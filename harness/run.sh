@@ -269,6 +269,16 @@ else
     fail_case "ONE_LINER" "Raw-URL stimmt nicht mit Repo überein"
 fi
 
+# ── 12) Repo-Name-Konsistenz (Grube 17, Live-Fund 2026-11-18: rename ohne
+#         UPSTREAM_REPO-Update → codeload-404 mitten im Live-Install-Lauf)
+if grep -qF 'UPSTREAM_REPO="Koch-I-Doo"' "$INSTALLER" \
+   && grep -qF 'codeload.github.com/${UPSTREAM_OWNER}/${UPSTREAM_REPO}' "$INSTALLER" \
+   && grep -qF 'HatchetMan111/Koch-I-Doo/main/install/kochido.sh' "$INSTALLER"; then
+    ok_case "Repo-Name konsistent (UPSTREAM_REPO, Tarball-URL, ONE_LINER)"
+else
+    fail_case "Repo-Name konsistent" "UPSTREAM_REPO / Tarball-URL / ONE_LINER zeigen auf unterschiedliche Repos"
+fi
+
 echo ""
 echo "━━━ Ergebnis: $PASS bestanden, $FAIL fehlgeschlagen ━━━"
 if [[ $FAIL -gt 0 ]]; then

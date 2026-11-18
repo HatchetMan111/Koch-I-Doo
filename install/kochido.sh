@@ -25,10 +25,10 @@
 set -Eeuo pipefail
 
 # ── Defaults ────────────────────────────────────────────────────────────────
-INSTALLER_VERSION="1.0.0"
+INSTALLER_VERSION="1.1.1"
 APP_NAME="kochido"
 UPSTREAM_OWNER="HatchetMan111"
-UPSTREAM_REPO="Kochido"
+UPSTREAM_REPO="Koch-I-Doo"
 UPSTREAM_BRANCH="main"
 UPSTREAM_TARBALL_URL="https://codeload.github.com/${UPSTREAM_OWNER}/${UPSTREAM_REPO}/tar.gz/refs/heads/${UPSTREAM_BRANCH}"
 CT_ID=""                    # leer = automatisch nächste freie ID ab ID_SCAN_START
