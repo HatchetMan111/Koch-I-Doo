@@ -69,7 +69,19 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Do
     im cookidoo-uploader-Schema werden samt TM-Parametern übernommen
 - **✎ Editor:** Schritte mit Zeit/Temperatur/Stufe/Linkslauf/Teigmodus
   pflegen, Einwiegen-Chips und Tipps pro Schritt, Zutaten-Tabelle
-- **🍽 Portions-Skalierung** mit Bruch-Formatierung (½, ¾ …)
+- **📅 Meine Woche:** 7-Tages-Planer – Rezepte per Picker (mit Suche)
+  einplanen, Woche blättern, Heute-Markierung; alles in derselben lokalen DB
+- **🧭 Entdecken:** Kategorie-Karten mit Zählern (Suppen, Saucen & Dips,
+  Backen & Teige, Hauptgerichte, …) + 🎲 Zufallsrezept
+- **🍲 Grundrezept-Bibliothek ab Werk:** 65 Thermomix-Grundrezepte über 9
+  Kategorien (Béchamel, Hollandaise, Risotto, Kartoffelpüree, Reis im
+  Gareinsatz, Pudding, Milchreis, Babybreie, Brot- und Waffelteige …) –
+  niemand startet bei null; Updates ergänzen das Paket automatisch ohne
+  Dubletten
+- **📋 Schritt-Übersicht im Koch-Modus:** alle Schritte als Vorschau
+  ansehen und direkt anspringen
+- **🍽 Portions-Skalierung** mit Bruch-Formatierung (½, ¾ …) – Presets
+  ½ / 1× / ×2, Einwiegen-Chips und Koch-Modus rechnen mit
 - **Suche, Tags, Favoriten** – und alles läuft **lokal** (FastAPI + SQLite)
 
 ## Nach der Installation
@@ -139,7 +151,7 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Do
 | Import | schema.org/Recipe (JSON-LD), Freitext-Heuristik, cookidump JSON/HTML, Cookidoo-Custom-Recipe-Schema |
 | Betrieb | systemd `kochido.service` (`Restart=always`), LXC unprivileged, `onboot: 1` |
 
-Tests: `pytest` (90 Fälle für Parser, Import-Wege, TM-Umwandler, Konto-Import und API) –
+Tests: `pytest` (100 Fälle für Parser, Import-Wege, TM-Umwandler, Konto-Import, Wochenplan, Seeding und API) –
 `python3 -m pytest tests/`
 
 ## Repo-Struktur
