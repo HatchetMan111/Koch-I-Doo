@@ -104,6 +104,7 @@ else
 fi
 INNER_OK=1
 for pat in "python3-venv" "python3 -m venv /opt/kochido/venv" "/opt/kochido/app.new" \
+           "mv /opt/kochido/app /opt/kochido/app.old" "rm -rf /opt/kochido/app.old" \
            "frontend/dist/index.html" "Restart=always" "After=network-online.target" \
            "KOCHIDO_DATA=/opt/kochido/data" "api/health" "dhclient-enter-hooks" \
            "systemctl enable kochido" "systemctl restart kochido" "--upgrade -r"; do

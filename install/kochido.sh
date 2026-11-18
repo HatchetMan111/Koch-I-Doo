@@ -350,7 +350,15 @@ fi
 /opt/kochido/venv/bin/pip install --quiet --upgrade -r /opt/kochido/app.new/requirements.txt
 
 echo ">>> App-Version aktivieren (atomarer Wechsel) ..."
+# GRUBE (Live-Fund 2026-11-18): GNU mv verschiebt bei existierendem Ziel-
+# verzeichnis INTO das Ziel (/opt/kochido/app/app.new → "Directory not
+# empty"). Deshalb explizit swappen: alt → app.old, neu → app.
+rm -rf /opt/kochido/app.old
+if [ -d /opt/kochido/app ]; then
+    mv /opt/kochido/app /opt/kochido/app.old
+fi
 mv /opt/kochido/app.new /opt/kochido/app
+rm -rf /opt/kochido/app.old
 
 echo ">>> Datenordner sicherstellen (Rezept-DB überlebt Updates) ..."
 mkdir -p /opt/kochido/data/images
