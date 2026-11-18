@@ -67,15 +67,47 @@ def init_db(seed_file: Path | None = None) -> None:
             if grund_ver:
                 set_meta("seed_grundrezepte", grund_ver, conn=conn)
         elif grund_ver and grund_ver != (get_meta("seed_grundrezepte", conn=conn) or ""):
-            # Grundrezept-Paket nachziehen, ohne bestehende Rezepte zu dublieren
-            existing = {row[0] for row in conn.execute("SELECT title FROM recipes")}
-            new = [r for r in (grund or []) if r.get("title") not in existing]
-            if new:
-                _insert_seed_recipes(conn, new)
+            # Grundrezept-Paket versioniert nachziehen: Original-Seeds werden
+            # ersetzt (bessere Schrittqualität/Bilder), User-Importe mit
+            # gleichem Titel bleiben unangetastet, Neues wird eingefügt.
+            _sync_seed_recipes(conn, grund or [])
             set_meta("seed_grundrezepte", grund_ver, conn=conn)
         conn.commit()
     finally:
         conn.close()
+
+
+SEED_SOURCE = "Koch-I-Doo Grundrezepte"
+_CATEGORY_ICONS = {
+    "Suppen": "🥣", "Saucen & Dips": "🥫", "Backen & Teige": "🥖",
+    "Hauptgerichte": "🍝", "Beilagen": "🥔", "Frühstück & Aufstriche": "🥐",
+    "Getränke & Smoothies": "🥤", "Desserts": "🍮", "Baby & Familie": "🍼",
+}
+
+
+def _seed_image(recipe) -> str:
+    """Kategorie-SVG (lokal!) erzeugen und als Rezeptbild setzen."""
+    cat = next((t for t in recipe.get("tags") or [] if t in _CATEGORY_ICONS), None)
+    if not cat:
+        return recipe.get("image") or ""
+    import re as _re
+
+    slug = _re.sub(r"[^a-z0-9]+", "-", cat.lower()).strip("-")
+    path = IMG_DIR / f"seed-{slug}.svg"
+    if not path.exists():
+        icon = _CATEGORY_ICONS[cat]
+        svg = (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150">'
+            '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+            '<stop offset="0" stop-color="#fdeae3"/><stop offset="1" stop-color="#f6d3ba"/>'
+            "</linearGradient></defs>"
+            '<rect width="200" height="150" fill="url(#g)" rx="12"/>'
+            f'<text x="100" y="96" font-size="64" text-anchor="middle">{icon}</text></svg>'
+        )
+        path.write_text(svg, encoding="utf-8")
+    if not recipe.get("image"):
+        recipe["image"] = f"/images/seed-{slug}.svg"
+    return recipe["image"]
 
 
 def _load_seed_file(path):
@@ -91,7 +123,34 @@ def _insert_seed_recipes(conn, recipes) -> None:
     from importers.common import match_ingredients_to_steps
 
     for recipe in recipes or []:
+        _seed_image(recipe)
         insert_recipe(match_ingredients_to_steps(recipe), conn=conn)
+
+
+def _sync_seed_recipes(conn, recipes) -> None:
+    """Bestehende Original-Seeds ersetzen, fehlende einfügen — Rezepte, die
+    der Nutzer selbst importiert/bearbeitet hat (anderer Source), bleiben."""
+    from importers.common import match_ingredients_to_steps
+
+    rows = {
+        row["title"]: {"id": row["id"], "source": (json.loads(row["data"])).get("source", ""),
+                       "favorite": bool(json.loads(row["data"]).get("favorite"))}
+        for row in conn.execute("SELECT id, title, data FROM recipes")
+    }
+    for recipe in recipes or []:
+        _seed_image(recipe)
+        mapped = match_ingredients_to_steps(recipe)
+        row = rows.get(mapped.get("title"))
+        if row and row["source"] == SEED_SOURCE:
+            payload = {k: v for k, v in mapped.items() if k not in ("id", "favorite", "created_at", "updated_at")}
+            payload["favorite"] = 1 if row["favorite"] else 0
+            conn.execute(
+                "UPDATE recipes SET title=?, tags=?, data=?, updated_at=? WHERE id=?",
+                (payload.get("title"), ",".join(payload.get("tags") or []),
+                 json.dumps(payload, ensure_ascii=False), time.time(), row["id"]),
+            )
+        elif not row:
+            insert_recipe(mapped, conn=conn)
 
 
 def get_meta(key: str, conn=None) -> str | None:

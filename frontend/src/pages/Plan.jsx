@@ -109,12 +109,17 @@ export default function Plan() {
                   <ul className="plan-list">
                     {dayEntries.map((e) => (
                       <li key={e.id} className="plan-entry">
-                        <Link to={`/rezept/${e.recipe_id}`} className="plan-entry-link">
-                          <b>{e.title}</b>
-                          <small>
-                            🍽 {e.servings} {e.serving_unit || "Portionen"}
-                            {e.time_total ? ` · ⏱ ${fmtDuration(e.time_total)}` : ""}
-                          </small>
+                        <Link to={`/rezept/${e.recipe_id}`} className="plan-entry-link plan-entry-row">
+                          <span className="plan-thumb">
+                            {e.image ? <img src={e.image} alt="" onError={(ev) => (ev.currentTarget.style.display = "none")} /> : "🍲"}
+                          </span>
+                          <span>
+                            <b>{e.title}</b>
+                            <small>
+                              🍽 {e.servings} {e.serving_unit || "Portionen"}
+                              {e.time_total ? ` · ⏱ ${fmtDuration(e.time_total)}` : ""}
+                            </small>
+                          </span>
                         </Link>
                         <button
                           className="btn btn-danger btn-icon"
@@ -184,10 +189,15 @@ function RecipePicker({ onClose, onPick }) {
           {filtered.length === 0 && <p className="muted">Keine Rezepte gefunden.</p>}
           {filtered.map((r) => (
             <button key={r.id} className="picker-item" onClick={() => onPick(r)}>
-              <b>{r.title}</b>
-              <small>
-                🍽 {r.servings} {r.serving_unit || "Portionen"} · {r.step_count} Schritte
-              </small>
+              <span className="plan-thumb">
+                {r.image ? <img src={r.image} alt="" onError={(ev) => (ev.currentTarget.style.display = "none")} /> : "🍲"}
+              </span>
+              <span className="picker-item-body">
+                <b>{r.title}</b>
+                <small>
+                  🍽 {r.servings} {r.serving_unit || "Portionen"} · {r.step_count} Schritte
+                </small>
+              </span>
             </button>
           ))}
         </div>

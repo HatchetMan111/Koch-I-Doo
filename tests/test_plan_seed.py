@@ -80,4 +80,38 @@ class TestSeed:
         import db
 
         db.init_db()
-        assert (db.get_meta("seed_grundrezepte") or "") == "1"
+        assert (db.get_meta("seed_grundrezepte") or "") == "2"
+
+
+class TestSeedV2:
+    def test_milchreis_granular(self, client):
+        """v2-Rezept muss Schritt für Schritt gehen (kein 'alles in den Topf')."""
+        import db
+
+        db.init_db()
+        r = client.get("/api/recipes", params={"q": "Milchreis"}).json()[0]
+        assert r["step_count"] >= 4
+        steps = client.get(f"/api/recipes/{r['id']}").json()["steps"]
+        assert any("Milch" in s["text"] and "erwärmen" in s["text"] for s in steps)
+        assert any("Milchreis einwiegen" in s["text"] for s in steps)
+        # Zutaten-Chips pro Schritt gepflegt
+        assert any(s["ingredients"] for s in steps)
+
+    def test_seed_bilder_lokal(self, client):
+        import db
+
+        db.init_db()
+        recipes = client.get("/api/recipes").json()
+        with_img = [r for r in recipes if (r["image"] or "").startswith("/images/seed-")]
+        assert len(with_img) >= 60
+
+    def test_sync_bewahrt_favorit(self, client):
+        """Version-Bump überschreibt Original-Seeds, behält aber den Favoriten-Status."""
+        import db
+
+        db.init_db()
+        r = client.get("/api/recipes", params={"q": "Milchreis"}).json()[0]
+        client.post(f"/api/recipes/{r['id']}/favorite", json={"favorite": True})
+        db.init_db()  # gleiche Version → kein Sync, aber Favorit bleibt
+        r2 = client.get(f"/api/recipes/{r['id']}").json()
+        assert r2["favorite"] is True
