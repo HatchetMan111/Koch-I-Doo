@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Component, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Import from "./pages/Import.jsx";
@@ -8,6 +8,35 @@ import Cook from "./pages/Cook.jsx";
 import Plan from "./pages/Plan.jsx";
 import Discover, { DiscoverCategory } from "./pages/Discover.jsx";
 
+// Fängt Render-Fehler und zeigt sie statt weißem Blatt (Debugging-Anforderung)
+class ErrorBoundary extends Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    console.error("Render-Fehler:", error, info?.componentStack);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="card" style={{ border: "2px solid #b91c1c", margin: 20, padding: 20 }}>
+          <h2>⚠ Render-Fehler</h2>
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.85rem" }}>
+            {String(this.state.error?.message || this.state.error)}
+            {"\n\n"}
+            {String(this.state.error?.stack || "")}
+          </pre>
+          <button className="btn btn-outline" onClick={() => this.setState({ error: null })}>
+            Neu versuchen
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const location = useLocation();
   const isCooking = location.pathname.startsWith("/kochen/");
@@ -15,9 +44,11 @@ export default function App() {
   if (isCooking) {
     // Vollbild-Modus ohne Rahmen – Koch-Bildschirm ist selbstständig.
     return (
-      <Routes>
-        <Route path="/kochen/:id" element={<Cook />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/kochen/:id" element={<Cook />} />
+        </Routes>
+      </ErrorBoundary>
     );
   }
 
@@ -47,6 +78,7 @@ export default function App() {
         </nav>
       </header>
       <main className="main">
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/import" element={<Import />} />
@@ -59,6 +91,7 @@ export default function App() {
           <Route path="/kochen/:id" element={<Cook />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
       </main>
       <footer className="footer">
         Koch-I-Doo v1.4.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6

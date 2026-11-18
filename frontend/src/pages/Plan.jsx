@@ -5,11 +5,11 @@ import { fmtDuration } from "../format.js";
 
 const DAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
 
-function isoDate(d) {
+export function isoDate(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function mondayOf(d) {
+export function mondayOf(d) {
   const m = new Date(d);
   m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
   m.setHours(12, 0, 0, 0); // Mittag statt Mitternacht (DST-Kanten)

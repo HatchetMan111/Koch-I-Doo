@@ -1,6 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { deleteRecipe, getRecipe, setFavorite } from "../api.js";
+import { addPlan, deleteRecipe, getRecipe, setFavorite } from "../api.js";
+
+// kleine Datums-Helfer (bewusst inline statt Cross-Page-Import)
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function mondayOf(d) {
+  const m = new Date(d);
+  m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+  m.setHours(12, 0, 0, 0);
+  return m;
+}
 import TmBadges from "../components/TmBadges.jsx";
 import { fmtAmount, fmtDuration, scaleAmount, scaleChipText } from "../format.js";
 
@@ -10,6 +21,9 @@ export default function RecipeDetail() {
   const [recipe, setRecipe] = useState(null);
   const [error, setError] = useState("");
   const [servings, setServings] = useState(null);
+  const [showPlan, setShowPlan] = useState(false);
+  const [planWeekOffset, setPlanWeekOffset] = useState(0);
+  const [planMsg, setPlanMsg] = useState("");
 
   useEffect(() => {
     getRecipe(id)
@@ -24,6 +38,16 @@ export default function RecipeDetail() {
     if (!recipe || !servings || !recipe.servings) return 1;
     return servings / recipe.servings;
   }, [recipe, servings]);
+
+  const planDays = useMemo(() => {
+    const m = mondayOf(new Date());
+    m.setDate(m.getDate() + planWeekOffset * 7);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(m);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  }, [planWeekOffset]);
 
   if (error) return <div className="alert alert-error">Fehler: {error}</div>;
   if (!recipe) return <div className="empty-hint">Lade Rezept …</div>;
@@ -41,6 +65,19 @@ export default function RecipeDetail() {
     await setFavorite(recipe.id, !recipe.favorite);
     setRecipe({ ...recipe, favorite: !recipe.favorite });
   };
+
+  const planFor = async (day) => {
+    try {
+      await addPlan(isoDate(day), recipe.id, servings);
+      setShowPlan(false);
+      setPlanMsg(`📅 Eingetragen für ${day.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "numeric" })}`);
+      setTimeout(() => setPlanMsg(""), 4000);
+    } catch (err) {
+      setError(String(err.message || err));
+      setShowPlan(false);
+    }
+  };
+
 
   return (
     <div className="detail">
@@ -107,6 +144,9 @@ export default function RecipeDetail() {
               onClick={toggleFav}
             >
               {recipe.favorite ? "★ Favorit" : "☆ Merken"}
+            </button>
+            <button className="btn btn-outline plan-quick-btn" onClick={() => setShowPlan(true)}>
+              📅 Zum Plan
             </button>
             <button className="btn btn-danger" onClick={remove}>
               🗑 Löschen
@@ -212,6 +252,60 @@ export default function RecipeDetail() {
           </ol>
         </section>
       </div>
+
+      {planMsg && <div className="alert alert-success">{planMsg}</div>}
+
+      {showPlan && (
+        <div className="picker-overlay" onClick={() => setShowPlan(false)}>
+          <div className="picker-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="picker-head">
+              <b>📅 Einplanen: {recipe.title}</b>
+              <button className="picker-close" onClick={() => setShowPlan(false)}>
+                ✕
+              </button>
+            </div>
+            <div className="plan-week-nav">
+              <button
+                className="btn btn-icon"
+                onClick={() => setPlanWeekOffset(planWeekOffset - 1)}
+                title="Vorherige Woche"
+              >
+                ←
+              </button>
+              <span className="muted">
+                {planWeekOffset === 0 ? "Diese Woche" : planWeekOffset === 1 ? "Nächste Woche" : `Woche ${planWeekOffset > 0 ? "+" : ""}${planWeekOffset}`}
+              </span>
+              <button
+                className="btn btn-icon"
+                onClick={() => setPlanWeekOffset(planWeekOffset + 1)}
+                title="Nächste Woche"
+              >
+                →
+              </button>
+            </div>
+            <div className="plan-day-picker">
+              {planDays.map((d) => {
+                const isToday = isoDate(d) === isoDate(new Date());
+                return (
+                  <button
+                    key={isoDate(d)}
+                    className={`picker-item plan-pick-day ${isToday ? "plan-today" : ""}`}
+                    onClick={() => planFor(d)}
+                  >
+                    <b>
+                      {d.toLocaleDateString("de-DE", { weekday: "short" })}{" "}
+                      {d.getDate()}.{d.getMonth() + 1}.
+                    </b>
+                    <small>
+                      🍽 {servings} {recipe.serving_unit || "Portionen"}
+                    </small>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
