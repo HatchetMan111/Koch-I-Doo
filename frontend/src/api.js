@@ -59,10 +59,27 @@ export const importCookidoo = (payload) =>
     method: "POST",
     body: JSON.stringify({ payload }),
   });
-export const importBatch = (recipes) =>
+export const importBatch = (recipes, listName = "", listSource = "") =>
   api("/api/import/batch", {
     method: "POST",
-    body: JSON.stringify({ recipes }),
+    body: JSON.stringify({ recipes, list_name: listName, list_source: listSource }),
+  });
+
+// Listen
+export const getLists = () => api("/api/lists");
+export const createList = (name, recipeIds = [], source = "") =>
+  api("/api/lists", { method: "POST", body: JSON.stringify({ name, recipe_ids: recipeIds, source }) });
+export const renameList = (id, name) =>
+  api(`/api/lists/${id}`, { method: "PUT", body: JSON.stringify({ name }) });
+export const deleteList = (id) => api(`/api/lists/${id}`, { method: "DELETE" });
+export const addToList = (id, recipeIds) =>
+  api(`/api/lists/${id}/items`, { method: "POST", body: JSON.stringify({ recipe_ids: recipeIds }) });
+export const removeFromList = (id, recipeId) =>
+  api(`/api/lists/${id}/items/${recipeId}`, { method: "DELETE" });
+export const fetchCookidooCollections = (email, password, country, language) =>
+  api("/api/import/cookidoo-collections", {
+    method: "POST",
+    body: JSON.stringify({ email, password, country, language }),
   });
 
 // Wochenplan

@@ -174,3 +174,72 @@ class TestSeedV4:
             "title": "Serve-Test", "serve_with": "mit Reis"}).json()["id"]
         full = client.get(f"/api/recipes/{rid}").json()
         assert full["serve_with"] == "mit Reis"
+
+
+RECIPE_FIXTURE = {
+    "title": "Listen-Testrezept", "servings": 4, "serving_unit": "Portionen",
+    "tags": ["Test"], "tm_versions": ["TM6"],
+    "ingredients": [{"amount": 200, "unit": "g", "name": "Mehl", "note": ""}],
+    "steps": [{"text": "Rühren", "time": 60, "temperature": "", "speed": "3",
+               "reverse": False, "mode": "", "ingredients": [], "tip": ""}],
+}
+
+
+class TestListen:
+    def test_crud_vollstaendig(self, client):
+        import db
+
+        conn = db._connect()
+        conn.execute("DELETE FROM lists"); conn.execute("DELETE FROM list_items"); conn.commit(); conn.close()
+        r1 = client.post("/api/recipes", json={"title": "Gericht A"}).json()["id"]
+        r2 = client.post("/api/recipes", json={"title": "Gericht B"}).json()["id"]
+
+        # Anlegen mit 2 Rezepten
+        lst = client.post("/api/lists", json={"name": "Grillen im Sommer", "recipe_ids": [r1, r2]}).json()
+        lid = lst["id"]
+        body = client.get(f"/api/lists/{lid}").json()
+        assert body["name"] == "Grillen im Sommer"
+        assert [r["title"] for r in body["recipes"]] == ["Gericht A", "Gericht B"]
+
+        # Umbenennen + ergänzen (Duplikat wird ignoriert)
+        client.put(f"/api/lists/{lid}", json={"name": "Sommergrillen"})
+        client.post(f"/api/lists/{lid}/items", json={"recipe_ids": [r2, r1]})
+        body = client.get(f"/api/lists/{lid}").json()
+        assert body["name"] == "Sommergrillen"
+        assert body["recipe_count"] == 2  # keine Duplikate
+
+        # Übersicht enthält Meta
+        overview = client.get("/api/lists").json()
+        assert any(l["id"] == lid for l in overview)
+
+        # Einzelnes Rezept entfernen
+        client.delete(f"/api/lists/{lid}/items/{r1}")
+        assert client.get(f"/api/lists/{lid}").json()["recipe_count"] == 1
+
+        # Löschen
+        client.delete(f"/api/lists/{lid}")
+        assert client.get(f"/api/lists/{lid}").status_code == 404
+
+    def test_batch_erstellt_liste(self, client):
+        r = client.post("/api/import/batch", json={
+            "recipes": [dict(RECIPE_FIXTURE, title=f"L-{i}") for i in range(3)],
+            "list_name": "Meine Batch-Liste",
+            "list_source": "Test",
+        })
+        assert r.status_code == 200
+        list_id = r.json()["list_id"]
+        assert list_id
+        body = client.get(f"/api/lists/{list_id}").json()
+        assert body["recipe_count"] == 3
+        assert body["source"] == "Test"
+
+    def test_batch_ohne_liste(self, client):
+        r = client.post("/api/import/batch", json={"recipes": [RECIPE_FIXTURE]})
+        assert r.json()["list_id"] is None
+
+    def test_validierung(self, client):
+        assert client.post("/api/lists", json={"name": ""}).status_code == 400
+        # Unbekanntes Rezept beim Ergänzen
+        lst = client.post("/api/lists", json={"name": "X"}).json()
+        r = client.post(f"/api/lists/{lst['id']}/items", json={"recipe_ids": [9999]})
+        assert r.status_code == 404

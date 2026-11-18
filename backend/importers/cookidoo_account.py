@@ -338,3 +338,102 @@ async def fetch_cookidoo_account(email: str, password: str,
             + ("; Details: " + " | ".join(warnings[:5]) if warnings else "")
         )
     return recipes, warnings
+
+
+async def fetch_cookidoo_collections(email: str, password: str,
+                                     country: str = "de", language: str = "de-DE",
+                                     max_per_collection: int = 60):
+    """Cookidoo-Sammlungen (Katalog + eigene) inkl. Rezepten abrufen.
+
+    Rückgabe: (sammlungen: list[{"name","description","recipes":[...]}], warnungen)
+    Für jede Sammlung werden die Rezept-Details geladen — bei großen Sammlungen
+    kann das dauern (max_per_collection begrenzt).
+    """
+    if not email or not password:
+        raise ImportFehler("E-Mail und Passwort für Cookidoo werden benötigt.")
+
+    try:
+        import aiohttp
+        from cookidoo_api import Cookidoo, CookidooConfig
+        from cookidoo_api.helpers import get_localization_options
+    except Exception as exc:
+        raise ImportFehler(
+            "Bibliothek 'cookidoo-api' nicht verfügbar (pip install cookidoo-api – "
+            "benötigt Python ≥ 3.12, LXC muss auf Debian 13 laufen)."
+        ) from exc
+
+    warnings: list[str] = []
+    token_path = token_cache_path()
+    jar = aiohttp.CookieJar(unsafe=True)
+    timeout = aiohttp.ClientTimeout(total=None, sock_connect=30, sock_read=180)
+    async with aiohttp.ClientSession(cookie_jar=jar, timeout=timeout) as session:
+        try:
+            localizations = await get_localization_options(country=country, language=language)
+        except Exception as exc:
+            raise ImportFehler(f"Cookidoo-Lokalisierung {country}/{language} nicht ermittelbar") from exc
+        if not localizations:
+            raise ImportFehler(
+                f"Unbekannte Cookidoo-Lokalisierung: Land='{country}', Sprache='{language}'"
+            )
+        cookidoo = Cookidoo(
+            session,
+            cfg=CookidooConfig(email=email, password=password, localization=localizations[0]),
+        )
+        cookidoo.on_auth_data_update = lambda _auth: cookidoo.save_token(str(token_path))
+        try:
+            cookidoo.load_token(str(token_path))
+        except Exception:
+            try:
+                await cookidoo.login()
+            except Exception as exc:
+                raise ImportFehler(
+                    "Cookidoo-Login fehlgeschlagen – E-Mail/Passwort prüfen. "
+                    "Bei 2FA/MFA oder CAPTCHA bitte den cookidump-Weg verwenden."
+                ) from exc
+
+        collections = []
+
+        async def _collect(fetcher, label):
+            try:
+                page = 0
+                while page < 10:
+                    result = await fetcher(page)
+                    if not result:
+                        break
+                    for col in result:
+                        chapters = list(getattr(col, "chapters", []) or [])
+                        rec_ids = []
+                        name = str(getattr(col, "title", "") or f"{label} {len(collections) + 1}")
+                        for ch in chapters:
+                            for cr in getattr(ch, "recipes", []) or []:
+                                rid = getattr(cr, "id", None)
+                                if rid and rid not in rec_ids:
+                                    rec_ids.append(rid)
+                        rec_ids = rec_ids[:max_per_collection]
+                        recipes = []
+                        for rid in rec_ids:
+                            try:
+                                details = await cookidoo.get_recipe_details(rid)
+                                recipes.append(recipe_from_details(details))
+                            except Exception as exc:
+                                warnings.append(f"„{name}“: Rezept {rid} übersprungen ({type(exc).__name__})")
+                        if recipes:
+                            collections.append({
+                                "name": name,
+                                "description": str(getattr(col, "description", "") or ""),
+                                "recipes": recipes,
+                            })
+                    page += 1
+            except Exception as exc:
+                warnings.append(f"{label} nicht abrufbar: {type(exc).__name__}: {exc}")
+
+        # Katalog-Sammlungen (braucht Premium) + eigene Sammlungen (immer)
+        await _collect(cookidoo.get_managed_collections, "Katalog-Sammlung")
+        await _collect(cookidoo.get_custom_collections, "Eigene Sammlung")
+
+    if not collections:
+        raise ImportFehler(
+            "Keine Sammlungen gefunden. "
+            + ("Details: " + " | ".join(warnings[:4]) if warnings else "")
+        )
+    return collections, warnings

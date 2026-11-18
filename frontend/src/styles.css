@@ -635,3 +635,46 @@ button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
   font-size: 1.05rem; line-height: 1.5;
 }
 .cook-serve b { color: var(--ck-text); }
+
+/* ── Listen & Monatsansicht ─────────────────────────────────────────────── */
+.plan-view-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+.month-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+}
+.month-head { text-align: center; font-weight: 800; color: var(--muted); padding: 6px 0; }
+.month-cell {
+  min-height: 92px; background: var(--card); border-radius: 10px;
+  border: 1.5px solid var(--border); padding: 6px; position: relative;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.month-pad { background: transparent; border-color: transparent; }
+.month-today { border-color: var(--accent); }
+.month-day-num { font-weight: 700; font-size: 0.8rem; color: var(--muted); }
+.month-today .month-day-num { color: var(--accent); }
+.month-entries { flex: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.month-entry {
+  display: flex; align-items: center; gap: 4px; font-size: 0.72rem; line-height: 1.2;
+  text-decoration: none; color: var(--text); background: var(--teal-soft);
+  border-radius: 6px; padding: 2px 4px; overflow: hidden;
+}
+.month-entry img { width: 16px; height: 16px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+.month-entry span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.month-add {
+  align-self: flex-start; width: 24px; height: 24px; border-radius: 6px;
+  border: 1.5px dashed var(--border); background: transparent; color: var(--muted);
+  cursor: pointer; font-size: 0.95rem; line-height: 1;
+}
+.month-add:hover { border-color: var(--accent); color: var(--accent); }
+
+.lists-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.lists-grid {
+  display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+}
+.list-card { text-align: left; cursor: pointer; padding: 14px 16px; }
+.list-card:hover { transform: translateY(-2px); }
+.list-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.list-card-head b { font-size: 1.05rem; line-height: 1.25; }
+.list-thumbs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+.list-more { font-size: 0.8rem; }
+.collection-list { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+.collection-card { margin-bottom: 0; border-left: 4px solid var(--teal); }

@@ -6,6 +6,7 @@ import RecipeDetail from "./pages/RecipeDetail.jsx";
 import Editor from "./pages/Editor.jsx";
 import Cook from "./pages/Cook.jsx";
 import Plan from "./pages/Plan.jsx";
+import Lists from "./pages/Lists.jsx";
 import Discover, { DiscoverCategory } from "./pages/Discover.jsx";
 
 // Fängt Render-Fehler und zeigt sie statt weißem Blatt (Debugging-Anforderung)
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/entdecken" element={<Discover />} />
           <Route path="/entdecken/kategorie/:cat" element={<DiscoverCategory />} />
           <Route path="/plan" element={<Plan />} />
+          <Route path="/listen" element={<Lists />} />
           <Route path="/neu" element={<Editor />} />
           <Route path="/rezept/:id" element={<RecipeDetail />} />
           <Route path="/rezept/:id/bearbeiten" element={<Editor />} />
@@ -94,7 +96,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.4.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.5.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, createRecipe, importBatch, importCookidoo, importFromText, importFromUrl } from "../api.js";
+import { api, createRecipe, fetchCookidooCollections, importBatch, importCookidoo, importFromText, importFromUrl } from "../api.js";
 import TmBadges from "../components/TmBadges.jsx";
 
 const TABS = [
@@ -128,6 +128,7 @@ function WarningBox({ warnings }) {
 function UrlTab() {
   const [url, setUrl] = useState("");
   const [maxRecipes, setMaxRecipes] = useState(30);
+  const [listName, setListName] = useState("");
   const [rawPreview, setRawPreview] = useState(null);
   const [multiPreviews, setMultiPreviews] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -202,8 +203,8 @@ function UrlTab() {
   const saveAll = async () => {
     setSaving(true);
     try {
-      await importBatch(multiPreviews);
-      navigate("/");
+      await importBatch(multiPreviews, listName.trim(), url.trim());
+      navigate("/listen");
     } catch (err) {
       setError(String(err.message || err));
       setSaving(false);
@@ -251,12 +252,30 @@ function UrlTab() {
         />
       )}
       {multiPreviews && (
-        <PreviewList
-          recipes={multiPreviews}
-          onSaveAll={saveAll}
-          saving={saving}
-          savedIds={new Set()}
-        />
+        <>
+          <div className="tm-convert-toggle">
+            <span>
+              📋 Diese Sammlung <b>als Liste speichern</b> — Name:
+              <input
+                className="input"
+                style={{ marginLeft: 8, width: "min(320px, 60vw)" }}
+                placeholder={listName || "z. B. Chefkoch-Sammlung"}
+                value={listName}
+                onChange={(e) => setListName(e.target.value)}
+              />
+              <small className="muted" style={{ display: "block", marginTop: 4 }}>
+                Ohne Namen werden nur die Rezepte gespeichert. Mit Namen erscheint
+                die Sammlung unter „📋 Listen“.
+              </small>
+            </span>
+          </div>
+          <PreviewList
+            recipes={multiPreviews}
+            onSaveAll={saveAll}
+            saving={saving}
+            savedIds={new Set()}
+          />
+        </>
       )}
       <WarningBox warnings={warnings} />
     </div>
@@ -373,7 +392,36 @@ function AccountTab() {
   const [error, setError] = useState("");
   const [warnings, setWarnings] = useState([]);
   const [savedIdx, setSavedIdx] = useState(new Set());
+  const [collections, setCollections] = useState(null);
+  const [loadingCollections, setLoadingCollections] = useState(false);
+  const [doneLists, setDoneLists] = useState(new Set());
   const navigate = useNavigate();
+
+  const loadCollections = async () => {
+    setLoadingCollections(true);
+    setError("");
+    try {
+      const result = await fetchCookidooCollections(email.trim(), password, country.trim() || "de", language.trim() || "de-DE");
+      setCollections(result.collections);
+      setWarnings(result.warnings || []);
+    } catch (err) {
+      setError(String(err.message || err));
+    } finally {
+      setLoadingCollections(false);
+    }
+  };
+
+  const importCollection = async (col) => {
+    setSaving(true);
+    try {
+      await importBatch(col.recipes, col.name, "Cookidoo-Sammlung");
+      setDoneLists((prev) => new Set([...prev, col.name]));
+    } catch (err) {
+      setError(String(err.message || err));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -467,14 +515,61 @@ function AccountTab() {
             value={maxRecipes} onChange={(e) => setMaxRecipes(e.target.value)} />
         </label>
       </div>
-      <button
-        className="btn btn-primary"
-        onClick={load}
-        disabled={!email.trim() || !password || loading}
-      >
-        {loading ? "Verbinde & hole Rezepte (kann dauern) …" : "🥘 Verbinden & Rezepte holen"}
-      </button>
+      <div className="form-row">
+        <button
+          className="btn btn-primary"
+          onClick={load}
+          disabled={!email.trim() || !password || loading}
+        >
+          {loading ? "Verbinde & hole Rezepte (kann dauern) …" : "🥘 Verbinden & Rezepte holen"}
+        </button>
+        <button
+          className="btn btn-outline"
+          onClick={loadCollections}
+          disabled={!email.trim() || !password || loadingCollections}
+          title="Katalog- und eigene Sammlungen als Listen holen"
+        >
+          {loadingCollections ? "Hole Sammlungen (kann dauern) …" : "🧺 Sammlungen als Listen holen"}
+        </button>
+      </div>
       <ErrorBox error={error} />
+
+      {collections && (
+        <div className="card hint-card">
+          <b>🧺 Cookidoo-Sammlungen ({collections.length})</b>
+          <p className="muted">
+            Jede Sammlung wird als Rezept-Liste gespeichert und erscheint unter
+            „📋 Listen“. Große Sammlungen brauchen einen Moment.
+          </p>
+          <div className="collection-list">
+            {collections.map((col) => (
+              <div key={col.name} className="card collection-card">
+                <div className="preview-title">
+                  <h3>{col.name}</h3>
+                  {doneLists.has(col.name) && <span className="badge badge-ok">✓ als Liste gespeichert</span>}
+                </div>
+                {col.description && <p className="muted">{col.description}</p>}
+                <div className="list-thumbs">
+                  {col.recipes.slice(0, 6).map((r, i) => (
+                    <span key={i} className="plan-thumb">
+                      {r.image ? <img src={r.image} alt="" onError={(e) => (e.currentTarget.style.display = "none")} /> : "🍲"}
+                    </span>
+                  ))}
+                  <span className="muted">{col.recipes.length} Rezepte</span>
+                </div>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => importCollection(col)}
+                  disabled={saving || doneLists.has(col.name)}
+                >
+                  {doneLists.has(col.name) ? "✓ gespeichert" : saving ? "Speichere …" : "⤓ Als Liste importieren"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {previews && (
         <PreviewList
           recipes={previews}

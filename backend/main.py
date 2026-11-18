@@ -17,12 +17,12 @@ from pydantic import BaseModel
 import db
 from importers.chefkoch import ImportFehler, USER_AGENT, import_from_url_multi
 from importers.cookidoo import import_cookidoo
-from importers.cookidoo_account import fetch_cookidoo_account
+from importers.cookidoo_account import fetch_cookidoo_collections, fetch_cookidoo_account
 from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.4.0"
+APP_VERSION = "1.5.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -301,6 +301,26 @@ async def api_import_cookidoo_account(body: CookidooAccountBody):
             "hint": "Vorschau prüfen und auf „Alle importieren“ klicken – danach kannst du das Abo kündigen."}
 
 
+class CookidooCollectionsBody(BaseModel):
+    email: str
+    password: str
+    country: str = "de"
+    language: str = "de-DE"
+    max_per_collection: int = 60
+
+
+@app.post("/api/import/cookidoo-collections")
+async def api_import_cookidoo_collections(body: CookidooCollectionsBody):
+    """Cookidoo-Sammlungen (Katalog + eigene) als benannte Rezept-Listen holen."""
+    try:
+        collections, warnings = await fetch_cookidoo_collections(
+            body.email, body.password, body.country, body.language, body.max_per_collection
+        )
+    except ImportFehler as exc:
+        raise _fail_400(exc) from None
+    return {"collections": collections, "warnings": warnings}
+
+
 @app.post("/api/import/convert-tm")
 def api_convert_tm(recipe: RecipeModel):
     """Heuristik: Schritte ohne TM-Parameter in Thermomix-Schritte übersetzen."""
@@ -311,11 +331,15 @@ def api_convert_tm(recipe: RecipeModel):
 
 class RecipeBatchBody(BaseModel):
     recipes: list[RecipeModel]
+    list_name: str = ""   # optional: alle Rezepte zusätzlich als Rezept-Liste speichern
+    list_source: str = ""
 
 
 @app.post("/api/import/batch")
 def api_import_batch(body: RecipeBatchBody):
-    """Speichert mehrere Vorschau-Rezepte (Import-Endpunkt-Output) gesammelt."""
+    """Speichert mehrere Vorschau-Rezepte (Import-Endpunkt-Output) gesammelt —
+    optional als benannte Rezept-Liste (z. B. eine Cookidoo-Sammlung oder eine
+    Chefkoch-Sammelseite)."""
     saved = []
     warnings = []
     for recipe in body.recipes:
@@ -324,7 +348,83 @@ def api_import_batch(body: RecipeBatchBody):
         if img_warn:
             warnings.append(f"{data.get('title', '?')}: {img_warn}")
         saved.append(db.insert_recipe(data))
-    return {"ids": saved, "count": len(saved), "warnings": warnings}
+    list_id = None
+    if body.list_name.strip():
+        list_id = db.create_list(body.list_name.strip(), saved, source=body.list_source)
+    return {"ids": saved, "count": len(saved), "warnings": warnings,
+            "list_id": list_id,
+            "list_hint": (f"Als Liste „{body.list_name.strip()}“ gespeichert." if list_id else "")}
+
+
+# ── Rezept-Listen ───────────────────────────────────────────────────────────
+
+class ListCreateBody(BaseModel):
+    name: str
+    recipe_ids: list[int] = []
+    source: str = ""
+
+
+class ListItemsBody(BaseModel):
+    recipe_ids: list[int]
+
+
+class ListRenameBody(BaseModel):
+    name: str
+
+
+@app.get("/api/lists")
+def api_lists():
+    return db.list_lists()
+
+
+@app.get("/api/lists/{list_id}")
+def api_get_list(list_id: int):
+    lst = db.get_list(list_id)
+    if lst is None:
+        raise HTTPException(status_code=404, detail=f"Liste {list_id} nicht gefunden")
+    return lst
+
+
+@app.post("/api/lists")
+def api_create_list(body: ListCreateBody):
+    if not body.name.strip():
+        raise HTTPException(status_code=400, detail="Listenname fehlt")
+    list_id = db.create_list(body.name.strip(), body.recipe_ids, source=body.source)
+    return {"id": list_id, "ok": True}
+
+
+@app.post("/api/lists/{list_id}/items")
+def api_add_list_items(list_id: int, body: ListItemsBody):
+    if db.get_list(list_id) is None:
+        raise HTTPException(status_code=404, detail=f"Liste {list_id} nicht gefunden")
+    for rid in body.recipe_ids:
+        if db.get_recipe(rid) is None:
+            raise HTTPException(status_code=404, detail=f"Rezept {rid} nicht gefunden")
+    added = db.add_to_list(list_id, body.recipe_ids)
+    return {"ok": True, "added": added}
+
+
+@app.delete("/api/lists/{list_id}/items/{recipe_id}")
+def api_remove_list_item(list_id: int, recipe_id: int):
+    if not db.remove_from_list(list_id, recipe_id):
+        raise HTTPException(status_code=404, detail="Eintrag nicht in Liste gefunden")
+    return {"ok": True}
+
+
+@app.put("/api/lists/{list_id}")
+def api_rename_list(list_id: int, body: ListRenameBody):
+    if not body.name.strip():
+        raise HTTPException(status_code=400, detail="Listenname fehlt")
+    if not db.rename_list(list_id, body.name.strip()):
+        raise HTTPException(status_code=404, detail=f"Liste {list_id} nicht gefunden")
+    return {"ok": True}
+
+
+@app.delete("/api/lists/{list_id}")
+def api_delete_list(list_id: int):
+    if not db.delete_list(list_id):
+        raise HTTPException(status_code=404, detail=f"Liste {list_id} nicht gefunden")
+    return {"ok": True}
 
 
 # ── Bilder & SPA ────────────────────────────────────────────────────────────

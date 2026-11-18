@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { addPlan, deleteRecipe, getRecipe, setFavorite } from "../api.js";
+import { addToList, deleteRecipe, getLists, getRecipe, setFavorite } from "../api.js";
 
 // kleine Datums-Helfer (bewusst inline statt Cross-Page-Import)
 function isoDate(d) {
@@ -22,6 +22,8 @@ export default function RecipeDetail() {
   const [error, setError] = useState("");
   const [servings, setServings] = useState(null);
   const [showPlan, setShowPlan] = useState(false);
+  const [showListPick, setShowListPick] = useState(false);
+  const [lists, setLists] = useState(null);
   const [planWeekOffset, setPlanWeekOffset] = useState(0);
   const [planMsg, setPlanMsg] = useState("");
 
@@ -148,6 +150,15 @@ export default function RecipeDetail() {
             <button className="btn btn-outline plan-quick-btn" onClick={() => setShowPlan(true)}>
               📅 Zum Plan
             </button>
+            <button
+              className="btn btn-outline list-quick-btn"
+              onClick={async () => {
+                setShowListPick(true);
+                setLists(await getLists().catch(() => []));
+              }}
+            >
+              📋 Zur Liste
+            </button>
             <button className="btn btn-danger" onClick={remove}>
               🗑 Löschen
             </button>
@@ -254,6 +265,35 @@ export default function RecipeDetail() {
       </div>
 
       {planMsg && <div className="alert alert-success">{planMsg}</div>}
+
+      {showListPick && (
+        <div className="picker-overlay" onClick={() => setShowListPick(false)}>
+          <div className="picker-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="picker-head">
+              <b>📋 Zu Liste hinzufügen: {recipe.title}</b>
+              <button className="picker-close" onClick={() => setShowListPick(false)}>✕</button>
+            </div>
+            <div className="picker-list">
+              {(lists || []).map((l) => (
+                <button
+                  key={l.id}
+                  className="picker-item"
+                  onClick={async () => {
+                    await addToList(l.id, [recipe.id]);
+                    setShowListPick(false);
+                    setPlanMsg(`📋 Zu „${l.name}“ hinzugefügt`);
+                    setTimeout(() => setPlanMsg(""), 4000);
+                  }}
+                >
+                  <b>{l.name}</b>
+                  <small>{l.recipe_count} Rezepte{l.source ? ` · ${l.source.startsWith("http") ? "Import" : l.source}` : ""}</small>
+                </button>
+              ))}
+              {(lists || []).length === 0 && <p className="muted">Noch keine Listen — erstelle eine unter „📋 Listen“.</p>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showPlan && (
         <div className="picker-overlay" onClick={() => setShowPlan(false)}>

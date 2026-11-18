@@ -17,6 +17,14 @@ export function mondayOf(d) {
 }
 
 export default function Plan() {
+  const [view, setView] = useState(() => localStorage.getItem("kochido-planview") || "woche");
+  const [monthAnchor, setMonthAnchor] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setHours(12, 0, 0, 0);
+    return d;
+  });
+  const [monthEntries, setMonthEntries] = useState(null);
   const [weekStart, setWeekStart] = useState(mondayOf(new Date()));
   const [entries, setEntries] = useState(null);
   const [error, setError] = useState("");
@@ -44,9 +52,23 @@ export default function Plan() {
   };
 
   useEffect(() => {
+    try { localStorage.setItem("kochido-planview", view); } catch {}
+  }, [view]);
+
+  useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weekStart]);
+
+  // Monats-Daten laden, wenn Monatsansicht aktiv
+  useEffect(() => {
+    if (view !== "monat") return;
+    const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+    const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
+    getPlan(isoDate(first), isoDate(last))
+      .then(setMonthEntries)
+      .catch((err) => setError(String(err.message || err)));
+  }, [view, monthAnchor]);
 
   const remove = async (id) => {
     await deletePlan(id);
@@ -69,9 +91,96 @@ export default function Plan() {
     return `${fmt(weekDays[0])} – ${fmt(weekDays[6], true)}`;
   }, [weekDays]);
 
+  const monthCells = useMemo(() => {
+    const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+    const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
+    const lead = (first.getDay() + 6) % 7; // Mo-Start
+    const cells = [];
+    for (let i = 0; i < lead; i++) cells.push(null);
+    for (let d = 1; d <= last.getDate(); d++) {
+      cells.push(new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), d, 12));
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [monthAnchor]);
+
+  const monthLabel = monthAnchor.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+  const moveMonth = (delta) => {
+    setMonthAnchor(new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + delta, 1, 12));
+  };
+
   return (
     <div className="plan-page">
       <h1>📅 Meine Woche</h1>
+      <div className="plan-view-toggle">
+        <button className={`tab ${view === "woche" ? "tab-active" : ""}`} onClick={() => setView("woche")}>
+          Woche
+        </button>
+        <button className={`tab ${view === "monat" ? "tab-active" : ""}`} onClick={() => setView("monat")}>
+          Monat
+        </button>
+      </div>
+      {view === "monat" ? (
+        <div>
+          <div className="plan-toolbar">
+            <button className="btn btn-outline" onClick={() => moveMonth(-1)}>←</button>
+            <button
+              className="btn btn-outline"
+              onClick={() => setMonthAnchor(new Date(new Date().getFullYear(), new Date().getMonth(), 1, 12))}
+            >
+              Heute
+            </button>
+            <button className="btn btn-outline" onClick={() => moveMonth(1)}>→</button>
+            <span className="plan-week-label">{monthLabel}</span>
+          </div>
+          {error && <div className="alert alert-error">⚠ {error}</div>}
+          <div className="month-grid">
+            {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((d) => (
+              <div key={d} className="month-head">{d}</div>
+            ))}
+            {monthCells.map((d, i) => {
+              if (!d) return <div key={"pad" + i} className="month-cell month-pad" />;
+              const iso = isoDate(d);
+              const dayEntries = (monthEntries || []).filter((e) => e.plan_date === iso);
+              const isToday = iso === isoDate(new Date());
+              return (
+                <div key={iso} className={`month-cell ${isToday ? "month-today" : ""}`}>
+                  <div className="month-day-num">{d.getDate()}</div>
+                  <div className="month-entries">
+                    {dayEntries.slice(0, 3).map((e) => (
+                      <Link key={e.id} to={`/rezept/${e.recipe_id}`} className="month-entry" title={e.title}>
+                        {e.image ? <img src={e.image} alt="" onError={(ev) => (ev.currentTarget.style.visibility = "hidden")} /> : "🍲"}
+                        <span>{e.title}</span>
+                      </Link>
+                    ))}
+                    {dayEntries.length > 3 && <small className="muted">+{dayEntries.length - 3} mehr</small>}
+                  </div>
+                  <button
+                    className="month-add"
+                    title="Rezept für diesen Tag einplanen"
+                    onClick={() => setPickerFor(iso)}
+                  >
+                    +
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          {pickerFor && (
+            <RecipePicker
+              onClose={() => setPickerFor(null)}
+              onPick={async (recipe) => {
+                await addPlan(pickerFor, recipe.id, recipe.servings);
+                setPickerFor(null);
+                const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+                const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
+                getPlan(isoDate(first), isoDate(last)).then(setMonthEntries).catch(() => {});
+              }}
+            />
+          )}
+        </div>
+      ) : (
+      <>
       <div className="plan-toolbar">
         <button className="btn btn-outline" onClick={() => moveWeek(-1)}>
           ← Vorherige Woche
@@ -151,11 +260,13 @@ export default function Plan() {
           }}
         />
       )}
+      </>
+      )}
     </div>
   );
 }
 
-function RecipePicker({ onClose, onPick }) {
+export function RecipePicker({ onClose, onPick }) {
   const [recipes, setRecipes] = useState([]);
   const [q, setQ] = useState("");
 

@@ -34,6 +34,20 @@ CREATE TABLE IF NOT EXISTS meta (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS lists (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    source      TEXT NOT NULL DEFAULT '',
+    created_at  REAL NOT NULL,
+    updated_at  REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS list_items (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    list_id     INTEGER NOT NULL,
+    recipe_id   INTEGER NOT NULL,
+    sort        INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(list_id, recipe_id)
+);
 """
 
 
@@ -445,6 +459,168 @@ def delete_plan_entry(entry_id: int, conn=None) -> bool:
     conn = conn or _connect()
     try:
         cur = conn.execute("DELETE FROM plan WHERE id=?", (entry_id,))
+        if own:
+            conn.commit()
+        return cur.rowcount > 0
+    finally:
+        if own:
+            conn.close()
+
+
+# ── Rezept-Listen (eigene Sammlungen + importierte) ─────────────────────────
+
+def _list_meta(row) -> dict:
+    data = json.loads(row["data"])
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "image": data.get("image", ""),
+        "tm_versions": data.get("tm_versions", []),
+        "time_total": data.get("time_total", 0),
+        "step_count": len(data.get("steps") or []),
+    }
+
+
+def list_lists(conn=None) -> list[dict]:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        lists = []
+        for row in conn.execute("SELECT * FROM lists ORDER BY updated_at DESC"):
+            items = conn.execute(
+                "SELECT r.id, r.title, r.data, li.sort FROM list_items li "
+                "JOIN recipes r ON r.id = li.recipe_id WHERE li.list_id=? "
+                "ORDER BY li.sort, li.id",
+                (row["id"],),
+            ).fetchall()
+            lists.append({
+                "id": row["id"],
+                "name": row["name"],
+                "source": row["source"],
+                "recipe_count": len(items),
+                "recipes": [_list_meta(i) for i in items],
+                "updated_at": row["updated_at"],
+            })
+        return lists
+    finally:
+        if own:
+            conn.close()
+
+
+def get_list(list_id: int, conn=None) -> dict | None:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        row = conn.execute("SELECT * FROM lists WHERE id=?", (list_id,)).fetchone()
+        if not row:
+            return None
+        items = conn.execute(
+            "SELECT r.id, r.title, r.data, li.sort FROM list_items li "
+            "JOIN recipes r ON r.id = li.recipe_id WHERE li.list_id=? "
+            "ORDER BY li.sort, li.id",
+            (list_id,),
+        ).fetchall()
+        return {
+            "id": row["id"],
+            "name": row["name"],
+            "source": row["source"],
+            "recipe_count": len(items),
+            "recipes": [_list_meta(i) for i in items],
+        }
+    finally:
+        if own:
+            conn.close()
+
+
+def create_list(name: str, recipe_ids=None, source: str = "", conn=None) -> int:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        now = time.time()
+        cur = conn.execute(
+            "INSERT INTO lists (name, source, created_at, updated_at) VALUES (?, ?, ?, ?)",
+            (name, source, now, now),
+        )
+        list_id = int(cur.lastrowid)
+        for sort, rid in enumerate(recipe_ids or []):
+            conn.execute(
+                "INSERT OR IGNORE INTO list_items (list_id, recipe_id, sort) VALUES (?, ?, ?)",
+                (list_id, rid, sort),
+            )
+        if own:
+            conn.commit()
+        return list_id
+    finally:
+        if own:
+            conn.close()
+
+
+def add_to_list(list_id: int, recipe_ids, conn=None) -> int:
+    """Rezepte ANS ENDE der Liste hängen; Duplikate werden ignoriert."""
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        row = conn.execute(
+            "SELECT COALESCE(MAX(sort), -1) FROM list_items WHERE list_id=?",
+            (list_id,),
+        ).fetchone()
+        sort = int(row[0]) + 1
+        added = 0
+        for rid in recipe_ids:
+            cur = conn.execute(
+                "INSERT OR IGNORE INTO list_items (list_id, recipe_id, sort) VALUES (?, ?, ?)",
+                (list_id, rid, sort),
+            )
+            if cur.rowcount > 0:
+                added += 1
+            sort += 1
+        conn.execute("UPDATE lists SET updated_at=? WHERE id=?", (time.time(), list_id))
+        if own:
+            conn.commit()
+        return added
+    finally:
+        if own:
+            conn.close()
+
+
+def remove_from_list(list_id: int, recipe_id: int, conn=None) -> bool:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        cur = conn.execute(
+            "DELETE FROM list_items WHERE list_id=? AND recipe_id=?",
+            (list_id, recipe_id),
+        )
+        if own:
+            conn.commit()
+        return cur.rowcount > 0
+    finally:
+        if own:
+            conn.close()
+
+
+def delete_list(list_id: int, conn=None) -> bool:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        conn.execute("DELETE FROM list_items WHERE list_id=?", (list_id,))
+        cur = conn.execute("DELETE FROM lists WHERE id=?", (list_id,))
+        if own:
+            conn.commit()
+        return cur.rowcount > 0
+    finally:
+        if own:
+            conn.close()
+
+
+def rename_list(list_id: int, name: str, conn=None) -> bool:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE lists SET name=?, updated_at=? WHERE id=?",
+            (name, time.time(), list_id),
+        )
         if own:
             conn.commit()
         return cur.rowcount > 0
