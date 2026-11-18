@@ -5,6 +5,13 @@ import TimerRing, { beep } from "../components/TimerRing.jsx";
 import TmBadges from "../components/TmBadges.jsx";
 import { scaleChipText } from "../format.js";
 
+// Farbschemata für den Koch-Bildschirm – Auswahl wird pro Gerät gespeichert.
+const COOK_THEMES = [
+  { id: "dark", icon: "🌙", label: "Dunkel" },
+  { id: "light", icon: "☀️", label: "Hell" },
+  { id: "cream", icon: "🌾", label: "Creme" },
+];
+
 // Guided-Cooking-Modus im Cookidoo-Stil:
 //  – Vollbild, dunkel, riesige Schritte (Tablett/kochwassersicher gedacht)
 //  – pro Schritt: Einwiegen-Chips, TM-Badges, Timer mit Pieps
@@ -20,8 +27,28 @@ export default function Cook() {
   const [checked, setChecked] = useState({});
   const [finished, setFinished] = useState(false);
   const [showSteps, setShowSteps] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("kochido-theme") || "dark";
+    } catch {
+      return "dark";
+    }
+  });
   const touchStartX = useRef(null);
   const flashRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("kochido-theme", theme);
+    } catch {
+      /* localStorage nicht verfügbar */
+    }
+  }, [theme]);
+
+  const cycleTheme = () => {
+    const i = COOK_THEMES.findIndex((t) => t.id === theme);
+    setTheme(COOK_THEMES[(i + 1) % COOK_THEMES.length].id);
+  };
 
   useEffect(() => {
     getRecipe(id)
@@ -157,9 +184,11 @@ export default function Cook() {
 
   const toggleIng = (k) => setChecked((c) => ({ ...c, [k]: !c[k] }));
 
+  const themeMeta = COOK_THEMES.find((t) => t.id === theme) || COOK_THEMES[0];
+
   return (
     <div
-      className="cook"
+      className={`cook cook-theme-${theme}`}
       ref={flashRef}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
@@ -169,6 +198,13 @@ export default function Cook() {
           ✕
         </Link>
         <div className="cook-title">{recipe.title}</div>
+        <button
+          className="cook-theme-btn"
+          onClick={cycleTheme}
+          title={`Farbschema: ${themeMeta.label} – klicken für das nächste`}
+        >
+          {themeMeta.icon}
+        </button>
         <div className="cook-count">
           {finished
             ? "Fertig"

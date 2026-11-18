@@ -75,8 +75,8 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 .btn-big { padding: 14px 26px; font-size: 1.1rem; border-radius: 14px; }
 .btn-cook { background: var(--accent); color: #fff; }
 .btn-cook:hover { background: var(--accent-dark); }
-.btn-cook-ghost { background: rgba(255, 255, 255, 0.1); color: #f5f5f4; border-color: rgba(255, 255, 255, 0.25); }
-.btn-cook-ghost:hover { background: rgba(255, 255, 255, 0.18); }
+.btn-cook-ghost { background: var(--ck-soft, rgba(255,255,255,0.1)); color: var(--ck-text, #f5f5f4); border-color: var(--ck-line, rgba(255,255,255,0.25)); }
+.btn-cook-ghost:hover { background: var(--ck-soft-hover, rgba(255,255,255,0.18)); }
 
 .input, .textarea, select.input {
   width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
@@ -274,32 +274,58 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 /* ── Koch-Modus (Guided Cooking) ────────────────────────────────────────── */
 
 .cook {
-  position: fixed; inset: 0; z-index: 100; background: #101418; color: #f5f5f4;
+  /* Farbschema-Variablen – umgeschaltet über cook-theme-* */
+  --ck-bg: #101418; --ck-text: #f5f5f4; --ck-muted: #a8a29e;
+  --ck-line: rgba(255, 255, 255, 0.25); --ck-soft: rgba(255, 255, 255, 0.08);
+  --ck-soft-hover: rgba(255, 255, 255, 0.18); --ck-panel: #171b21;
+  --ck-overlay: rgba(0, 0, 0, 0.65); --ck-track: rgba(255, 255, 255, 0.14);
+  --ck-flash: #3f1d1b;
+  position: fixed; inset: 0; z-index: 100; background: var(--ck-bg); color: var(--ck-text);
   display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
   overflow-y: auto; transition: background 0.3s ease;
 }
+.cook-theme-light {
+  --ck-bg: #fdfbf7; --ck-text: #27272a; --ck-muted: #78716c;
+  --ck-line: rgba(0, 0, 0, 0.18); --ck-soft: rgba(0, 0, 0, 0.06);
+  --ck-soft-hover: rgba(0, 0, 0, 0.12); --ck-panel: #ffffff;
+  --ck-overlay: rgba(31, 41, 55, 0.45); --ck-track: rgba(0, 0, 0, 0.12);
+  --ck-flash: #fbd5c7;
+}
+.cook-theme-cream {
+  --ck-bg: #f6ead8; --ck-text: #4a3728; --ck-muted: #8a6f56;
+  --ck-line: rgba(122, 86, 52, 0.35); --ck-soft: rgba(122, 86, 52, 0.10);
+  --ck-soft-hover: rgba(122, 86, 52, 0.18); --ck-panel: #fff8ec;
+  --ck-overlay: rgba(90, 60, 30, 0.45); --ck-track: rgba(122, 86, 52, 0.22);
+  --ck-flash: #f2c9a0;
+}
+.cook-theme-btn {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid var(--ck-line); background: var(--ck-soft);
+  color: var(--ck-text); font-size: 1.1rem; cursor: pointer;
+}
+.cook-theme-btn:hover { background: var(--ck-soft-hover); }
 .cook-error, .cook-loading { align-items: center; justify-content: center; gap: 16px; }
-.cook-error { color: #fca5a5; }
+.cook-error { color: #fca5a5; }  /* Fehler bleibt rot */
 
 .timer-flash { animation: flashbg 0.55s ease 2; }
 @keyframes flashbg {
-  0%, 100% { background: #101418; }
-  50% { background: #3f1d1b; }
+  0%, 100% { background: var(--ck-bg); }
+  50% { background: var(--ck-flash); }
 }
 
 .cook-header { display: flex; align-items: center; gap: 14px; padding: 6px 0; }
 .cook-exit {
-  width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.08); color: #f5f5f4; font-size: 1.15rem;
+  width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--ck-line);
+  background: var(--ck-soft); color: var(--ck-text); font-size: 1.15rem;
   display: inline-flex; align-items: center; justify-content: center; text-decoration: none; flex-shrink: 0;
 }
-.cook-title { flex: 1; font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cook-count { color: #a8a29e; font-size: 0.9rem; flex-shrink: 0; }
+.cook-title { flex: 1; font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ck-text); }
+.cook-count { color: var(--ck-muted); font-size: 0.9rem; flex-shrink: 0; }
 
 .cook-progress { display: flex; gap: 6px; padding: 10px 2px 6px; flex-wrap: wrap; }
 .dot {
   width: 14px; height: 14px; border-radius: 50%; border: none; cursor: pointer;
-  background: rgba(255, 255, 255, 0.22); padding: 0;
+  background: var(--ck-soft-hover); padding: 0;
 }
 .dot-done { background: var(--teal); }
 .dot-active { background: var(--accent); transform: scale(1.25); }
@@ -312,19 +338,19 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 }
 .cook-text {
   font-size: clamp(1.4rem, 4.2vw, 2.2rem); line-height: 1.35; font-weight: 700;
-  color: #fafaf9;
+  color: var(--ck-text);
 }
 .cook .badge { font-size: 1.05rem; padding: 8px 18px; border-radius: 999px; }
 .cook-ings { display: flex; flex-direction: column; gap: 8px; }
-.cook-ings-label { color: #a8a29e; font-size: 0.95rem; }
+.cook-ings-label { color: var(--ck-muted); font-size: 0.95rem; }
 .cook-ings-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .cook-ing {
   background: var(--teal); color: #fff; border: none; border-radius: 14px;
   padding: 12px 18px; font-size: 1.15rem; font-weight: 700; cursor: pointer;
 }
-.cook-ing-done { background: rgba(255, 255, 255, 0.12); color: #a8a29e; text-decoration: line-through; }
-.cook-tip { color: #d6d0c8; font-size: 1rem; max-width: 560px; margin: 0; }
-.cook-next { color: #a8a29e; font-size: 0.88rem; }
+.cook-ing-done { background: var(--ck-soft); color: var(--ck-muted); text-decoration: line-through; }
+.cook-tip { color: var(--ck-muted); font-size: 1rem; max-width: 560px; margin: 0; }
+.cook-next { color: var(--ck-muted); font-size: 0.88rem; }
 
 .timer-ring {
   position: relative; flex-shrink: 0;
@@ -333,7 +359,7 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
   padding-bottom: 4px;
 }
 .timer-svg { width: 100%; transform: rotate(-90deg); display: block; }
-.timer-track { fill: none; stroke: rgba(255, 255, 255, 0.14); stroke-width: 16; }
+.timer-track { fill: none; stroke: var(--ck-track); stroke-width: 16; }
 .timer-fill { fill: none; stroke: var(--accent); stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.9s linear; }
 .timer-running .timer-fill { stroke: #f97316; }
 .timer-done .timer-fill { stroke: var(--teal); }
@@ -343,7 +369,7 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
   transform: translateY(-50%);
   display: flex; align-items: center; justify-content: center;
   font-size: clamp(2rem, 7.5vw, 3.4rem); font-weight: 800; font-variant-numeric: tabular-nums;
-  color: #fafaf9; line-height: 1;
+  color: var(--ck-text); line-height: 1;
 }
 .timer-controls {
   position: static;
@@ -356,11 +382,12 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
   .timer-controls .btn-cook { padding: 9px 20px; font-size: 1rem; }
   .timer-controls .btn-cook-ghost { padding: 9px 14px; font-size: 0.92rem; }
 }
-.timer-done .timer-value { color: #5eead4; }
+.timer-done .timer-value { color: var(--teal); }
+.cook-theme-dark .timer-done .timer-value { color: #5eead4; }
 
 .cook-nav {
   display: flex; gap: 14px; justify-content: center; padding: 12px 0 4px;
-  position: sticky; bottom: 0; background: linear-gradient(transparent, #101418 30%);
+  position: sticky; bottom: 0; background: linear-gradient(transparent, var(--ck-bg) 30%);
 }
 .cook-nav .btn-big { min-width: 150px; }
 
@@ -467,17 +494,17 @@ button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
 
 .cook-progress { display: flex; gap: 6px; padding: 10px 2px 6px; flex-wrap: wrap; align-items: center; }
 .cook-overview-btn {
-  margin-left: auto; background: rgba(255, 255, 255, 0.1); color: #f5f5f4;
-  border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
+  margin-left: auto; background: var(--ck-soft); color: var(--ck-text);
+  border: 1.5px solid var(--ck-line); border-radius: 999px;
   padding: 6px 14px; font-size: 0.85rem; cursor: pointer; font-weight: 600;
 }
-.cook-overview-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.cook-overview-btn:hover { background: var(--ck-soft-hover); }
 .cook-overview {
-  position: fixed; inset: 0; z-index: 120; background: rgba(0, 0, 0, 0.65);
+  position: fixed; inset: 0; z-index: 120; background: var(--ck-overlay);
   display: flex; align-items: flex-end; justify-content: center;
 }
 .cook-overview-panel {
-  background: #171b21; color: #f5f5f4; border-radius: 20px 20px 0 0;
+  background: var(--ck-panel); color: var(--ck-text); border-radius: 20px 20px 0 0;
   width: min(720px, 100%); max-height: 78vh; overflow-y: auto; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
 }
 .cook-overview-head {
@@ -485,24 +512,24 @@ button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
   margin-bottom: 12px; font-size: 1.1rem;
 }
 .cook-overview-close {
-  background: rgba(255, 255, 255, 0.1); border: none; color: #f5f5f4;
+  background: var(--ck-soft); border: none; color: var(--ck-text);
   width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1rem;
 }
 .cook-overview-step {
   display: flex; gap: 12px; width: 100%; text-align: left; align-items: flex-start;
-  background: transparent; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 12px 6px; cursor: pointer; color: #e7e5e4; font-size: 1rem; line-height: 1.4;
+  background: transparent; border: none; border-bottom: 1px solid var(--ck-soft-hover);
+  padding: 12px 6px; cursor: pointer; color: var(--ck-text); font-size: 1rem; line-height: 1.4;
 }
 .cook-overview-step:last-child { border-bottom: none; }
 .cook-overview-step.current { background: rgba(232, 84, 47, 0.15); }
 .cook-overview-num {
   flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12); display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ck-soft-hover); display: inline-flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 0.85rem;
 }
 .cook-overview-step.current .cook-overview-num { background: var(--accent); color: #fff; }
 .cook-overview-text { flex: 1; }
-.cook-overview-text small { display: block; color: #a8a29e; margin-top: 3px; }
+.cook-overview-text small { display: block; color: var(--ck-muted); margin-top: 3px; }
 
 /* ── Wochenplan ─────────────────────────────────────────────────────────── */
 
