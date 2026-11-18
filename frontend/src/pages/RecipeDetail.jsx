@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { deleteRecipe, getRecipe, setFavorite } from "../api.js";
 import TmBadges from "../components/TmBadges.jsx";
-import { fmtAmount, fmtDuration, scaleAmount } from "../format.js";
+import { fmtAmount, fmtDuration, scaleAmount, scaleChipText } from "../format.js";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -93,7 +93,10 @@ export default function RecipeDetail() {
             </div>
           )}
           <div className="detail-actions">
-            <Link to={`/kochen/${recipe.id}`} className="btn btn-cook btn-big">
+            <Link
+              to={`/kochen/${recipe.id}?servings=${servings}`}
+              className="btn btn-cook btn-big"
+            >
               🍳 Kochen starten
             </Link>
             <Link to={`/rezept/${recipe.id}/bearbeiten`} className="btn btn-outline">
@@ -117,6 +120,29 @@ export default function RecipeDetail() {
           <div className="card-head">
             <h2>Zutaten</h2>
             <div className="servings-stepper">
+              <div className="stepper-presets">
+                <button
+                  className="preset-btn"
+                  onClick={() => setServings(Math.max(1, Math.round((recipe.servings || 4) / 2)))}
+                  title="Halbieren"
+                >
+                  ½
+                </button>
+                <button
+                  className="preset-btn"
+                  onClick={() => setServings(recipe.servings || 4)}
+                  title="Original-Mengen"
+                >
+                  1×
+                </button>
+                <button
+                  className="preset-btn"
+                  onClick={() => setServings((recipe.servings || 4) * 2)}
+                  title="Verdoppeln"
+                >
+                  ×2
+                </button>
+              </div>
               <button
                 className="stepper-btn"
                 onClick={() => setServings(Math.max(1, servings - 1))}
@@ -145,6 +171,10 @@ export default function RecipeDetail() {
             ))}
             {recipe.ingredients.length === 0 && <li className="muted">Keine Zutaten erfasst.</li>}
           </ul>
+          <p className="muted servings-hint">
+            Mengen rechnen automatisch hoch/runter — auch in den Einwiegen-Chips der
+            Schritte und im Koch-Modus.
+          </p>
         </section>
 
         <section className="card">
@@ -163,7 +193,7 @@ export default function RecipeDetail() {
                     <div className="step-ings">
                       {step.ingredients.map((t, k) => (
                         <span key={k} className="step-ing">
-                          ⚖ {t}
+                          ⚖ {scaleChipText(t, factor)}
                         </span>
                       ))}
                     </div>

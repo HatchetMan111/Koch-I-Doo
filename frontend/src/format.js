@@ -23,6 +23,15 @@ export function scaleAmount(amount, factor) {
   return Math.round(amount * factor * 8) / 8;
 }
 
+// Skaliert die erste Zahl in einem Zutaten-Text ("200 g Mehl" → "300 g Mehl")
+export function scaleChipText(text, factor) {
+  if (!factor || Math.abs(factor - 1) < 1e-9) return text;
+  return text.replace(/(\d+(?:[.,]\d+)?)/, (m) => {
+    const scaled = Math.round(parseFloat(m.replace(",", ".")) * factor * 8) / 8;
+    return fmtAmount(scaled);
+  });
+}
+
 export function fmtTimer(seconds) {
   const s = Math.max(0, Math.round(seconds));
   const h = Math.floor(s / 3600);

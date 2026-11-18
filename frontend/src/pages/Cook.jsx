@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { getRecipe } from "../api.js";
 import TimerRing, { beep } from "../components/TimerRing.jsx";
 import TmBadges from "../components/TmBadges.jsx";
+import { scaleChipText } from "../format.js";
 
 // Guided-Cooking-Modus im Cookidoo-Stil:
 //  – Vollbild, dunkel, riesige Schritte (Tablett/kochwassersicher gedacht)
@@ -10,6 +11,7 @@ import TmBadges from "../components/TmBadges.jsx";
 //  – Bedienung: Tasten ←/→/Leertaste, Swipe oder große Buttons
 export default function Cook() {
   const { id } = useParams();
+  const location = useLocation();
   const [recipe, setRecipe] = useState(null);
   const [error, setError] = useState("");
   const [idx, setIdx] = useState(0);
@@ -28,6 +30,14 @@ export default function Cook() {
 
   const steps = recipe?.steps || [];
   const step = steps[idx];
+
+  // Portionen aus dem Detail-Seitenschalter (?servings=N) – Mengen in den
+  // Einwiegen-Chips skalieren mit.
+  const servingsParam = Number(new URLSearchParams(location.search).get("servings")) || 0;
+  const factor =
+    recipe && recipe.servings && servingsParam
+      ? servingsParam / recipe.servings
+      : 1;
 
   // Timer pro Schritt zurücksetzen
   useEffect(() => {
@@ -159,7 +169,11 @@ export default function Cook() {
         </Link>
         <div className="cook-title">{recipe.title}</div>
         <div className="cook-count">
-          {finished ? "Fertig" : `Schritt ${idx + 1} / ${steps.length}`}
+          {finished
+            ? "Fertig"
+            : factor !== 1
+              ? `${Math.round(servingsParam)} ${recipe.serving_unit || "Portionen"} · Schritt ${idx + 1}/${steps.length}`
+              : `Schritt ${idx + 1} / ${steps.length}`}
         </div>
       </header>
 
@@ -182,7 +196,8 @@ export default function Cook() {
           <div className="cook-done-emoji">🎉</div>
           <h1>Rezept ist fertig!</h1>
           <p className="muted">
-            {recipe.title} – {steps.length} Schritte gekocht.
+            {recipe.title} – {steps.length} Schritte gekocht
+            {factor !== 1 ? ` für ${Math.round(servingsParam)} ${recipe.serving_unit || "Portionen"}` : ""}.
           </p>
           <div className="cook-done-actions">
             <Link className="btn btn-cook" to={`/rezept/${recipe.id}`}>
@@ -214,7 +229,7 @@ export default function Cook() {
                       className={`cook-ing ${checked[k] ? "cook-ing-done" : ""}`}
                       onClick={() => toggleIng(k)}
                     >
-                      {t}
+                      {scaleChipText(t, factor)}
                     </button>
                   ))}
                 </div>

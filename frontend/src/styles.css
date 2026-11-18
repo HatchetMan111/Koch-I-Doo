@@ -165,7 +165,15 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 .detail-columns { display: grid; gap: 18px; grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.4fr); }
 @media (max-width: 800px) { .detail-columns { grid-template-columns: 1fr; } .detail-hero { flex-direction: column; } .detail-img { width: 100%; } }
 
-.servings-stepper { display: inline-flex; align-items: center; gap: 8px; }
+.servings-stepper { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.stepper-presets { display: inline-flex; gap: 5px; margin-right: 6px; }
+.preset-btn {
+  min-width: 40px; height: 34px; padding: 0 10px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--card); cursor: pointer;
+  font-weight: 800; font-size: 0.9rem; color: var(--text);
+}
+.preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+.servings-hint { margin-top: 8px; font-size: 0.82rem; }
 .stepper-btn {
   width: 34px; height: 34px; border-radius: 10px; border: 1.5px solid var(--border);
   background: var(--card); font-size: 1.1rem; cursor: pointer; font-weight: 700;
