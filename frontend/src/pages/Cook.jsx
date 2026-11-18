@@ -19,6 +19,7 @@ export default function Cook() {
   const [running, setRunning] = useState(false);
   const [checked, setChecked] = useState({});
   const [finished, setFinished] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
   const touchStartX = useRef(null);
   const flashRef = useRef(null);
 
@@ -189,7 +190,46 @@ export default function Cook() {
             title={`Schritt ${i + 1}`}
           />
         ))}
+        <button
+          className="cook-overview-btn"
+          onClick={() => setShowSteps(true)}
+          title="Alle Schritte als Vorschau ansehen"
+        >
+          📋 Schritte
+        </button>
       </div>
+
+      {showSteps && (
+        <div className="cook-overview" onClick={() => setShowSteps(false)}>
+          <div className="cook-overview-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="cook-overview-head">
+              <b>Schritt-Übersicht</b>
+              <button className="cook-overview-close" onClick={() => setShowSteps(false)}>
+                ✕
+              </button>
+            </div>
+            {steps.map((s, i) => (
+              <button
+                key={i}
+                className={`cook-overview-step ${i === idx && !finished ? "current" : ""}`}
+                onClick={() => {
+                  setIdx(i);
+                  setFinished(false);
+                  setShowSteps(false);
+                }}
+              >
+                <span className="cook-overview-num">{i + 1}</span>
+                <span className="cook-overview-text">
+                  {s.text}
+                  {s.ingredients?.length > 0 && (
+                    <small> · ⚖ {s.ingredients.join(", ")}</small>
+                  )}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {finished ? (
         <div className="cook-done">

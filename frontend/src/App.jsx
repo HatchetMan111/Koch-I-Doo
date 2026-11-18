@@ -5,6 +5,8 @@ import Import from "./pages/Import.jsx";
 import RecipeDetail from "./pages/RecipeDetail.jsx";
 import Editor from "./pages/Editor.jsx";
 import Cook from "./pages/Cook.jsx";
+import Plan from "./pages/Plan.jsx";
+import Discover from "./pages/Discover.jsx";
 
 export default function App() {
   const location = useLocation();
@@ -30,6 +32,12 @@ export default function App() {
           </span>
         </Link>
         <nav className="topnav">
+          <Link to="/entdecken" className="btn btn-outline">
+            🧭 Entdecken
+          </Link>
+          <Link to="/plan" className="btn btn-outline">
+            📅 Woche
+          </Link>
           <Link to="/import" className="btn btn-outline">
             ⤓ Importieren
           </Link>
@@ -42,6 +50,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/import" element={<Import />} />
+          <Route path="/entdecken" element={<Discover />} />
+          <Route path="/plan" element={<Plan />} />
           <Route path="/neu" element={<Editor />} />
           <Route path="/rezept/:id" element={<RecipeDetail />} />
           <Route path="/rezept/:id/bearbeiten" element={<Editor />} />
@@ -50,7 +60,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.1.3 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.2.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
     </div>
   );

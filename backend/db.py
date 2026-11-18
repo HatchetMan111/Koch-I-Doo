@@ -21,6 +21,19 @@ CREATE TABLE IF NOT EXISTS recipes (
     updated_at  REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title);
+CREATE TABLE IF NOT EXISTS plan (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_date   TEXT NOT NULL,
+    slot        TEXT NOT NULL DEFAULT '',
+    recipe_id   INTEGER NOT NULL,
+    servings    INTEGER,
+    created_at  REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_plan_date ON plan(plan_date);
+CREATE TABLE IF NOT EXISTS meta (
+    key         TEXT PRIMARY KEY,
+    value       TEXT NOT NULL
+);
 """
 
 
@@ -37,14 +50,75 @@ def init_db(seed_file: Path | None = None) -> None:
     conn = _connect()
     try:
         conn.executescript(_SCHEMA)
-        if count_recipes(conn) == 0 and seed_file and Path(seed_file).exists():
-            with open(seed_file, "r", encoding="utf-8") as fh:
-                seeds = json.load(fh)
-            for recipe in seeds:
-                insert_recipe(recipe, conn=conn)
-            conn.commit()
+        count = count_recipes(conn)
+
+        demo = None
+        if seed_file and Path(seed_file).exists():
+            _, demo = _load_seed_file(seed_file)
+
+        grund_ver, grund = None, None
+        grund_file = Path(__file__).parent / "seed" / "grundrezepte.json"
+        if grund_file.exists():
+            grund_ver, grund = _load_seed_file(grund_file)
+
+        if count == 0:
+            recipes = (demo or []) + (grund or [])
+            _insert_seed_recipes(conn, recipes)
+            if grund_ver:
+                set_meta("seed_grundrezepte", grund_ver, conn=conn)
+        elif grund_ver and grund_ver != (get_meta("seed_grundrezepte", conn=conn) or ""):
+            # Grundrezept-Paket nachziehen, ohne bestehende Rezepte zu dublieren
+            existing = {row[0] for row in conn.execute("SELECT title FROM recipes")}
+            new = [r for r in (grund or []) if r.get("title") not in existing]
+            if new:
+                _insert_seed_recipes(conn, new)
+            set_meta("seed_grundrezepte", grund_ver, conn=conn)
+        conn.commit()
     finally:
         conn.close()
+
+
+def _load_seed_file(path):
+    """Seed-Datei: bare Liste oder {"version": "x", "recipes": [...]}."""
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    if isinstance(data, dict) and "recipes" in data:
+        return str(data.get("version", "0")), data["recipes"]
+    return None, data
+
+
+def _insert_seed_recipes(conn, recipes) -> None:
+    from importers.common import match_ingredients_to_steps
+
+    for recipe in recipes or []:
+        insert_recipe(match_ingredients_to_steps(recipe), conn=conn)
+
+
+def get_meta(key: str, conn=None) -> str | None:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        row = conn.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
+        return row["value"] if row else None
+    finally:
+        if own:
+            conn.close()
+
+
+def set_meta(key: str, value: str, conn=None) -> None:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        conn.execute(
+            "INSERT INTO meta (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value),
+        )
+        if own:
+            conn.commit()
+    finally:
+        if own:
+            conn.close()
 
 
 def _row_to_meta(row) -> dict:
@@ -187,6 +261,70 @@ def set_favorite(recipe_id: int, favorite: bool, conn=None) -> bool:
     conn = conn or _connect()
     try:
         cur = conn.execute("UPDATE recipes SET favorite=? WHERE id=?", (1 if favorite else 0, recipe_id))
+        if own:
+            conn.commit()
+        return cur.rowcount > 0
+    finally:
+        if own:
+            conn.close()
+
+
+# ── Wochenplan ──────────────────────────────────────────────────────────────
+
+def list_plan(date_from: str, date_to: str, conn=None) -> list[dict]:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        rows = conn.execute(
+            "SELECT p.id, p.plan_date, p.slot, p.servings, p.recipe_id, r.title, r.data "
+            "FROM plan p JOIN recipes r ON r.id = p.recipe_id "
+            "WHERE p.plan_date >= ? AND p.plan_date <= ? "
+            "ORDER BY p.plan_date, p.id",
+            (date_from, date_to),
+        ).fetchall()
+        out = []
+        for row in rows:
+            data = json.loads(row["data"])
+            out.append({
+                "id": row["id"],
+                "plan_date": row["plan_date"],
+                "slot": row["slot"],
+                "servings": row["servings"] or data.get("servings"),
+                "serving_unit": data.get("serving_unit", "Portionen"),
+                "recipe_id": row["recipe_id"],
+                "title": row["title"],
+                "image": data.get("image", ""),
+                "time_total": data.get("time_total", 0),
+            })
+        return out
+    finally:
+        if own:
+            conn.close()
+
+
+def add_plan_entry(plan_date: str, recipe_id: int, servings: int | None = None,
+                   slot: str = "", conn=None) -> int:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO plan (plan_date, slot, recipe_id, servings, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (plan_date, slot, recipe_id, servings, time.time()),
+        )
+        if own:
+            conn.commit()
+        return int(cur.lastrowid)
+    finally:
+        if own:
+            conn.close()
+
+
+def delete_plan_entry(entry_id: int, conn=None) -> bool:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        cur = conn.execute("DELETE FROM plan WHERE id=?", (entry_id,))
         if own:
             conn.commit()
         return cur.rowcount > 0

@@ -3,11 +3,13 @@
 import hashlib
 import json
 import os
+import re
 import urllib.error
 import urllib.request
+from datetime import date, timedelta
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -20,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.1.3"
+APP_VERSION = "1.2.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -199,6 +201,43 @@ def api_favorite(recipe_id: int, body: FavoriteBody):
     if not db.set_favorite(recipe_id, body.favorite):
         raise HTTPException(status_code=404, detail=f"Rezept {recipe_id} nicht gefunden")
     return {"ok": True, "favorite": body.favorite}
+
+
+# ── Wochenplan ──────────────────────────────────────────────────────────────
+
+class PlanBody(BaseModel):
+    plan_date: str  # YYYY-MM-DD
+    recipe_id: int
+    servings: int | None = None
+    slot: str = ""
+
+
+@app.get("/api/plan")
+def api_plan(from_: str | None = Query(None, alias="from"), to: str | None = Query(None)):
+    """Planeinträge; ohne Parameter die aktuelle Woche (Mo–So)."""
+    if not from_ or not to:
+        today = date.today()
+        monday = today - timedelta(days=today.weekday())
+        from_ = from_ or monday.isoformat()
+        to = to or (monday + timedelta(days=6)).isoformat()
+    return db.list_plan(from_, to)
+
+
+@app.post("/api/plan")
+def api_add_plan(body: PlanBody):
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", body.plan_date):
+        raise HTTPException(status_code=400, detail=f"plan_date muss YYYY-MM-DD sein, war: {body.plan_date}")
+    if db.get_recipe(body.recipe_id) is None:
+        raise HTTPException(status_code=404, detail=f"Rezept {body.recipe_id} nicht gefunden")
+    entry_id = db.add_plan_entry(body.plan_date, body.recipe_id, body.servings, body.slot)
+    return {"id": entry_id, "ok": True}
+
+
+@app.delete("/api/plan/{entry_id}")
+def api_delete_plan(entry_id: int):
+    if not db.delete_plan_entry(entry_id):
+        raise HTTPException(status_code=404, detail=f"Planeintrag {entry_id} nicht gefunden")
+    return {"ok": True}
 
 
 # ── Import ──────────────────────────────────────────────────────────────────

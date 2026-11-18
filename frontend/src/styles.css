@@ -337,9 +337,10 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 .timer-fill { fill: none; stroke: var(--accent); stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.9s linear; }
 .timer-running .timer-fill { stroke: #f97316; }
 .timer-done .timer-fill { stroke: var(--teal); }
-/* Zeit mittig IM Kreis; Buttons darunter im normalen Fluss (kein Überlappen) */
+/* Zeit exakt in der Kreismitte; Buttons darunter im normalen Fluss */
 .timer-value {
-  position: absolute; left: 0; right: 0; top: 27%; height: 46%;
+  position: absolute; left: 0; right: 0; top: 50%; height: auto;
+  transform: translateY(-50%);
   display: flex; align-items: center; justify-content: center;
   font-size: clamp(2rem, 7.5vw, 3.4rem); font-weight: 800; font-variant-numeric: tabular-nums;
   color: #fafaf9; line-height: 1;
@@ -460,3 +461,121 @@ button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
   .cook .badge { font-size: 0.9rem; padding: 6px 13px; }
   .cook-progress { padding-top: 6px; }
 }
+
+/* ── Koch-Modus: Schritt-Übersicht ──────────────────────────────────────── */
+
+.cook-progress { display: flex; gap: 6px; padding: 10px 2px 6px; flex-wrap: wrap; align-items: center; }
+.cook-overview-btn {
+  margin-left: auto; background: rgba(255, 255, 255, 0.1); color: #f5f5f4;
+  border: 1.5px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
+  padding: 6px 14px; font-size: 0.85rem; cursor: pointer; font-weight: 600;
+}
+.cook-overview-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.cook-overview {
+  position: fixed; inset: 0; z-index: 120; background: rgba(0, 0, 0, 0.65);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.cook-overview-panel {
+  background: #171b21; color: #f5f5f4; border-radius: 20px 20px 0 0;
+  width: min(720px, 100%); max-height: 78vh; overflow-y: auto; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.cook-overview-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px; font-size: 1.1rem;
+}
+.cook-overview-close {
+  background: rgba(255, 255, 255, 0.1); border: none; color: #f5f5f4;
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 1rem;
+}
+.cook-overview-step {
+  display: flex; gap: 12px; width: 100%; text-align: left; align-items: flex-start;
+  background: transparent; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 6px; cursor: pointer; color: #e7e5e4; font-size: 1rem; line-height: 1.4;
+}
+.cook-overview-step:last-child { border-bottom: none; }
+.cook-overview-step.current { background: rgba(232, 84, 47, 0.15); }
+.cook-overview-num {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12); display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem;
+}
+.cook-overview-step.current .cook-overview-num { background: var(--accent); color: #fff; }
+.cook-overview-text { flex: 1; }
+.cook-overview-text small { display: block; color: #a8a29e; margin-top: 3px; }
+
+/* ── Wochenplan ─────────────────────────────────────────────────────────── */
+
+.plan-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.plan-week-label { font-weight: 700; margin-left: auto; }
+.plan-grid {
+  display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+.plan-day { display: flex; flex-direction: column; margin-bottom: 0; padding: 14px 16px; }
+.plan-today { border: 2px solid var(--accent); }
+.plan-day-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.plan-empty { margin: 6px 0 12px; font-size: 0.85rem; }
+.plan-list { list-style: none; margin: 0 0 10px; padding: 0; flex: 1; }
+.plan-entry {
+  display: flex; align-items: center; gap: 8px; padding: 8px 4px;
+  border-bottom: 1px dashed var(--border);
+}
+.plan-entry:last-child { border-bottom: none; }
+.plan-entry-link { flex: 1; text-decoration: none; color: var(--text); line-height: 1.3; }
+.plan-entry-link small { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+.plan-add { margin-top: auto; }
+
+.picker-overlay {
+  position: fixed; inset: 0; z-index: 130; background: rgba(0, 0, 0, 0.55);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.picker-panel {
+  background: var(--card); border-radius: 20px 20px 0 0; width: min(640px, 100%);
+  max-height: 80vh; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px;
+}
+.picker-head { display: flex; justify-content: space-between; align-items: center; font-size: 1.05rem; }
+.picker-close {
+  background: var(--bg); border: none; width: 36px; height: 36px;
+  border-radius: 50%; cursor: pointer; font-size: 1rem;
+}
+.picker-list { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 120px; }
+.picker-item {
+  text-align: left; background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 10px 14px; cursor: pointer; color: var(--text);
+}
+.picker-item:hover { border-color: var(--accent); }
+.picker-item small { display: block; color: var(--muted); margin-top: 2px; }
+
+/* ── Entdecken ──────────────────────────────────────────────────────────── */
+
+.discover-actions { display: flex; justify-content: center; margin: 14px 0 20px; }
+.category-grid {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  margin-bottom: 22px;
+}
+.category-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 16px 10px; margin-bottom: 0; cursor: pointer; border: 2px solid transparent;
+  position: relative;
+}
+.category-card:hover { transform: translateY(-2px); }
+.category-active { border-color: var(--accent); background: var(--accent-soft); }
+.category-icon { font-size: 2rem; }
+.category-name { font-weight: 700; text-align: center; line-height: 1.2; }
+.category-count {
+  background: var(--accent); color: #fff; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700; padding: 2px 10px; margin-top: 4px;
+}
+.discover-list { display: flex; flex-direction: column; gap: 8px; }
+.discover-item {
+  display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--text);
+  padding: 12px 16px; margin-bottom: 0;
+}
+.discover-emoji { font-size: 1.8rem; width: 44px; text-align: center; flex-shrink: 0; }
+.discover-emoji img { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; }
+.discover-body { flex: 1; min-width: 0; }
+.discover-body b { display: block; line-height: 1.3; }
+.discover-body small { color: var(--muted); }
+.discover-arrow { color: var(--muted); font-size: 1.2rem; }

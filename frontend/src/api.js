@@ -64,3 +64,18 @@ export const importBatch = (recipes) =>
     method: "POST",
     body: JSON.stringify({ recipes }),
   });
+
+// Wochenplan
+export const getPlan = (from, to) => {
+  const params = new URLSearchParams();
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const qs = params.toString();
+  return api(`/api/plan${qs ? `?${qs}` : ""}`);
+};
+export const addPlan = (plan_date, recipe_id, servings, slot = "") =>
+  api("/api/plan", {
+    method: "POST",
+    body: JSON.stringify({ plan_date, recipe_id, servings, slot }),
+  });
+export const deletePlan = (id) => api(`/api/plan/${id}`, { method: "DELETE" });
