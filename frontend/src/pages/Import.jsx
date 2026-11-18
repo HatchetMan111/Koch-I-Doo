@@ -127,7 +127,9 @@ function WarningBox({ warnings }) {
 
 function UrlTab() {
   const [url, setUrl] = useState("");
+  const [maxRecipes, setMaxRecipes] = useState(30);
   const [rawPreview, setRawPreview] = useState(null);
+  const [multiPreviews, setMultiPreviews] = useState(null);
   const [preview, setPreview] = useState(null);
   const [tmConvert, setTmConvert] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -141,16 +143,26 @@ function UrlTab() {
     setError("");
     setWarnings([]);
     setPreview(null);
+    setMultiPreviews(null);
     setRawPreview(null);
     try {
-      const result = await importFromUrl(url.trim());
-      setRawPreview(result.recipes[0]);
-      if (tmConvert) {
-        const conv = await convertToTm(result.recipes[0]);
-        setPreview(conv.recipe);
-        setWarnings(conv.warnings);
+      const result = await importFromUrl(url.trim(), Number(maxRecipes) || 0);
+      setWarnings(result.warnings || []);
+      if (result.recipes.length > 1) {
+        // Sammlung/Suchseite: Umwandler hier absichtlich nicht automatisch –
+        // jede Seite einzeln prüfen ist Aufwand; Vorschau zeigt TM-Badges,
+        // die Chefkoch-Seite hergibt.
+        setMultiPreviews(result.recipes);
       } else {
-        setPreview(result.recipes[0]);
+        const first = result.recipes[0];
+        setRawPreview(first);
+        if (tmConvert) {
+          const conv = await convertToTm(first);
+          setPreview(conv.recipe);
+          setWarnings((w) => [...(result.warnings || []), ...conv.warnings]);
+        } else {
+          setPreview(first);
+        }
       }
     } catch (err) {
       setError(String(err.message || err));
@@ -187,25 +199,46 @@ function UrlTab() {
     }
   };
 
+  const saveAll = async () => {
+    setSaving(true);
+    try {
+      await importBatch(multiPreviews);
+      navigate("/");
+    } catch (err) {
+      setError(String(err.message || err));
+      setSaving(false);
+    }
+  };
+
   return (
     <div>
       <div className="form-row">
         <input
           className="input"
-          placeholder="https://www.chefkoch.de/rezepte/…"
+          placeholder="Chefkoch-Rezept-URL ODER Such-/Sammlungsseite (viele Rezepte)"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && url && load()}
         />
+        <input
+          className="input form-narrow"
+          type="number"
+          min={0}
+          max={100}
+          title="Max. Rezepte bei Sammlungs-/Suchseiten (0 = alle auf der Seite, max 100)"
+          value={maxRecipes}
+          onChange={(e) => setMaxRecipes(e.target.value)}
+        />
         <button className="btn btn-primary" onClick={load} disabled={!url || loading}>
-          {loading ? "Lade …" : "Rezept laden"}
+          {loading ? "Lade …" : "Rezept(e) laden"}
         </button>
       </div>
       <p className="hint">
-        Funktioniert mit Chefkoch und allen Seiten, die schema.org-Rezeptdaten
-        (JSON-LD) einbetten. TM-Schritte wie „3 Min./Stufe 2“ werden automatisch
-        erkannt – fehlen sie, wandelt der Schalter unten die Schritte in
-        Thermomix-typische Guided-Schritte um.
+        Einzel-URL → ein Rezept. Chefkoch-Suchseite/Sammlung/Kochbuch-URL → alle
+        Rezepte der Seite (max. 100, höflich nacheinander geladen – bei 30
+        Rezepten ~30 Sek.). TM-Schritte wie „3 Min./Stufe 2“ werden automatisch
+        erkannt; bei Einzelrezepten wandelt der Schalter fehlende Parameter in
+        Thermomix-Schritte um.
       </p>
       <TmConvertToggle checked={tmConvert} onChange={toggleConvert} />
       <ErrorBox error={error} />
@@ -213,6 +246,14 @@ function UrlTab() {
         <PreviewList
           recipes={[preview]}
           onSaveOne={save}
+          saving={saving}
+          savedIds={new Set()}
+        />
+      )}
+      {multiPreviews && (
+        <PreviewList
+          recipes={multiPreviews}
+          onSaveAll={saveAll}
           saving={saving}
           savedIds={new Set()}
         />

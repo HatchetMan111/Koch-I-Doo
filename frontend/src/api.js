@@ -44,8 +44,11 @@ export const setFavorite = (id, favorite) =>
     body: JSON.stringify({ favorite }),
   });
 
-export const importFromUrl = (url) =>
-  api("/api/import/url", { method: "POST", body: JSON.stringify({ url }) });
+export const importFromUrl = (url, maxRecipes = 30) =>
+  api("/api/import/url", {
+    method: "POST",
+    body: JSON.stringify({ url, max_recipes: Number(maxRecipes) || 0 }),
+  });
 export const importFromText = (text, title) =>
   api("/api/import/text", {
     method: "POST",

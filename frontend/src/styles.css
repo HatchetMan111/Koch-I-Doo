@@ -330,22 +330,24 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
   position: relative; flex-shrink: 0;
   width: clamp(200px, 52vw, 280px);
   margin-top: 2px;
+  padding-bottom: 4px;
 }
 .timer-svg { width: 100%; transform: rotate(-90deg); display: block; }
 .timer-track { fill: none; stroke: rgba(255, 255, 255, 0.14); stroke-width: 16; }
 .timer-fill { fill: none; stroke: var(--accent); stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.9s linear; }
 .timer-running .timer-fill { stroke: #f97316; }
 .timer-done .timer-fill { stroke: var(--teal); }
-/* Zeit oben in der Ring-Mitte, Buttons darunter – beides INNERHALB des Kreises */
+/* Zeit mittig IM Kreis; Buttons darunter im normalen Fluss (kein Überlappen) */
 .timer-value {
-  position: absolute; left: 0; right: 0; top: 30%; height: 32%;
+  position: absolute; left: 0; right: 0; top: 27%; height: 46%;
   display: flex; align-items: center; justify-content: center;
   font-size: clamp(2rem, 7.5vw, 3.4rem); font-weight: 800; font-variant-numeric: tabular-nums;
   color: #fafaf9; line-height: 1;
 }
 .timer-controls {
-  position: absolute; left: 0; right: 0; top: 60%;
-  display: flex; flex-wrap: nowrap; gap: 6px; justify-content: center; align-items: center;
+  position: static;
+  display: flex; flex-wrap: nowrap; gap: 8px; justify-content: center; align-items: center;
+  margin-top: 12px;
 }
 .timer-controls .btn-cook { padding: 7px 14px; font-size: 0.9rem; border-radius: 999px; white-space: nowrap; }
 .timer-controls .btn-cook-ghost { padding: 7px 11px; font-size: 0.85rem; border-radius: 999px; white-space: nowrap; }
@@ -382,6 +384,7 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 }
 .tm-convert-toggle input { width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
 .field-narrow { max-width: 150px; }
+.form-narrow { flex: 0 0 120px; width: 120px; }
 .field-narrow .input { min-width: 120px; }
 
 /* ── Mobil-Optimierung (Tablett/Handy in der Küche) ─────────────────────── */

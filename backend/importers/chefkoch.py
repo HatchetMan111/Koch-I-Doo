@@ -254,3 +254,77 @@ def import_from_url(url: str) -> dict:
             f"– Seite liefert unvollständige JSON-LD-Daten."
         )
     return match_ingredients_to_steps(recipe)
+
+
+# ── Sammlungs-/Suchseiten: viele Rezepte auf einmal ─────────────────────────
+
+_RE_RECIPE_LINK = re.compile(
+    r"https?://(?:www\.)?chefkoch\.de/rezepte/(\d+)/[^\"'\s<>]+\.html",
+    re.IGNORECASE,
+)
+
+
+def extract_recipe_links(html: str) -> list[str]:
+    """Alle eindeutigen Chefkoch-Rezept-Links einer Seite (Suche, Sammlung,
+    Kochbuch) in Reihenfolge ihres Auftretens."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in _RE_RECIPE_LINK.finditer(html):
+        rid = m.group(1)
+        if rid not in seen:
+            seen.add(rid)
+            out.append(m.group(0))
+    return out
+
+
+def import_from_url_multi(url: str, max_recipes: int = 30):
+    """URL importieren – erkennt automatisch, ob die Seite EIN Rezept ist oder
+    eine Sammlung/Suchseite mit vielen Chefkoch-Rezept-Links.
+
+    Rückgabe: (rezepte: list[dict], warnungen: list[str])
+    """
+    if not re.match(r"^https?://", url.strip()):
+        raise ImportFehler(f"Kein gültiger URL-Anfang: '{url}' (https://… erwartet)")
+    page = fetch_html(url.strip())
+
+    links = extract_recipe_links(page)
+    page_is_recipe = False
+    try:
+        jsonld = extract_jsonld_recipes(page)
+        page_is_recipe = bool(jsonld)
+    except ImportFehler:
+        page_is_recipe = False
+
+    if page_is_recipe and len(links) <= 1:
+        best = max(jsonld, key=lambda r: len(json.dumps(r, ensure_ascii=False)))
+        return [match_ingredients_to_steps(recipe_from_jsonld(best, url.strip()))], []
+
+    if not links:
+        raise ImportFehler(
+            "Weder ein Rezept (schema.org/Recipe) noch Chefkoch-Rezept-Links auf "
+            "der Seite gefunden. Für Sammlungs-Import bitte eine Chefkoch-"
+            "Such-/Sammlungs-Seite oder eine einzelne Rezept-URL einfügen."
+        )
+
+    limit = max_recipes if max_recipes and max_recipes > 0 else 100
+    links = links[:limit]
+
+    import time
+
+    recipes: list[dict] = []
+    warnings: list[str] = []
+    for i, link in enumerate(links):
+        try:
+            recipes.append(import_from_url(link))
+        except ImportFehler as exc:
+            warnings.append(f"Rezept {i + 1} übersprungen: {exc}")
+        time.sleep(0.3)  # höflich bleiben, kein DDoS gegen Chefkoch
+
+    if not recipes:
+        raise ImportFehler(
+            f"Keines der {len(links)} gefundenen Rezepte konnte importiert werden. "
+            + ("Details: " + " | ".join(warnings[:4]) if warnings else "")
+        )
+    if warnings:
+        warnings.append(f"{len(recipes)} von {len(links)} Rezepten importiert.")
+    return recipes, warnings

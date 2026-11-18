@@ -237,3 +237,64 @@ class TestTextImport:
         r = import_from_text(text, "")
         assert len(r["ingredients"]) == 0
         assert "zerkleinern" in r["steps"][0]["text"]
+
+
+class TestSammlungsImport:
+    """Chefkoch-Such-/Sammlungsseiten → viele Rezepte auf einmal."""
+
+    def test_extract_links_dedupe(self):
+        from importers.chefkoch import extract_recipe_links
+
+        html = (
+            '<a href="https://www.chefkoch.de/rezepte/111/a-rezept.html">A</a>'
+            '<a href="https://www.chefkoch.de/rezepte/222/b-rezept.html">B</a>'
+            '<a href="https://www.chefkoch.de/rezepte/111/a-rezept.html">A wieder</a>'
+            '<a href="/magazin/irgendwas">kein Rezept</a>'
+        )
+        links = extract_recipe_links(html)
+        assert len(links) == 2
+        assert links[0].endswith("a-rezept.html")
+
+    def test_einzelseite_bleibt_einzeln(self, monkeypatch):
+        from importers.chefkoch import import_from_url_multi
+
+        monkeypatch.setattr(
+            "importers.chefkoch.fetch_html",
+            lambda url: "<script type='application/ld+json'>" + json.dumps(CHEFKOCH_JSONLD) + "</script>",
+        )
+        recipes, warnings = import_from_url_multi("https://www.chefkoch.de/rezepte/1.html")
+        assert len(recipes) == 1 and not warnings
+
+    def test_sammelseite_laedt_alle(self, monkeypatch):
+        from importers.chefkoch import import_from_url_multi
+
+        def fake_fetch(url):
+            if "rs/s0" in url:  # Suchseite
+                return (
+                    '<a href="https://www.chefkoch.de/rezepte/111/a.html">A</a>'
+                    '<a href="https://www.chefkoch.de/rezepte/222/b.html">B</a>'
+                    '<a href="https://www.chefkoch.de/rezepte/333/c.html">C</a>'
+                )
+            # Rezeptseiten: 333 schlägt fehl → Warnung
+            if "333" in url:
+                raise ImportFehler("HTTP 404 beim Laden")
+            return ("<script type='application/ld+json'>" + json.dumps(
+                dict(CHEFKOCH_JSONLD, name=f"Rezept {url[-5]}")) + "</script>")
+
+        monkeypatch.setattr("importers.chefkoch.fetch_html", fake_fetch)
+        import time as _time
+        monkeypatch.setattr(_time, "sleep", lambda _s: None)
+        recipes, warnings = import_from_url_multi("https://www.chefkoch.de/rs/s0/test/Rezepte.html", max_recipes=10)
+        assert len(recipes) == 2
+        assert any("übersprungen" in w for w in warnings)
+        assert recipes[0]["title"].startswith("Rezept")
+
+    def test_leere_seite_fehler(self, monkeypatch):
+        from importers.chefkoch import import_from_url_multi
+
+        monkeypatch.setattr(
+            "importers.chefkoch.fetch_html",
+            lambda url: "<html><body>nichts</body></html>",
+        )
+        with pytest.raises(ImportFehler):
+            import_from_url_multi("https://www.chefkoch.de/rs/s0/xyz/Rezepte.html")

@@ -13,14 +13,14 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import db
-from importers.chefkoch import ImportFehler, USER_AGENT, import_from_url
+from importers.chefkoch import ImportFehler, USER_AGENT, import_from_url_multi
 from importers.cookidoo import import_cookidoo
 from importers.cookidoo_account import fetch_cookidoo_account
 from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.1.2"
+APP_VERSION = "1.1.3"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -76,6 +76,7 @@ class RecipeModel(BaseModel):
 
 class ImportUrlBody(BaseModel):
     url: str
+    max_recipes: int = 30  # Sammlungs-/Suchseiten: 0 = alle auf der Seite (max 100)
 
 
 class ImportTextBody(BaseModel):
@@ -204,11 +205,12 @@ def api_favorite(recipe_id: int, body: FavoriteBody):
 
 @app.post("/api/import/url")
 def api_import_url(body: ImportUrlBody):
+    """Einzelnes Rezept ODER Chefkoch-Sammlungs-/Suchseite (viele Rezepte)."""
     try:
-        recipe = import_from_url(body.url)
+        recipes, warnings = import_from_url_multi(body.url, body.max_recipes)
     except ImportFehler as exc:
         raise _fail_400(exc) from None
-    return {"recipes": [recipe], "source": "url"}
+    return {"recipes": recipes, "source": "url", "warnings": warnings}
 
 
 @app.post("/api/import/text")
