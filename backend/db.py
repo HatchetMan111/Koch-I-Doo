@@ -78,6 +78,50 @@ def init_db(seed_file: Path | None = None) -> None:
 
 
 SEED_SOURCE = "Koch-I-Doo Grundrezepte"
+# Gerichtsspezifische Emojis: Keyword → Emoji (Prüfreihenfolge = Priorität)
+_DISH_KEYWORDS = [
+    ("spaghetti", "🍝"), ("nudel", "🍝"), ("pasta", "🍝"), ("mac & cheese", "🧀"),
+    ("lasagne", "🍝"), ("tortellini", "🥟"), ("zoodles", "🥒"),
+    ("pizza", "🍕"), ("taco", "🌮"), ("burrito", "🌯"), ("gyros", "🥙"),
+    ("burger", "🍔"), ("cevapcici", "🥩"), ("schnitzel", "🍖"), ("gulasch", "🍲"),
+    ("hackbraten", "🍖"), ("frikadellen", "🍖"), ("köttbullar", "🍖"),
+    ("klopse", "🍖"), ("braten", "🍖"), ("wings", "🍗"), ("hähnchen", "🍗"),
+    ("hähnchenbrust", "🍗"), ("puten", "🍗"), ("schweinefilet", "🍖"),
+    ("lachs", "🐟"), ("garnelen", "🍤"), ("fisch", "🐟"), ("thunfisch", "🐟"),
+    ("curry", "🍛"), ("dal", "🍛"), ("kichererbsen", "🫘"), ("linsen", "🫘"),
+    ("ratatouille", "🍆"), ("blumenkohl", "🥦"), ("brokkoli", "🥦"),
+    ("spargel", "🌱"), ("spinat", "🥬"), ("champignon", "🍄"), ("pilz", "🍄"),
+    ("risotto", "🍚"), ("reis", "🍚"), ("milchreis", "🍚"), ("quinoa", "🌾"),
+    ("polenta", "🥣"), ("couscous", "🌾"), ("bulgur", "🌾"),
+    ("kartoffel", "🥔"), ("püree", "🥔"), ("gnocchi", "🥔"), ("süßkartoffel", "🍠"),
+    ("kürbis", "🎃"), ("tomaten", "🍅"), ("tomate", "🍅"), ("erbsen", "🫛"),
+    ("möhren", "🥕"), ("karotte", "🥕"), ("zucchini", "🥒"), ("gurke", "🥒"),
+    ("mango", "🥭"), ("avocado", "🥑"), ("apfel", "🍎"), ("birne", "🍐"),
+    ("bananen", "🍌"), ("banane", "🍌"), ("erdbeer", "🍓"), ("himbeer", "🫐"),
+    ("beeren", "🫐"), ("zitrone", "🍋"), ("limette", "🍋"), ("ingwer", "🫚"),
+    ("ananas", "🍍"), ("kürbispüree", "🎃"), ("chili", "🌶"), ("salat", "🥗"),
+    ("schoko", "🍫"), ("schokolade", "🍫"), ("kakao", "🍫"), ("brownie", "🍫"),
+    ("karamell", "🍯"), ("honig", "🍯"), ("marmelade", "🍓"), ("pudding", "🍮"),
+    ("mousse", "🍨"), ("eis", "🍨"), ("kuchen", "🍰"), ("käsekuchen", "🍰"),
+    ("waffel", "🧇"), ("pfannkuchen", "🥞"), ("crêpe", "🥞"), ("pancake", "🥞"),
+    ("keulchen", "🥞"), ("kaiserschmarrn", "🥞"), ("churros", "🥨"),
+    ("brezel", "🥨"), ("brötchen", "🥖"), ("brot", "🍞"), ("teig", "🥖"),
+    ("mürbe", "🥧"), ("boden", "🥧"), ("curd", "🥧"), ("bowl", "🥗"),
+    ("salatdressing", "🥗"), ("vinaigrette", "🥗"), ("caesar", "🥗"),
+    ("pesto", "🌿"), ("kräuter", "🌿"), ("basilikum", "🌿"),
+    ("smoothie", "🥤"), ("shake", "🥤"), ("limonade", "🥤"), ("eistee", "🧋"),
+    ("latte", "☕"), ("kaffee", "☕"), ("tee", "🫖"), ("sirup", "🧃"),
+    ("shot", "🧃"), ("schokolade heiß", "☕"), ("lassi", "🥤"),
+    ("suppe", "🥣"), ("cremesuppe", "🥣"), ("eintopf", "🍲"), ("minestrone", "🍲"),
+    ("fischsuppe", "🐟"), ("sauce", "🥫"), ("béchamel", "🥫"), ("hollandaise", "🥫"),
+    ("ketchup", "🥫"), ("mayonnaise", "🥫"), ("remoulade", "🥫"),
+    ("dip", "🥙"), ("hummus", "🥙"), ("guacamole", "🥑"), ("aioli", "🥙"),
+    ("tzatziki", "🥙"), ("aufstrich", "🥙"), ("creme", "🥙"), ("salsa", "🥙"),
+    ("chutney", "🥙"), ("saucen", "🥫"),
+    ("babybrei", "🍼"), ("brei", "🍼"), ("baby", "🍼"), ("zwieback", "🍼"),
+    ("brühe", "🥫"),
+]
+
 _CATEGORY_ICONS = {
     "Suppen": "🥣", "Saucen & Dips": "🥫", "Backen & Teige": "🥖",
     "Hauptgerichte": "🍛", "Pasta & Nudeln": "🍝", "Fleisch & Geflügel": "🍗",
@@ -87,24 +131,39 @@ _CATEGORY_ICONS = {
 }
 
 
-def _seed_image(recipe) -> str:
-    """Kategorie-SVG (lokal!) erzeugen und als Rezeptbild setzen."""
+def _dish_emoji(recipe) -> str:
+    """Passt das Emoji möglichst zum GERICHT (Titel + Zutaten), nicht nur zur Kategorie."""
+    haystack = " ".join(
+        [recipe.get("title") or ""]
+        + [i.get("name", "") for i in recipe.get("ingredients") or []]
+    ).lower()
+    for keyword, emoji in _DISH_KEYWORDS:
+        if keyword in haystack:
+            return emoji
     cat = next((t for t in recipe.get("tags") or [] if t in _CATEGORY_ICONS), None)
-    if not cat:
-        return recipe.get("image") or ""
+    return _CATEGORY_ICONS.get(cat, "🍲")
+
+
+def _seed_image(recipe) -> str:
+    """Gerichtsspezifisches SVG (lokal!) erzeugen und als Rezeptbild setzen."""
     import re as _re
 
-    slug = _re.sub(r"[^a-z0-9]+", "-", cat.lower()).strip("-")
+    emoji = _dish_emoji(recipe)
+    title_slug = _re.sub(r"[^a-z0-9]+", "-", (recipe.get("title") or "rezept").lower()).strip("-")[:40]
+    slug = f"{title_slug}"
     path = IMG_DIR / f"seed-{slug}.svg"
     if not path.exists():
-        icon = _CATEGORY_ICONS[cat]
+        # Farbverlauf leicht variieren, damit nicht alles gleich aussieht
+        hue = sum(ord(c) for c in (recipe.get("title") or "")) % 60
+        c1 = f"hsl({20 + hue}, 85%, 88%)"
+        c2 = f"hsl({20 + hue}, 75%, 76%)"
         svg = (
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150">'
             '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
-            '<stop offset="0" stop-color="#fdeae3"/><stop offset="1" stop-color="#f6d3ba"/>'
+            f'<stop offset="0" stop-color="{c1}"/><stop offset="1" stop-color="{c2}"/>'
             "</linearGradient></defs>"
             '<rect width="200" height="150" fill="url(#g)" rx="12"/>'
-            f'<text x="100" y="96" font-size="64" text-anchor="middle">{icon}</text></svg>'
+            f'<text x="100" y="96" font-size="64" text-anchor="middle">{emoji}</text></svg>'
         )
         path.write_text(svg, encoding="utf-8")
     if not recipe.get("image"):

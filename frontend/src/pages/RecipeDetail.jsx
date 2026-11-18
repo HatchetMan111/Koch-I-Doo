@@ -177,6 +177,13 @@ export default function RecipeDetail() {
           </p>
         </section>
 
+        {recipe.serve_with && (
+          <section className="card serve-card">
+            <h2>🍽 Servier-Empfehlung</h2>
+            <p className="serve-text">{recipe.serve_with}</p>
+          </section>
+        )}
+
         <section className="card">
           <div className="card-head">
             <h2>Zubereitung</h2>

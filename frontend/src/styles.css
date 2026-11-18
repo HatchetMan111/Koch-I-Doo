@@ -625,3 +625,13 @@ button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
   .recipe-card-img { height: 160px; }
   .recipe-card-body h3 { font-size: 1.15rem; }
 }
+
+/* ── Servier-Empfehlung ─────────────────────────────────────────────────── */
+.serve-card { border-left: 4px solid var(--teal); background: var(--teal-soft); }
+.serve-text { margin: 0; font-size: 1.05rem; line-height: 1.5; }
+.cook-serve {
+  background: var(--ck-soft); border: 1.5px solid var(--ck-line);
+  border-radius: 14px; padding: 14px 18px; max-width: 560px;
+  font-size: 1.05rem; line-height: 1.5;
+}
+.cook-serve b { color: var(--ck-text); }

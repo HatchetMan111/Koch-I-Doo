@@ -275,6 +275,11 @@ export default function Cook() {
             {recipe.title} – {steps.length} Schritte gekocht
             {factor !== 1 ? ` für ${Math.round(servingsParam)} ${recipe.serving_unit || "Portionen"}` : ""}.
           </p>
+          {recipe.serve_with ? (
+            <div className="cook-serve">
+              <b>🍽 Servier-Empfehlung:</b> {recipe.serve_with}
+            </div>
+          ) : null}
           <div className="cook-done-actions">
             <Link className="btn btn-cook" to={`/rezept/${recipe.id}`}>
               ← Zurück zum Rezept

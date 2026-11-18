@@ -80,7 +80,7 @@ class TestSeed:
         import db
 
         db.init_db()
-        assert (db.get_meta("seed_grundrezepte") or "") == "3"
+        assert (db.get_meta("seed_grundrezepte") or "") == "4"
 
 
 class TestSeedV2:
@@ -89,7 +89,8 @@ class TestSeedV2:
         import db
 
         db.init_db()
-        r = client.get("/api/recipes", params={"q": "Milchreis"}).json()[0]
+        all_rec = client.get("/api/recipes").json()
+        r = next(x for x in all_rec if x["title"] == "Milchreis")
         assert r["step_count"] >= 4
         steps = client.get(f"/api/recipes/{r['id']}").json()["steps"]
         assert any("Milch" in s["text"] and "erwärmen" in s["text"] for s in steps)
@@ -110,7 +111,8 @@ class TestSeedV2:
         import db
 
         db.init_db()
-        r = client.get("/api/recipes", params={"q": "Milchreis"}).json()[0]
+        all_rec = client.get("/api/recipes").json()
+        r = next(x for x in all_rec if x["title"] == "Milchreis")
         client.post(f"/api/recipes/{r['id']}/favorite", json={"favorite": True})
         db.init_db()  # gleiche Version → kein Sync, aber Favorit bleibt
         r2 = client.get(f"/api/recipes/{r['id']}").json()
@@ -135,3 +137,40 @@ class TestSeedV3:
         assert len(pasta) >= 13
         vegetarisch = [r for r in recipes if "Vegetarisch & Vegan" in (r["tags"] or [])]
         assert len(vegetarisch) >= 12
+
+
+class TestSeedV4:
+    def test_serve_with_vorhanden(self, client):
+        """Jedes Grundrezept hat eine Servier-Empfehlung."""
+        import db
+
+        db.init_db()
+        recipes = client.get("/api/recipes").json()
+        seeds = [r for r in recipes if "Grundrezept" in (r["tags"] or [])]
+        with_serve = 0
+        for r in seeds:
+            full = client.get(f"/api/recipes/{r['id']}").json()
+            if full.get("serve_with"):
+                with_serve += 1
+        assert with_serve == len(seeds) and len(seeds) >= 160
+
+    def test_gerichtsspezifische_bilder(self, client):
+        """Milchreis → Reis-Emoji-SVG, pro Rezept eigene Bild-Datei."""
+        import db
+        from pathlib import Path
+
+        db.init_db()
+        all_rec = client.get("/api/recipes").json()
+        r = next(x for x in all_rec if x["title"] == "Milchreis")
+        assert r["image"] == "/images/seed-milchreis.svg"
+        svg = (Path(db.IMG_DIR) / "seed-milchreis.svg").read_text()
+        assert "🍚" in svg  # Gericht-Emoji, nicht Kategorie-Emoji
+        # Milchreis-Brei (Baby) hat eigenes Bild-File
+        assert (Path(db.IMG_DIR) / "seed-milch-hafer-babybrei.svg").exists()
+
+    def test_serve_im_editor_modell(self, client):
+        """serve_with kann gesetzt und gespeichert werden (Import-Pfad)."""
+        rid = client.post("/api/recipes", json={
+            "title": "Serve-Test", "serve_with": "mit Reis"}).json()["id"]
+        full = client.get(f"/api/recipes/{rid}").json()
+        assert full["serve_with"] == "mit Reis"

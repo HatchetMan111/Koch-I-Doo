@@ -229,6 +229,14 @@ def recipe_from_cookidoo_html(page_html: str) -> dict:
         "Cookidoo (HTML-Dump)",
         tm_versions or ["TM5", "TM6"],
     )
+    # Bild aus dem Dump (og:image oder recipe-card-Bild)
+    m_img = re.search(
+        r'(?:property=["\']og:image["\']|id=["\']recipe-card__image-loader["\'][^>]*<img[^>]*src=["\'])([^"\' >]+)',
+        page_html,
+        re.IGNORECASE,
+    )
+    if m_img:
+        recipe["image"] = html_mod.unescape(m_img.group(1).strip())
     recipe["time_prep"] = _parse_time_seconds(_feature_value(features, _TIME_FEATURES))
     recipe["time_total"] = _parse_time_seconds(_feature_value(features, _TOTAL_FEATURES)) or recipe["time_prep"]
 

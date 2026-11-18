@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -65,6 +65,7 @@ class RecipeModel(BaseModel):
     image: str = ""
     source: str = ""
     tm_versions: list[str] = ["TM5", "TM6"]
+    serve_with: str = ""   # Servier-Empfehlung (z. B. "mit Reis und Naan-Brot")
     ingredients: list[IngredientModel] = []
     steps: list[StepModel] = []
 
@@ -126,25 +127,39 @@ _IMG_EXT = {
 
 
 def localize_image(recipe: dict) -> tuple[dict, str | None]:
-    """Lädt das Rezeptbild lokal in data/images (best effort, offline-tauglich)."""
+    """Lädt das Rezeptbild lokal in data/images (best effort, offline-tauglich).
+    Bei 403/401 (Hotlink-Schutz) zweiter Versuch mit Referer der Rezept-URL."""
     url = recipe.get("image") or ""
     if not url or not url.startswith("http"):
         return recipe, None
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            raw = resp.read(10 * 1024 * 1024)
-            ctype = resp.headers.get_content_type()
-        ext = _IMG_EXT.get(ctype)
-        if not ext:
-            return recipe, f"Bildtyp {ctype} nicht unterstützt – URL bleibt extern."
-        name = hashlib.sha256(url.encode()).hexdigest()[:16] + ext
-        (db.IMG_DIR / name).write_bytes(raw)
-        recipe = {**recipe, "image": f"/images/{name}"}
-        return recipe, None
-    except Exception as exc:  # noqa: BLE001 – Bild ist optional, Kette trotzdem loggen
-        print(f"[import] Bild nicht ladbar: {url} – {type(exc).__name__}: {exc}")
-        return recipe, f"Bild konnte nicht lokal gespeichert werden ({type(exc).__name__}) – externe URL bleibt."
+
+    attempts = [{"User-Agent": USER_AGENT}]
+    source = recipe.get("source") or ""
+    if source.startswith("http"):
+        attempts.append({
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+            "Referer": source,
+            "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        })
+
+    last_err: Exception | None = None
+    for headers in attempts:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                raw = resp.read(10 * 1024 * 1024)
+                ctype = resp.headers.get_content_type()
+            ext = _IMG_EXT.get(ctype)
+            if not ext:
+                return recipe, f"Bildtyp {ctype} nicht unterstützt – URL bleibt extern."
+            name = hashlib.sha256(url.encode()).hexdigest()[:16] + ext
+            (db.IMG_DIR / name).write_bytes(raw)
+            recipe = {**recipe, "image": f"/images/{name}"}
+            return recipe, None
+        except Exception as exc:  # noqa: BLE001 – Bild ist optional
+            last_err = exc
+            print(f"[import] Bild-Versuch fehlgeschlagen ({url}): {type(exc).__name__}: {exc}")
+    return recipe, f"Bild konnte nicht lokal gespeichert werden ({type(last_err).__name__}) – externe URL bleibt (evtl. Hotlink-Schutz)."
 
 
 # ── API-Routen ──────────────────────────────────────────────────────────────

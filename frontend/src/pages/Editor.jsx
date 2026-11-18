@@ -93,6 +93,15 @@ export default function Editor() {
             onChange={(e) => set({ description: e.target.value })}
           />
         </label>
+        <label className="field">
+          <span>🍽 Servier-Empfehlung (z. B. „mit Reis und Naan-Brot“)</span>
+          <input
+            className="input"
+            value={recipe.serve_with || ""}
+            onChange={(e) => set({ serve_with: e.target.value })}
+            placeholder="Womit servierst du das Gericht?"
+          />
+        </label>
         <div className="field-row">
           <label className="field">
             <span>Portionen / Menge</span>
