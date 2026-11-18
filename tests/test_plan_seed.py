@@ -66,7 +66,7 @@ class TestSeed:
         titles = [r["title"] for r in recipes]
         assert any("Tomatensuppe" in t for t in titles)
         assert any("Béchamel" in t for t in titles)
-        assert len(recipes) >= 60
+        assert len(recipes) >= 160
 
     def test_seeding_idempotent(self, client):
         import db
@@ -80,7 +80,7 @@ class TestSeed:
         import db
 
         db.init_db()
-        assert (db.get_meta("seed_grundrezepte") or "") == "2"
+        assert (db.get_meta("seed_grundrezepte") or "") == "3"
 
 
 class TestSeedV2:
@@ -115,3 +115,23 @@ class TestSeedV2:
         db.init_db()  # gleiche Version → kein Sync, aber Favorit bleibt
         r2 = client.get(f"/api/recipes/{r['id']}").json()
         assert r2["favorite"] is True
+
+class TestSeedV3:
+    def test_spaghetti_vorhanden(self, client):
+        import db
+
+        db.init_db()
+        titles = [r["title"] for r in client.get("/api/recipes").json()]
+        assert any("Spaghetti" in t for t in titles)
+        assert any("Tzatziki" in t for t in titles)
+        assert len(titles) >= 162
+
+    def test_neue_kategorien_gezaehlt(self, client):
+        import db
+
+        db.init_db()
+        recipes = client.get("/api/recipes").json()
+        pasta = [r for r in recipes if "Pasta & Nudeln" in (r["tags"] or [])]
+        assert len(pasta) >= 13
+        vegetarisch = [r for r in recipes if "Vegetarisch & Vegan" in (r["tags"] or [])]
+        assert len(vegetarisch) >= 12

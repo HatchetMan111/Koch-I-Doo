@@ -80,7 +80,9 @@ def init_db(seed_file: Path | None = None) -> None:
 SEED_SOURCE = "Koch-I-Doo Grundrezepte"
 _CATEGORY_ICONS = {
     "Suppen": "🥣", "Saucen & Dips": "🥫", "Backen & Teige": "🥖",
-    "Hauptgerichte": "🍝", "Beilagen": "🥔", "Frühstück & Aufstriche": "🥐",
+    "Hauptgerichte": "🍛", "Pasta & Nudeln": "🍝", "Fleisch & Geflügel": "🍗",
+    "Vegetarisch & Vegan": "🥗", "Fisch & Meeresfrüchte": "🐟",
+    "Beilagen": "🥔", "Frühstück & Aufstriche": "🥐",
     "Getränke & Smoothies": "🥤", "Desserts": "🍮", "Baby & Familie": "🍼",
 }
 

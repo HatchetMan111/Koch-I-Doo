@@ -6,7 +6,7 @@ import RecipeDetail from "./pages/RecipeDetail.jsx";
 import Editor from "./pages/Editor.jsx";
 import Cook from "./pages/Cook.jsx";
 import Plan from "./pages/Plan.jsx";
-import Discover from "./pages/Discover.jsx";
+import Discover, { DiscoverCategory } from "./pages/Discover.jsx";
 
 export default function App() {
   const location = useLocation();
@@ -51,6 +51,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/import" element={<Import />} />
           <Route path="/entdecken" element={<Discover />} />
+          <Route path="/entdecken/kategorie/:cat" element={<DiscoverCategory />} />
           <Route path="/plan" element={<Plan />} />
           <Route path="/neu" element={<Editor />} />
           <Route path="/rezept/:id" element={<RecipeDetail />} />
@@ -60,7 +61,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.2.3 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.3.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
     </div>
   );

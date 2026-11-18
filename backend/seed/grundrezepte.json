@@ -1,5 +1,5 @@
 {
- "version": "2",
+ "version": "3",
  "recipes": [
   {
    "title": "Tomatensuppe (cremig)",
@@ -5622,6 +5622,7912 @@
      "tip": "Öl erst am Ende und ganz langsam — sonst trennt die Mayonnaise.",
      "ingredients": [
       "200 g Öl"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Spaghetti Napoli",
+   "description": "Klassische Tomaten-Pasta.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Spaghetti",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Dose(n)",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Basilikum",
+     "note": "frisch"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser in den Mixtopf füllen, Spaghetti im Gareinsatz ringförmig einlegen",
+     "ingredients": [
+      "1200 g Wasser",
+      "400 g Spaghetti"
+     ]
+    },
+    {
+     "text": "Spaghetti garen",
+     "time": 900,
+     "temperature": "Varoma",
+     "speed": "1",
+     "tip": "Auf al dente prüfen."
+    },
+    {
+     "text": "In der Zwischenzeit Zwiebel und Knoblauch in der Pfanne/Bowl andünsten — hier: Öl in den Mixtopf und beiseitestellen",
+     "tip": "Parallel: Tomatensauce nach Rezept 'Tomatensauce (für Pasta)' kochen."
+    },
+    {
+     "text": "Spaghetti mit Sauce vermengen und servieren"
+    }
+   ]
+  },
+  {
+   "title": "Spaghetti Aglio e Olio",
+   "description": "Der Schnellste: Knoblauch-Öl-Pasta.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Spaghetti",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 3,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": "in Scheiben"
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Chiliflocken",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauchscheiben und Olivenöl in den Mixtopf geben und sanft anziehen lassen",
+     "time": 180,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "3 Zehe(n) Knoblauch",
+      "80 g Olivenöl"
+     ]
+    },
+    {
+     "text": "Chiliflocken einwiegen",
+     "time": 5,
+     "speed": "1",
+     "ingredients": [
+      "1 Msp. Chiliflocken"
+     ]
+    },
+    {
+     "text": "Abgekochte, al dente gekochte Spaghetti zugeben und vermengen",
+     "time": 30,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "tip": "Spaghetti vorher in Salzwasser kochen (Topf) oder Gareinsatz."
+    },
+    {
+     "text": "Mit geriebenem Parmesan servieren"
+    }
+   ]
+  },
+  {
+   "title": "Spaghetti Carbonara (komplett)",
+   "description": "Original ohne Sahne — nur Eigelb & Pecorino.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "mittel",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Spaghetti",
+     "note": ""
+    },
+    {
+     "amount": 180,
+     "unit": "g",
+     "name": "Guanciale oder Speck",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eigelb",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Pecorino oder Parmesan",
+     "note": "gerieben"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Schwarzer Pfeffer",
+     "note": "grob gemahlen"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Spaghetti al dente kochen (Gareinsatz oder Topf)",
+     "ingredients": [
+      "400 g Spaghetti"
+     ]
+    },
+    {
+     "text": "Speckwürfel in den Mixtopf geben und knusprig braten",
+     "time": 480,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "180 g Guanciale oder Speck"
+     ]
+    },
+    {
+     "text": "Eigelb, Pecorino und Pfeffer einwiegen",
+     "ingredients": [
+      "4 Eigelb",
+      "100 g Pecorino oder Parmesan",
+      "1 TL Schwarzer Pfeffer"
+     ]
+    },
+    {
+     "text": "Bei 60°C glatt rühren",
+     "time": 90,
+     "temperature": "60",
+     "speed": "3",
+     "tip": "Nicht heißer — das Eigelb gerinnt."
+    },
+    {
+     "text": "Abgetropfte Spaghetti zugeben und schwenken",
+     "time": 20,
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Mac & Cheese (cremig)",
+   "description": "Amerikanischer Käse-Nudel-Klassiker.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Makkaroni",
+     "note": ""
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Cheddar",
+     "note": "gerieben"
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 40,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Senf",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Butter in den Mixtopf schmelzen",
+     "time": 60,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "40 g Butter"
+     ]
+    },
+    {
+     "text": "Mehl einstäuben und rühren",
+     "time": 60,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "2 EL Mehl"
+     ]
+    },
+    {
+     "text": "Milch, Kochsahne, Senf und Salz zugeben und aufkochen",
+     "time": 300,
+     "temperature": "90",
+     "speed": "4",
+     "ingredients": [
+      "300 g Milch",
+      "150 g Kochsahne",
+      "1 TL Senf",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Cheddar einwiegen und schmelzen lassen",
+     "time": 120,
+     "temperature": "90",
+     "speed": "3",
+     "ingredients": [
+      "300 g Cheddar"
+     ]
+    },
+    {
+     "text": "Abgekochte Makkaroni zugeben und vermengen",
+     "time": 20,
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Pasta al Pesto (komplett)",
+   "description": "Pasta mit hausgemachtem Pesto.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Pasta",
+     "note": "z. B. Fusilli"
+    },
+    {
+     "amount": 120,
+     "unit": "g",
+     "name": "Pesto Genovese",
+     "note": "nach Grundrezept"
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Parmesan",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Nudelwasser",
+     "note": "aufbewahrt"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Pasta in Salzwasser al dente kochen (Gareinsatz oder Topf)",
+     "ingredients": [
+      "400 g Pasta"
+     ]
+    },
+    {
+     "text": "Pesto, Nudelwasser und Parmesan in den Mixtopf geben",
+     "ingredients": [
+      "120 g Pesto Genovese",
+      "50 g Parmesan"
+     ]
+    },
+    {
+     "text": "Bei 60°C aufschlagen",
+     "time": 90,
+     "temperature": "60",
+     "speed": "3"
+    },
+    {
+     "text": "Abgetropfte Pasta zugeben und vermengen",
+     "time": 20,
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Tunfisch-Pasta",
+   "description": "Schnelle Pasta mit Thunfisch-Tomaten-Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Pasta",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Dose(n)",
+     "name": "Thunfisch",
+     "note": "abgetropft"
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Olivenöl zugeben und andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 EL Olivenöl"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten einwiegen und köcheln",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "400 g Passierte Tomaten"
+     ]
+    },
+    {
+     "text": "Abgetropften Thunfisch zugeben und unterheben",
+     "time": 30,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 Dose(n) Thunfisch"
+     ]
+    },
+    {
+     "text": "Mit gekochter Pasta vermengen",
+     "time": 20,
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Tomaten-Mozzarella-Pasta",
+   "description": "Caprese-artige Pasta, schnell und frisch.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Pasta",
+     "note": ""
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Mozzarella",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Kirschtomaten",
+     "note": "geviertelt"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Bund",
+     "name": "Basilikum",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Pasta al dente kochen",
+     "ingredients": [
+      "400 g Pasta"
+     ]
+    },
+    {
+     "text": "Kirschtomaten, Olivenöl und Salz in den Mixtopf geben und kurz zerkleinern",
+     "time": 6,
+     "speed": "4",
+     "ingredients": [
+      "300 g Kirschtomaten",
+      "2 EL Olivenöl",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Mozzarella und abgetropfte Pasta zugeben und schwenken",
+     "time": 20,
+     "temperature": "60",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "250 g Mozzarella"
+     ]
+    },
+    {
+     "text": "Basilikum zugeben und kurz vermischen",
+     "time": 5,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 Bund Basilikum"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Nudelauflauf-Sauce (Schinken-Sahne)",
+   "description": "Cremige Auflauf-Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochschinken",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Emmentaler",
+     "note": "gerieben"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Kochschinken in den Mixtopf geben und anbraten",
+     "time": 240,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Kochschinken"
+     ]
+    },
+    {
+     "text": "Mehl einstäuben",
+     "time": 60,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "2 EL Mehl"
+     ]
+    },
+    {
+     "text": "Kochsahne und Milch zugeben und aufkochen",
+     "time": 300,
+     "temperature": "90",
+     "speed": "4",
+     "ingredients": [
+      "300 g Kochsahne",
+      "200 g Milch"
+     ]
+    },
+    {
+     "text": "Emmentaler einwiegen und schmelzen",
+     "time": 120,
+     "temperature": "90",
+     "speed": "3",
+     "ingredients": [
+      "150 g Emmentaler"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Zucchini-Nudeln (Zoodles) mit Tomaten",
+   "description": "Leichte Gemüse-Pasta.",
+   "servings": 2,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zucchini",
+     "note": "zu Streifen gespiralisiert"
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kirschtomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch in den Mixtopf geben und zerkleinern",
+     "time": 3,
+     "speed": "6",
+     "ingredients": [
+      "1 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Olivenöl und Kirschtomaten zugeben und andünsten",
+     "time": 240,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "2 EL Olivenöl",
+      "200 g Kirschtomaten"
+     ]
+    },
+    {
+     "text": "Zucchini-Streifen zugeben und kurz schwenken",
+     "time": 120,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "tip": "Nur kurz — Zoodles sollen Biss behalten.",
+     "ingredients": [
+      "2 Zucchini"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Knoblauch-Nudeln (mit Parmesan)",
+   "description": "Schnelle Beilage oder leichtes Essen.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Nudeln",
+     "note": "kurze"
+    },
+    {
+     "amount": 3,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Parmesan",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Petersilie",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Butter und Knoblauch in den Mixtopf geben und sanft dünsten",
+     "time": 180,
+     "temperature": "90",
+     "speed": "1",
+     "ingredients": [
+      "60 g Butter",
+      "3 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Parmesan einwiegen",
+     "ingredients": [
+      "50 g Parmesan"
+     ]
+    },
+    {
+     "text": "Abgekochte Nudeln zugeben und schwenken",
+     "time": 20,
+     "speed": "1",
+     "reverse": true
+    },
+    {
+     "text": "Petersilie zugeben und vermischen",
+     "time": 5,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 EL Petersilie"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Lasagne (komplett, 3-Schichten-Aufbau)",
+   "description": "Hausgemachte Lasagne mit Béchamel.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 900,
+   "time_total": 3900,
+   "difficulty": "mittel",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 9,
+     "unit": "",
+     "name": "Lasagneplatten",
+     "note": ""
+    },
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hackfleisch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Dose(n)",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Käse",
+     "note": "gerieben"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel und Knoblauch zerkleinern und mit Hackfleisch anbraten",
+     "time": 600,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 Zwiebel",
+      "1 Zehe(n) Knoblauch",
+      "600 g Hackfleisch"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten einwiegen und 20 Min. schmoren",
+     "time": 1200,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "2 Dose(n) Passierte Tomaten"
+     ]
+    },
+    {
+     "text": "Béchamel kochen: Butter, Mehl, Milch aufkochen",
+     "time": 480,
+     "temperature": "90",
+     "speed": "4",
+     "ingredients": [
+      "60 g Butter",
+      "60 g Mehl",
+      "600 g Milch"
+     ]
+    },
+    {
+     "text": "Lasagne schichten: Sauce — Platten — Béchamel — wiederholen",
+     "tip": "3 Schichten, mit Käse abschließen."
+    },
+    {
+     "text": "Im Ofen 40 Min. bei 180°C backen",
+     "time": 2400,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Tortellini-Auflauf-Sauce",
+   "description": "Sahnige Sauce für Tortellini-Auflauf.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Geräucherter Schinken",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Käse",
+     "note": "gerieben"
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Muskatnuss",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Schinkenwürfel in den Mixtopf geben und anbraten",
+     "time": 240,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "150 g Geräucherter Schinken"
+     ]
+    },
+    {
+     "text": "Mehl einstäuben",
+     "time": 60,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "1 EL Mehl"
+     ]
+    },
+    {
+     "text": "Kochsahne und Milch zugeben und aufkochen",
+     "time": 300,
+     "temperature": "90",
+     "speed": "4",
+     "ingredients": [
+      "300 g Kochsahne",
+      "200 g Milch"
+     ]
+    },
+    {
+     "text": "Käse und Muskat einwiegen und schmelzen",
+     "time": 120,
+     "temperature": "90",
+     "speed": "3",
+     "ingredients": [
+      "150 g Käse",
+      "1 Msp. Muskatnuss"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Spaghetti mit Frikadellen-Sauce",
+   "description": "Italian Meatballs mit Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 2400,
+   "difficulty": "mittel",
+   "tags": [
+    "Pasta & Nudeln",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Hackfleisch",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Spaghetti",
+     "note": ""
+    },
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Paniermehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Ei",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf zerkleinern, mit Hackfleisch, Paniermehl und Ei vermischen",
+     "time": 30,
+     "speed": "3",
+     "ingredients": [
+      "1 Zwiebel",
+      "400 g Hackfleisch",
+      "2 EL Paniermehl",
+      "1 Ei"
+     ]
+    },
+    {
+     "text": "Zu Bällchen formen und in der Pfanne braten",
+     "tip": "Manueller Schritt — oder Bällchen in die Sauce geben und mitgaren."
+    },
+    {
+     "text": "Passierte Tomaten mit Oregano aufkochen",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "500 g Passierte Tomaten",
+      "1 TL Oregano"
+     ]
+    },
+    {
+     "text": "Frikadellen in der Sauce garen",
+     "time": 900,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true
+    },
+    {
+     "text": "Mit Spaghetti servieren"
+    }
+   ]
+  },
+  {
+   "title": "Hähnchenbrust in Rahmsauce",
+   "description": "Zarte Hähnchenbrust mit Sahne-Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hähnchenbrust",
+     "note": "in Streifen"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 20,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Brühe-Pulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Paprikapulver",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Butter zugeben und andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "20 g Butter"
+     ]
+    },
+    {
+     "text": "Hähnchenstreifen zugeben und anbraten",
+     "time": 600,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "600 g Hähnchenbrust"
+     ]
+    },
+    {
+     "text": "Kochsahne, Brühe und Paprika einwiegen",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Kochsahne",
+      "1 TL Brühe-Pulver",
+      "1 TL Paprikapulver"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Putengeschnetzeltes",
+   "description": "Klassiker mit Champignons in Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Putenschnitzel",
+     "note": "in Streifen"
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Champignons",
+     "note": "geschnitten"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Öl und Putenstreifen zugeben und anbraten",
+     "time": 600,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "2 EL Öl",
+      "600 g Putenschnitzel"
+     ]
+    },
+    {
+     "text": "Champignons zugeben und mitdünsten",
+     "time": 300,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "300 g Champignons"
+     ]
+    },
+    {
+     "text": "Mehl einstäuben",
+     "time": 60,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "1 EL Mehl"
+     ]
+    },
+    {
+     "text": "Kochsahne und Salz zugeben und köcheln",
+     "time": 300,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Kochsahne",
+      "1 TL Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Schweinefilet in Pfeffersauce",
+   "description": "Rahm-Pfeffersauce zum Filet.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "mittel",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Schweinefilet",
+     "note": "in Medaillons"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Grüner Pfeffer",
+     "note": "aus der Dose"
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Brühe",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Schalotte",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Brandy",
+     "note": "optional"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Schalotte in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Schalotte"
+     ]
+    },
+    {
+     "text": "Butter zugeben und andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "20 g Butter"
+     ]
+    },
+    {
+     "text": "Medaillons zugeben und anbraten",
+     "time": 480,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "600 g Schweinefilet"
+     ]
+    },
+    {
+     "text": "Brühe und Brandy zugeben und abdampfen",
+     "time": 180,
+     "temperature": "Varoma",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "100 g Brühe",
+      "1 EL Brandy"
+     ]
+    },
+    {
+     "text": "Grünen Pfeffer und Kochsahne einwiegen und köcheln",
+     "time": 300,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "2 EL Grüner Pfeffer",
+      "200 g Kochsahne"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Königsberger Klopse (Masse + Sauce)",
+   "description": "Klassiker mit Kapern-Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 900,
+   "time_total": 2400,
+   "difficulty": "mittel",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Hackfleisch gemischt",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Brötchen",
+     "note": "eingeweicht"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Ei",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Brühe",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Kapern",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf zerkleinern, mit Hackfleisch, Ei und Brötchen vermischen",
+     "time": 30,
+     "speed": "3",
+     "ingredients": [
+      "1 Zwiebel",
+      "500 g Hackfleisch gemischt",
+      "1 Ei",
+      "1 Brötchen"
+     ]
+    },
+    {
+     "text": "Klopse formen und in Brühe ziehen lassen",
+     "time": 900,
+     "temperature": "90",
+     "speed": "1",
+     "reverse": true,
+     "tip": "Sanft — nicht kochen, sonst werden sie hart."
+    },
+    {
+     "text": "Klopfs entnehmen, Kochsahne zur Brühe geben",
+     "ingredients": [
+      "200 g Kochsahne"
+     ]
+    },
+    {
+     "text": "Kapern und Zitronensaft einwiegen und binden",
+     "time": 180,
+     "temperature": "80",
+     "speed": "2",
+     "ingredients": [
+      "2 EL Kapern",
+      "1 EL Zitronensaft"
+     ]
+    },
+    {
+     "text": "Klopse zurück in die Sauce geben",
+     "time": 60,
+     "temperature": "80",
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Hähnchen-Gyros-Marinade (+ Hähnchen)",
+   "description": "Gyros-Gewürz-Mix und mariniertes Hähnchen.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hähnchenbrust",
+     "note": "in Streifen"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": "getrocknet"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Paprikapulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Kreuzkümmel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zitrone",
+     "note": "Saft"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch und Zitronensaft in den Mixtopf geben",
+     "time": 3,
+     "speed": "6",
+     "ingredients": [
+      "2 Zehe(n) Knoblauch",
+      "1 Zitrone"
+     ]
+    },
+    {
+     "text": "Olivenöl und alle Gewürze einwiegen",
+     "time": 15,
+     "speed": "3",
+     "ingredients": [
+      "2 EL Olivenöl",
+      "1 TL Oregano",
+      "1 TL Paprikapulver",
+      "1 TL Kreuzkümmel"
+     ]
+    },
+    {
+     "text": "Hähnchenstreifen zugeben und marinieren",
+     "time": 20,
+     "speed": "1",
+     "reverse": true,
+     "tip": "Mindestens 1 Std. im Kühlschrank ziehen lassen.",
+     "ingredients": [
+      "600 g Hähnchenbrust"
+     ]
+    },
+    {
+     "text": "Anbraten",
+     "time": 600,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Cevapcici-Masse",
+   "description": "Balkan-Hackröllchen zum Grillen.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hackfleisch gemischt",
+     "note": "Rind/Lamm"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Paprikapulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Chili",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel und Knoblauch in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel",
+      "2 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Hackfleisch und Gewürze zugeben und vermischen",
+     "time": 30,
+     "speed": "3",
+     "reverse": true,
+     "tip": "Masse 1 Std. kühlen, dann zu Röllchen formen und grillen.",
+     "ingredients": [
+      "600 g Hackfleisch gemischt",
+      "1 TL Paprikapulver",
+      "1 TL Salz",
+      "1 Msp. Chili"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Hackbällchen in Tomatensauce",
+   "description": "Weiche Bällchen, direkt in der Sauce gegart.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 2400,
+   "difficulty": "einfach",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Hackfleisch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Ei",
+     "note": ""
+    },
+    {
+     "amount": 3,
+     "unit": "EL",
+     "name": "Paniermehl",
+     "note": ""
+    },
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf zerkleinern und mit Hackfleisch, Ei, Paniermehl vermischen",
+     "time": 30,
+     "speed": "3",
+     "ingredients": [
+      "1 Zwiebel",
+      "500 g Hackfleisch",
+      "1 Ei",
+      "3 EL Paniermehl"
+     ]
+    },
+    {
+     "text": "Bällchen rollen (manuell)",
+     "tip": "Ca. 16 Bällchen zu ca. 2 cm."
+    },
+    {
+     "text": "Passierte Tomaten mit Oregano und Salz aufkochen",
+     "time": 300,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "800 g Passierte Tomaten",
+      "1 TL Oregano",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Bällchen in der Sauce ziehen lassen",
+     "time": 1500,
+     "temperature": "95",
+     "speed": "1",
+     "reverse": true
+    }
+   ]
+  },
+  {
+   "title": "Chicken-Wings-Marinade (Honig-Chili)",
+   "description": "Klebrige süß-scharfe Wings.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Fleisch & Geflügel",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1000,
+     "unit": "g",
+     "name": "Chicken Wings",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Ketchup",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Sojasauce",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Sriracha",
+     "note": "optional"
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch in den Mixtopf zerkleinern",
+     "time": 3,
+     "speed": "6",
+     "ingredients": [
+      "2 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Honig, Ketchup, Sojasauce und Sriracha einwiegen und verrühren",
+     "time": 15,
+     "speed": "3",
+     "ingredients": [
+      "80 g Honig",
+      "60 g Ketchup",
+      "2 EL Sojasauce",
+      "1 EL Sriracha"
+     ]
+    },
+    {
+     "text": "Wings zugeben und marinieren",
+     "time": 20,
+     "speed": "1",
+     "reverse": true,
+     "tip": "2 Std. ziehen lassen, dann im Ofen 35 Min. bei 200°C knusprig backen.",
+     "ingredients": [
+      "1000 g Chicken Wings"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Gemüse-Curry mit Kichererbsen",
+   "description": "Cremiges One-Pot-Curry.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1,
+     "unit": "Dose(n)",
+     "name": "Kichererbsen",
+     "note": "abgetropft"
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Kokosmilch",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "TK-Gemüse",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "TL",
+     "name": "Currypulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Garam Masala",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Öl und Gewürze zugeben und anrösten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 TL Currypulver",
+      "1 TL Garam Masala"
+     ]
+    },
+    {
+     "text": "Kokosmilch einwiegen",
+     "ingredients": [
+      "400 g Kokosmilch"
+     ]
+    },
+    {
+     "text": "Kichererbsen und Gemüse zugeben und köcheln",
+     "time": 1200,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "1 Dose(n) Kichererbsen",
+      "400 g TK-Gemüse"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Ratatouille",
+   "description": "Provençalisches Gemüsegericht.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 2400,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zucchini",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Aubergine",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Paprika",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zwiebeln",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 3,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Thymian",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebeln in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "2 Zwiebeln"
+     ]
+    },
+    {
+     "text": "Olivenöl zugeben und andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "3 EL Olivenöl"
+     ]
+    },
+    {
+     "text": "Aubergine zugeben und andünsten",
+     "time": 300,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 Aubergine"
+     ]
+    },
+    {
+     "text": "Paprika, Zucchini und Thymian zugeben",
+     "ingredients": [
+      "1 Paprika",
+      "1 Zucchini",
+      "1 TL Thymian"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten einwiegen und schmoren",
+     "time": 1200,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "400 g Passierte Tomaten"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Linsen-Bolognese (vegetarisch)",
+   "description": "Proteinreiche Sauce ohne Fleisch.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 2100,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Rote Linsen",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Karotte",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel und Karotte in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel",
+      "1 Karotte"
+     ]
+    },
+    {
+     "text": "Olivenöl zugeben und andünsten",
+     "time": 180,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 EL Olivenöl"
+     ]
+    },
+    {
+     "text": "Rote Linsen einwiegen",
+     "ingredients": [
+      "150 g Rote Linsen"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten und Oregano zugeben und köcheln",
+     "time": 1200,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "400 g Passierte Tomaten",
+      "1 TL Oregano"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Blumenkohl-Curry",
+   "description": "Blumenkohl in cremiger Currysauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Blumenkohl",
+     "note": "in Röschen"
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Kokosmilch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "TL",
+     "name": "Currypulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf geben und zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Öl und Currypulver zugeben und anrösten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 EL Öl",
+      "2 TL Currypulver"
+     ]
+    },
+    {
+     "text": "Blumenkohl-Röschen einwiegen",
+     "ingredients": [
+      "600 g Blumenkohl"
+     ]
+    },
+    {
+     "text": "Kokosmilch und Wasser zugeben und garen",
+     "time": 1200,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "400 g Kokosmilch",
+      "200 g Wasser"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Knoblauch-Champignons",
+   "description": "Schnelle Beilage oder Vorspeise.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 900,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Champignons",
+     "note": "geviertelt"
+    },
+    {
+     "amount": 3,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Petersilie",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch in den Mixtopf geben und zerkleinern",
+     "time": 3,
+     "speed": "6",
+     "ingredients": [
+      "3 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Butter zugeben",
+     "time": 60,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "60 g Butter"
+     ]
+    },
+    {
+     "text": "Champignons einwiegen und braten",
+     "time": 480,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "500 g Champignons"
+     ]
+    },
+    {
+     "text": "Petersilie zugeben und vermischen",
+     "time": 10,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 EL Petersilie"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Gemüsebrühe (selbst gemacht)",
+   "description": "Paste aus frischem Gemüse — immer griffbereit.",
+   "servings": 20,
+   "serving_unit": "Portionen",
+   "time_prep": 900,
+   "time_total": 2700,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Sellerie",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Karotten",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Zwiebeln",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Petersilie",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Kurkuma",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alles Gemüse in den Mixtopf geben und zerkleinern",
+     "time": 8,
+     "speed": "8",
+     "ingredients": [
+      "150 g Sellerie",
+      "150 g Karotten",
+      "100 g Zwiebeln",
+      "50 g Petersilie"
+     ]
+    },
+    {
+     "text": "Salz und Kurkuma einwiegen und zu Paste mixen",
+     "time": 30,
+     "speed": "8",
+     "tip": "In Gläser füllen, hält kühl 3 Monate — 1 EL = 500 ml Brühe.",
+     "ingredients": [
+      "100 g Salz",
+      "1 TL Kurkuma"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Guacamole",
+   "description": "Cremige Avocado-Dip.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 300,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Reife Avocados",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Limette",
+     "note": "Saft"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Tomate",
+     "note": "entkernt"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel rot",
+     "note": "klein"
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Koriander",
+     "note": "optional"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Tomate und rote Zwiebel in den Mixtopf geben und grob zerkleinern",
+     "time": 5,
+     "speed": "5",
+     "ingredients": [
+      "1 Tomate",
+      "1 Zwiebel rot"
+     ]
+    },
+    {
+     "text": "Avocados, Limettensaft und Salz zugeben",
+     "ingredients": [
+      "2 Reife Avocados",
+      "1 Limette",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Grob-stückig mixen",
+     "time": 15,
+     "speed": "4",
+     "ingredients": [
+      "1 EL Koriander"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Tomaten-Salsa",
+   "description": "Frische Salsa für Chips & Grillen.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Tomaten",
+     "note": "geviertelt"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel rot",
+     "note": "halb"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Jalapeño",
+     "note": "optional"
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "400 g Tomaten",
+      "1 Zwiebel rot",
+      "1 Jalapeño",
+      "1 EL Zitronensaft",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Kurz auf gewünschte Stückigkeit zerkleinern",
+     "time": 5,
+     "speed": "5"
+    }
+   ]
+  },
+  {
+   "title": "Spargel-Risotto",
+   "description": "Frühjahrs-Risotto mit grünem Spargel.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 2400,
+   "difficulty": "mittel",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Risottoreis",
+     "note": ""
+    },
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Grüner Spargel",
+     "note": "in Stücken"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 40,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Gemüsebrühe",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Parmesan",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel zerkleinern und mit Butter andünsten",
+     "time": 180,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 Zwiebel",
+      "40 g Butter"
+     ]
+    },
+    {
+     "text": "Reis zugeben und rösten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "300 g Risottoreis"
+     ]
+    },
+    {
+     "text": "Brühe zugeben und garen",
+     "time": 1000,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "800 g Gemüsebrühe"
+     ]
+    },
+    {
+     "text": "Spargelstücke zugeben und mitgaren",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "500 g Grüner Spargel"
+     ]
+    },
+    {
+     "text": "Parmesan einrühren",
+     "time": 60,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "80 g Parmesan"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Kichererbsen-Bowl-Basis",
+   "description": "Gewürzte Kichererbsen für Bowls.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "Dose(n)",
+     "name": "Kichererbsen",
+     "note": "abgetropft"
+    },
+    {
+     "amount": 2,
+     "unit": "TL",
+     "name": "Paprikapulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Kreuzkümmel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Olivenöl und Gewürze in den Mixtopf geben",
+     "ingredients": [
+      "2 EL Olivenöl",
+      "2 TL Paprikapulver",
+      "1 TL Kreuzkümmel",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Abgetropfte Kichererbsen zugeben und schwenken",
+     "time": 30,
+     "speed": "1",
+     "reverse": true,
+     "tip": "Im Ofen 25 Min. bei 200°C knusprig backen oder direkt in Bowls.",
+     "ingredients": [
+      "2 Dose(n) Kichererbsen"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Ofen-Omelett-Basis (Gemüse)",
+   "description": "Ei-Masse für das Ofen-Omelett.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 8,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Gemüse",
+     "note": "klein gewürfelt"
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Käse",
+     "note": "gerieben"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Eier und Salz in den Mixtopf geben und aufschlagen",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "8 Eier",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Gemüse und Käse unterheben",
+     "time": 15,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Gemüse",
+      "100 g Käse"
+     ]
+    },
+    {
+     "text": "In gefettete Form und im Ofen 25 Min. bei 180°C backen",
+     "time": 1500,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Auberginen-Dip (Baba Ganoush)",
+   "description": "Rauchiger Auberginen-Aufstrich.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 2400,
+   "difficulty": "mittel",
+   "tags": [
+    "Vegetarisch & Vegan",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Auberginen",
+     "note": "gehalbiert"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Tahini",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Auberginen im Ofen 40 Min. bei 200°C weich braten",
+     "time": 2400,
+     "tip": "Manueller Ofen-Schritt — das gibt den Rauchgeschmack."
+    },
+    {
+     "text": "Fleisch auslöffeln, mit Tahini, Knoblauch und Zitronensaft in den Mixtopf geben",
+     "ingredients": [
+      "2 EL Tahini",
+      "2 Zehe(n) Knoblauch",
+      "2 EL Zitronensaft"
+     ]
+    },
+    {
+     "text": "Zu cremigem Dip mixen",
+     "time": 20,
+     "speed": "6",
+     "ingredients": [
+      "1 TL Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Lachs in Rahmsauce",
+   "description": "Zarter Lachs mit Dill-Sahne.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Fisch & Meeresfrüchte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Lachsfilet",
+     "note": "in Stücken"
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Dill",
+     "note": "frisch"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Schalotte",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Schalotte in den Mixtopf zerkleinern und mit Butter andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 Schalotte",
+      "20 g Butter"
+     ]
+    },
+    {
+     "text": "Lachsstücke einwiegen",
+     "ingredients": [
+      "600 g Lachsfilet"
+     ]
+    },
+    {
+     "text": "Kochsahne, Zitronensaft und Salz zugeben und sanft garen",
+     "time": 900,
+     "temperature": "90",
+     "speed": "1",
+     "reverse": true,
+     "tip": "Nur bei 90°C — Lachs bleibt saftig.",
+     "ingredients": [
+      "200 g Kochsahne",
+      "1 EL Zitronensaft",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Dill unterheben",
+     "time": 10,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 EL Dill"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Garnelen in Knoblauch-Öl",
+   "description": "Spanischer Tapas-Klassiker.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 900,
+   "difficulty": "einfach",
+   "tags": [
+    "Fisch & Meeresfrüchte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Garnelen",
+     "note": "geschält"
+    },
+    {
+     "amount": 4,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": "in Scheiben"
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Chiliflocken",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Petersilie",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauchscheiben mit Olivenöl in den Mixtopf geben und sanft anziehen lassen",
+     "time": 180,
+     "temperature": "90",
+     "speed": "1",
+     "ingredients": [
+      "4 Zehe(n) Knoblauch",
+      "80 g Olivenöl"
+     ]
+    },
+    {
+     "text": "Chiliflocken einwiegen",
+     "time": 5,
+     "speed": "1",
+     "ingredients": [
+      "1 Msp. Chiliflocken"
+     ]
+    },
+    {
+     "text": "Garnelen zugeben und garen",
+     "time": 300,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "tip": "Garnelen sind fertig, sobald sie rosa-weiß sind — nicht länger!",
+     "ingredients": [
+      "500 g Garnelen"
+     ]
+    },
+    {
+     "text": "Petersilie unterheben",
+     "time": 10,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 EL Petersilie"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Fischfrikadellen-Masse",
+   "description": "Für die Pfanne — schnell gemacht.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Fisch & Meeresfrüchte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Fischfilet",
+     "note": "z. B. Seelachs"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Ei",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Paniermehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Dill",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Fischfilet zugeben und zerkleinern",
+     "time": 8,
+     "speed": "6",
+     "ingredients": [
+      "500 g Fischfilet"
+     ]
+    },
+    {
+     "text": "Ei, Paniermehl, Salz und Dill zugeben und vermischen",
+     "time": 20,
+     "speed": "3",
+     "ingredients": [
+      "1 Ei",
+      "2 EL Paniermehl",
+      "1 TL Salz",
+      "1 EL Dill"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Thunfisch-Aufstrich",
+   "description": "Für Brot und Crackers.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Fisch & Meeresfrüchte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "Dose(n)",
+     "name": "Thunfisch",
+     "note": "abgetropft"
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Frischkäse",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel rot",
+     "note": "klein"
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Rote Zwiebel in den Mixtopf zerkleinern",
+     "time": 5,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel rot"
+     ]
+    },
+    {
+     "text": "Thunfisch, Frischkäse, Zitronensaft und Salz zugeben",
+     "time": 20,
+     "speed": "4",
+     "ingredients": [
+      "2 Dose(n) Thunfisch",
+      "150 g Frischkäse",
+      "1 EL Zitronensaft",
+      "1 Msp. Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Räucherlachs-Dip",
+   "description": "Cremiger Party-Dip.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Fisch & Meeresfrüchte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Räucherlachs",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Frischkäse",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Schmand",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zitrone",
+     "note": "Saft"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Meerrettich",
+     "note": "optional"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "200 g Räucherlachs",
+      "200 g Frischkäse",
+      "100 g Schmand",
+      "1 Zitrone",
+      "1 TL Meerrettich"
+     ]
+    },
+    {
+     "text": "Cremig mixen, stückig ok",
+     "time": 20,
+     "speed": "4"
+    }
+   ]
+  },
+  {
+   "title": "Fischsuppe (cremig)",
+   "description": "Heimische Fischsuppe mit Gemüse.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 2100,
+   "difficulty": "einfach",
+   "tags": [
+    "Fisch & Meeresfrüchte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Fischfilet",
+     "note": "in Stücken"
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Karotten",
+     "note": "in Scheiben"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 700,
+     "unit": "g",
+     "name": "Fischbrühe",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel zerkleinern und mit Karotten in Butter andünsten",
+     "time": 240,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 Zwiebel",
+      "2 Karotten",
+      "20 g Butter"
+     ]
+    },
+    {
+     "text": "Brühe zugeben und kochen",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "700 g Fischbrühe"
+     ]
+    },
+    {
+     "text": "Fischstücke einwiegen und sanft ziehen lassen",
+     "time": 600,
+     "temperature": "90",
+     "speed": "1",
+     "reverse": true,
+     "tip": "Nicht kochen — der Fisch bleibt zart.",
+     "ingredients": [
+      "500 g Fischfilet"
+     ]
+    },
+    {
+     "text": "Kochsahne und Zitronensaft zugeben",
+     "time": 120,
+     "temperature": "90",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Kochsahne",
+      "1 EL Zitronensaft"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Pizza-Sauce (für 2 Bleche)",
+   "description": "Würzige Sauce für selbstgemachte Pizza.",
+   "servings": 2,
+   "serving_unit": "Bleche",
+   "time_prep": 300,
+   "time_total": 900,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Zucker",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel und Knoblauch in den Mixtopf zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel",
+      "1 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten und Gewürze einwiegen und köcheln",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "tip": "Dick einkochen lassen — Pizza-Platten saugen sonst voll.",
+     "ingredients": [
+      "800 g Passierte Tomaten",
+      "1 TL Oregano",
+      "1 TL Salz",
+      "1 Msp. Zucker"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Taco-Füllung (Hack)",
+   "description": "Gewürzte Hackfüllung für Tacos.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hackfleisch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "TL",
+     "name": "Chilipulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Kreuzkümmel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Tomatenmark",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf zerkleinern und mit Hackfleisch anbraten",
+     "time": 600,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 Zwiebel",
+      "600 g Hackfleisch"
+     ]
+    },
+    {
+     "text": "Gewürze und Tomatenmark einwiegen und rühren",
+     "time": 60,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 TL Chilipulver",
+      "1 TL Kreuzkümmel",
+      "2 EL Tomatenmark"
+     ]
+    },
+    {
+     "text": "Wasser zugeben und einreduzieren",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "100 g Wasser"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Burrito-Bohnen (schwarze Bohnen)",
+   "description": "Gewürzte Füllung für Burritos.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "Dose(n)",
+     "name": "Schwarze Bohnen",
+     "note": "abgetropft"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Kreuzkümmel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Rauchpaprika",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel und Knoblauch in den Mixtopf zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel",
+      "2 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Öl und Gewürze zugeben und anrösten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 TL Kreuzkümmel",
+      "1 TL Rauchpaprika"
+     ]
+    },
+    {
+     "text": "Bohnen und Wasser zugeben und leicht zerdrücken",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "2 Dose(n) Schwarze Bohnen",
+      "50 g Wasser"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Hähnchen Teriyaki",
+   "description": "Süß-würzige japanische Glaze.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hähnchenbrust",
+     "note": "in Streifen"
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Sojasauce",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Reisessig",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 20,
+     "unit": "g",
+     "name": "Ingwer",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch und Ingwer in den Mixtopf zerkleinern",
+     "time": 5,
+     "speed": "6",
+     "ingredients": [
+      "2 Zehe(n) Knoblauch",
+      "20 g Ingwer"
+     ]
+    },
+    {
+     "text": "Sojasauce, Honig und Reisessig einwiegen und aufkochen",
+     "time": 300,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "80 g Sojasauce",
+      "60 g Honig",
+      "2 EL Reisessig"
+     ]
+    },
+    {
+     "text": "Hähnchenstreifen zugeben und glasiert garen",
+     "time": 900,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "600 g Hähnchenbrust"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Süß-Sauer-Sauce (+ Hähnchen)",
+   "description": "Asiatische Ananas-Sauce.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Hähnchenbrust",
+     "note": "in Würfeln"
+    },
+    {
+     "amount": 1,
+     "unit": "Dose(n)",
+     "name": "Ananas-Stücke",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Ketchup",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Essig",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Sojasauce",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Paprika",
+     "note": "gewürfelt"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Hähnchenwürfel in den Mixtopf geben und anbraten",
+     "time": 600,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "600 g Hähnchenbrust"
+     ]
+    },
+    {
+     "text": "Ananas mit Saft, Ketchup, Essig, Zucker und Sojasauce einwiegen",
+     "ingredients": [
+      "1 Dose(n) Ananas-Stücke",
+      "80 g Ketchup",
+      "60 g Essig",
+      "60 g Zucker",
+      "2 EL Sojasauce"
+     ]
+    },
+    {
+     "text": "Paprika zugeben und köcheln",
+     "time": 900,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "1 Paprika"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Schnitzel-Rahmsauce",
+   "description": "Die Sauce zum Schnitzel (der Klassiker).",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Champignons",
+     "note": "geschnitten"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Brühe",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel zerkleinern und mit Butter andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 Zwiebel",
+      "20 g Butter"
+     ]
+    },
+    {
+     "text": "Champignons zugeben und braten",
+     "time": 300,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Champignons"
+     ]
+    },
+    {
+     "text": "Mehl einstäuben",
+     "time": 60,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "1 EL Mehl"
+     ]
+    },
+    {
+     "text": "Brühe und Kochsahne zugeben und binden",
+     "time": 300,
+     "temperature": "100",
+     "speed": "3",
+     "ingredients": [
+      "100 g Brühe",
+      "200 g Kochsahne"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Currywurst-Sauce (hausgemacht)",
+   "description": "Imbiss-Klassiker zum Nachkochen.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Ketchup",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Zwiebeln",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "TL",
+     "name": "Currypulver",
+     "note": "scharf"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Worcestershire",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebeln in den Mixtopf zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "100 g Zwiebeln"
+     ]
+    },
+    {
+     "text": "Ketchup, Honig, Worcestershire und Curry zugeben",
+     "ingredients": [
+      "400 g Ketchup",
+      "2 EL Honig",
+      "2 EL Worcestershire",
+      "2 TL Currypulver"
+     ]
+    },
+    {
+     "text": "Wasser zugeben und leicht köcheln",
+     "time": 600,
+     "temperature": "90",
+     "speed": "2",
+     "ingredients": [
+      "50 g Wasser"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Gnocchi-Pfanne (Tomate-Mozzarella)",
+   "description": "Alles in einem Topf.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Gnocchi",
+     "note": "aus dem Kühlregal"
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Mozzarella",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel zerkleinern und in Öl andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 Zwiebel",
+      "2 EL Olivenöl"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten und Oregano einwiegen und köcheln",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "400 g Passierte Tomaten",
+      "1 TL Oregano"
+     ]
+    },
+    {
+     "text": "Gnocchi direkt zugeben und mitgaren",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "800 g Gnocchi"
+     ]
+    },
+    {
+     "text": "Mozzarella unterheben und schmelzen lassen",
+     "time": 120,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "200 g Mozzarella"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Kumpir-Füllung (Toppings-Creme)",
+   "description": "Die Creme für die Ofenkartoffel.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kochsahne",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Schmand",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Käse",
+     "note": "gerieben"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Schnittlauch",
+     "note": "geschnitten"
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Kochsahne und Schmand in den Mixtopf geben",
+     "ingredients": [
+      "200 g Kochsahne",
+      "100 g Schmand"
+     ]
+    },
+    {
+     "text": "Käse, Schnittlauch und Salz zugeben und verrühren",
+     "time": 20,
+     "speed": "3",
+     "tip": "Auf aufgeschnittene Ofenkartoffel geben und mit Toppings belegen.",
+     "ingredients": [
+      "100 g Käse",
+      "2 EL Schnittlauch",
+      "1 Msp. Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Schweinegulasch",
+   "description": "Geschmortes Gulasch vom Schwein.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 600,
+   "time_total": 3900,
+   "difficulty": "mittel",
+   "tags": [
+    "Hauptgerichte",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Schweinegulasch",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zwiebeln",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Paprikapulver",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Brühe",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Senf",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebeln in den Mixtopf zerkleinern und in Öl andünsten",
+     "time": 180,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 Zwiebeln",
+      "2 EL Öl"
+     ]
+    },
+    {
+     "text": "Fleisch zugeben und anbraten",
+     "time": 480,
+     "temperature": "120",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "800 g Schweinegulasch"
+     ]
+    },
+    {
+     "text": "Paprikapulver und Senf einwiegen",
+     "time": 60,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "2 EL Paprikapulver",
+      "2 EL Senf"
+     ]
+    },
+    {
+     "text": "Passierte Tomaten und Brühe zugeben und 60 Min. schmoren",
+     "time": 3600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "400 g Passierte Tomaten",
+      "400 g Brühe"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Tzatziki",
+   "description": "Griechischer Gurken-Joghurt-Dip.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Griechischer Joghurt",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Salzgurke",
+     "note": "gerieben, ausgedrückt"
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Dill",
+     "note": "frisch"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch in den Mixtopf zerkleinern",
+     "time": 3,
+     "speed": "6",
+     "ingredients": [
+      "2 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Joghurt einwiegen",
+     "ingredients": [
+      "500 g Griechischer Joghurt"
+     ]
+    },
+    {
+     "text": "Ausgedrückte Gurke, Öl, Dill und Salz zugeben und verrühren",
+     "time": 20,
+     "speed": "3",
+     "ingredients": [
+      "1 Salzgurke",
+      "2 EL Olivenöl",
+      "1 EL Dill",
+      "1 TL Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Sour Cream",
+   "description": "Die Creme für Kartoffeln & Chili.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 300,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Schmand",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Sahne",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Pfeffer",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "200 g Schmand",
+      "100 g Sahne",
+      "1 TL Zitronensaft",
+      "1 Msp. Salz",
+      "1 Msp. Pfeffer"
+     ]
+    },
+    {
+     "text": "Glatt rühren",
+     "time": 20,
+     "speed": "3"
+    }
+   ]
+  },
+  {
+   "title": "Barbecue-Sauce",
+   "description": "Rauchig-süße BBQ-Sauce.",
+   "servings": 8,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Ketchup",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Worcestershire",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Rauchpaprika",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zwiebel",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Zwiebel in den Mixtopf zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zwiebel"
+     ]
+    },
+    {
+     "text": "Übrige Zutaten einwiegen und 10 Min. köcheln",
+     "time": 600,
+     "temperature": "90",
+     "speed": "2",
+     "ingredients": [
+      "300 g Ketchup",
+      "80 g Honig",
+      "60 g Worcestershire",
+      "2 EL Rauchpaprika",
+      "60 g Wasser"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Mayonnaise",
+   "description": "Echte Mayo aus dem Mixtopf.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 420,
+   "difficulty": "mittel",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Eigelb",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Senf",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Öl",
+     "note": "neutral"
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Eigelb, Senf, Zitronensaft und Salz in den Mixtopf geben",
+     "ingredients": [
+      "1 Eigelb",
+      "1 TL Senf",
+      "1 EL Zitronensaft",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Bei 37°C aufschlagen",
+     "time": 120,
+     "temperature": "37",
+     "speed": "4"
+    },
+    {
+     "text": "Öl langsam über den Deckel zulaufen lassen",
+     "time": 180,
+     "temperature": "37",
+     "speed": "4",
+     "tip": "Ganz langsam — sonst trennt sie.",
+     "ingredients": [
+      "250 g Öl"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Remoulade",
+   "description": "Mayo-Klassiker zu Fisch.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Mayonnaise",
+     "note": "nach Grundrezept"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Gewürzgurken",
+     "note": "fein gewürfelt"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Kapern",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Senf",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Dill",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Mayonnaise in den Mixtopf geben",
+     "ingredients": [
+      "250 g Mayonnaise"
+     ]
+    },
+    {
+     "text": "Gewürzgurken, Kapern, Senf und Dill zugeben und verrühren",
+     "time": 20,
+     "speed": "3",
+     "ingredients": [
+      "2 EL Gewürzgurken",
+      "1 TL Kapern",
+      "1 TL Senf",
+      "1 EL Dill"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Ketchup (hausgemacht)",
+   "description": "Eigener Ketchup ohne Zucker-Overkill.",
+   "servings": 8,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 2100,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1000,
+     "unit": "g",
+     "name": "Passierte Tomaten",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Zimt",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Essig",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "1000 g Passierte Tomaten",
+      "80 g Zucker",
+      "1 TL Salz",
+      "1 Msp. Zimt",
+      "2 EL Essig"
+     ]
+    },
+    {
+     "text": "Dick einkochen",
+     "time": 1800,
+     "temperature": "Varoma",
+     "speed": "2",
+     "tip": "Ohne Messbecher kochen — Spritzschutz Gareinsatz auflegen."
+    }
+   ]
+  },
+  {
+   "title": "Honig-Senf-Dressing",
+   "description": "Salatdressing in 30 Sekunden.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 120,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Senf",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Weißweinessig",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "60 g Honig",
+      "60 g Senf",
+      "60 g Olivenöl",
+      "60 g Weißweinessig",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Emulgieren",
+     "time": 30,
+     "speed": "5"
+    }
+   ]
+  },
+  {
+   "title": "Caesar-Dressing",
+   "description": "Für den klassischen Caesar-Salat.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 300,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Mayonnaise",
+     "note": "nach Grundrezept"
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Parmesan",
+     "note": "gerieben"
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Sardellen",
+     "note": "optional"
+    },
+    {
+     "amount": 1,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Knoblauch und Sardellen in den Mixtopf zerkleinern",
+     "time": 4,
+     "speed": "6",
+     "ingredients": [
+      "1 Zehe(n) Knoblauch",
+      "2 Sardellen"
+     ]
+    },
+    {
+     "text": "Mayonnaise, Parmesan und Zitronensaft zugeben und verrühren",
+     "time": 20,
+     "speed": "3",
+     "ingredients": [
+      "100 g Mayonnaise",
+      "60 g Parmesan",
+      "1 EL Zitronensaft"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Süße-Chili-Sauce",
+   "description": "Asia-Dip zum Dippen und Marinieren.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 900,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 3,
+     "unit": "",
+     "name": "Chilischoten rot",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Reisessig",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Chilis und Knoblauch in den Mixtopf zerkleinern",
+     "time": 5,
+     "speed": "7",
+     "ingredients": [
+      "3 Chilischoten rot",
+      "2 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Zucker, Wasser und Essig einwiegen und dick einkochen",
+     "time": 600,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "150 g Zucker",
+      "80 g Wasser",
+      "2 EL Reisessig"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Vinaigrette (klassisch)",
+   "description": "Basis-Dressing für jeden Salat.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 120,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 40,
+     "unit": "g",
+     "name": "Balsamicoessig",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Senf",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "80 g Olivenöl",
+      "40 g Balsamicoessig",
+      "1 TL Senf",
+      "1 TL Honig",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Emulgieren",
+     "time": 30,
+     "speed": "5"
+    }
+   ]
+  },
+  {
+   "title": "Erdnuss-Sauce (Satay)",
+   "description": "Asia-Sauce zu Fleischspießen.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Erdnussbutter",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Kokosmilch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Sojasauce",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Currypulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Chilipulver",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Kokosmilch einwiegen und erwärmen",
+     "time": 120,
+     "temperature": "90",
+     "speed": "2",
+     "ingredients": [
+      "200 g Kokosmilch"
+     ]
+    },
+    {
+     "text": "Erdnussbutter und Gewürze zugeben und glatt rühren",
+     "time": 240,
+     "temperature": "90",
+     "speed": "3",
+     "ingredients": [
+      "150 g Erdnussbutter",
+      "2 EL Sojasauce",
+      "1 EL Currypulver",
+      "1 TL Chilipulver",
+      "50 g Wasser"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Chimichurri",
+   "description": "Argentinische Kräutersauce zum Steak.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Saucen & Dips",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1,
+     "unit": "Bund",
+     "name": "Petersilie",
+     "note": ""
+    },
+    {
+     "amount": 3,
+     "unit": "Zehe(n)",
+     "name": "Knoblauch",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Rotweinessig",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Oregano",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Chiliflocken",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Petersilie und Knoblauch in den Mixtopf zerkleinern",
+     "time": 5,
+     "speed": "7",
+     "ingredients": [
+      "1 Bund Petersilie",
+      "3 Zehe(n) Knoblauch"
+     ]
+    },
+    {
+     "text": "Olivenöl, Essig und Gewürze zugeben und vermischen",
+     "time": 20,
+     "speed": "4",
+     "ingredients": [
+      "100 g Olivenöl",
+      "2 EL Rotweinessig",
+      "1 TL Oregano",
+      "1 Msp. Chiliflocken"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Grießbrei",
+   "description": "Warmer Grießbrei mit Zimtzucker.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Grieß",
+     "note": "Weichweizengrieß"
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Vanille",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Milch in den Mixtopf geben und erwärmen",
+     "time": 120,
+     "temperature": "90",
+     "speed": "2",
+     "ingredients": [
+      "500 g Milch"
+     ]
+    },
+    {
+     "text": "Zucker und Vanille einwiegen",
+     "ingredients": [
+      "50 g Zucker",
+      "1 Msp. Vanille"
+     ]
+    },
+    {
+     "text": "Grieß einrieseln lassen und quellen",
+     "time": 600,
+     "temperature": "90",
+     "speed": "2",
+     "ingredients": [
+      "80 g Grieß"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Erdbeersauce",
+   "description": "Zu Eis, Pfannkuchen & Cheesecake.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Erdbeeren",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Erdbeeren und Zucker in den Mixtopf geben",
+     "ingredients": [
+      "300 g Erdbeeren",
+      "60 g Zucker"
+     ]
+    },
+    {
+     "text": "Köcheln lassen",
+     "time": 300,
+     "temperature": "100",
+     "speed": "1",
+     "ingredients": [
+      "1 EL Zitronensaft"
+     ]
+    },
+    {
+     "text": "Pürieren oder stückig lassen",
+     "time": 15,
+     "speed": "5"
+    }
+   ]
+  },
+  {
+   "title": "Himbeersauce (Couli)",
+   "description": "Feine Sauce für Dessertteller.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 420,
+   "difficulty": "einfach",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "TK-Himbeeren",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Puderzucker",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "300 g TK-Himbeeren",
+      "60 g Puderzucker",
+      "1 EL Zitronensaft"
+     ]
+    },
+    {
+     "text": "Fein mixen und durch ein Sieb streichen",
+     "time": 20,
+     "speed": "8"
+    }
+   ]
+  },
+  {
+   "title": "Zitronen-Curd",
+   "description": "Cremige Zitronencreme für Kuchen & Toast.",
+   "servings": 4,
+   "serving_unit": "Gläser",
+   "time_prep": 120,
+   "time_total": 1200,
+   "difficulty": "mittel",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 3,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zitronen",
+     "note": "Saft"
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Eier und Zucker in den Mixtopf geben und aufschlagen",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "3 Eier",
+      "150 g Zucker"
+     ]
+    },
+    {
+     "text": "Zitronensaft einwiegen",
+     "ingredients": [
+      "2 Zitronen"
+     ]
+    },
+    {
+     "text": "Bei 80°C zur Creme aufschlagen",
+     "time": 600,
+     "temperature": "80",
+     "speed": "3"
+    },
+    {
+     "text": "Butter zugeben und einrühren",
+     "time": 60,
+     "temperature": "80",
+     "speed": "3",
+     "ingredients": [
+      "80 g Butter"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Kaiserschmarrn-Teig",
+   "description": "Für die Pfanne mit Rosinen.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 40,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Rosinen",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Eigelb, Milch, Mehl, Zucker und Salz in den Mixtopf geben",
+     "time": 30,
+     "speed": "5",
+     "ingredients": [
+      "4 Eigelb",
+      "300 g Milch",
+      "250 g Mehl",
+      "40 g Zucker",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Eiweiß separat steif schlagen und unterheben — hier: Rosinen einwiegen",
+     "time": 10,
+     "speed": "1",
+     "reverse": true,
+     "tip": "Eiweiß außerhalb steif schlagen und vorsichtig unterheben.",
+     "ingredients": [
+      "80 g Rosinen"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Quarkkeulchen-Masse",
+   "description": "Sächsische Bratkeulchen.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Kartoffeln",
+     "note": "gekocht"
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Quark",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Zimt",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Gekochte Kartoffeln in den Mixtopf geben und zerdrücken",
+     "time": 20,
+     "speed": "4",
+     "ingredients": [
+      "500 g Kartoffeln"
+     ]
+    },
+    {
+     "text": "Quark und Eier zugeben",
+     "time": 20,
+     "speed": "3",
+     "ingredients": [
+      "250 g Quark",
+      "2 Eier"
+     ]
+    },
+    {
+     "text": "Mehl, Zucker und Zimt einwiegen und vermischen",
+     "time": 30,
+     "speed": "3",
+     "ingredients": [
+      "80 g Mehl",
+      "60 g Zucker",
+      "1 Msp. Zimt"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Erdbeermarmelade (kompott-Style)",
+   "description": "Fruchtig, mit Gelierzucker.",
+   "servings": 8,
+   "serving_unit": "Gläser",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Desserts",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1000,
+     "unit": "g",
+     "name": "Erdbeeren",
+     "note": ""
+    },
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Gelierzucker 2:1",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zitrone",
+     "note": "Saft"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Erdbeeren in den Mixtopf geben und zerkleinern",
+     "time": 6,
+     "speed": "5",
+     "ingredients": [
+      "1000 g Erdbeeren"
+     ]
+    },
+    {
+     "text": "Gelierzucker und Zitronensaft einwiegen",
+     "ingredients": [
+      "500 g Gelierzucker 2:1",
+      "1 Zitrone"
+     ]
+    },
+    {
+     "text": "Aufkochen und 4 Min. sprudelnd kochen",
+     "time": 240,
+     "temperature": "Varoma",
+     "speed": "2",
+     "tip": "Gelierprobe auf kalten Teller."
+    }
+   ]
+  },
+  {
+   "title": "Käsekuchen-Füllung",
+   "description": "Die cremige Füllung für den Käsekuchen.",
+   "servings": 1,
+   "serving_unit": "Form",
+   "time_prep": 300,
+   "time_total": 2400,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1000,
+     "unit": "g",
+     "name": "Magerquark",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Sahne",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Pck.",
+     "name": "Puddingpulver Vanille",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zitrone",
+     "note": "Abrieb"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Quark, Sahne und Zucker in den Mixtopf geben",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "1000 g Magerquark",
+      "200 g Sahne",
+      "150 g Zucker"
+     ]
+    },
+    {
+     "text": "Eier einzeln zugeben",
+     "time": 40,
+     "speed": "4",
+     "ingredients": [
+      "4 Eier"
+     ]
+    },
+    {
+     "text": "Puddingpulver und Zitronenabrieb einwiegen und glatt rühren",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "1 Pck. Puddingpulver Vanille",
+      "1 Zitrone"
+     ]
+    },
+    {
+     "text": "Auf Mürbeteigboden füllen und im Ofen 60 Min. bei 170°C backen",
+     "time": 3600,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Schokokuchen-Teig",
+   "description": "Saftiger Schokokuchen.",
+   "servings": 12,
+   "serving_unit": "Stücke",
+   "time_prep": 300,
+   "time_total": 4200,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Weiche Butter",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Kakao",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Pck.",
+     "name": "Backpulver",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Butter und Zucker schaumig rühren",
+     "time": 40,
+     "speed": "4",
+     "ingredients": [
+      "250 g Weiche Butter",
+      "200 g Zucker"
+     ]
+    },
+    {
+     "text": "Eier einzeln zugeben",
+     "time": 60,
+     "speed": "4",
+     "ingredients": [
+      "4 Eier"
+     ]
+    },
+    {
+     "text": "Mehl, Kakao und Backpulver einwiegen",
+     "ingredients": [
+      "200 g Mehl",
+      "50 g Kakao",
+      "1 Pck. Backpulver"
+     ]
+    },
+    {
+     "text": "Milch zugeben und glatt rühren",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "80 g Milch"
+     ]
+    },
+    {
+     "text": "Im Ofen 45 Min. bei 180°C backen",
+     "time": 2700,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Karottenkuchen-Teig",
+   "description": "Saftig mit Nüssen und Zimt.",
+   "servings": 12,
+   "serving_unit": "Stücke",
+   "time_prep": 300,
+   "time_total": 4200,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Karotten",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Öl",
+     "note": ""
+    },
+    {
+     "amount": 3,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Zimt",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Walnüsse",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Karotten in den Mixtopf geben und reiben",
+     "time": 8,
+     "speed": "6",
+     "ingredients": [
+      "300 g Karotten"
+     ]
+    },
+    {
+     "text": "Öl, Eier und Zucker zugeben",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "200 g Öl",
+      "3 Eier",
+      "200 g Zucker"
+     ]
+    },
+    {
+     "text": "Mehl und Zimt einwiegen",
+     "ingredients": [
+      "250 g Mehl",
+      "1 TL Zimt"
+     ]
+    },
+    {
+     "text": "Walnüsse zugeben und kurz unterheben",
+     "time": 15,
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "100 g Walnüsse"
+     ]
+    },
+    {
+     "text": "Im Ofen 50 Min. bei 180°C backen",
+     "time": 3000,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Zitronenkuchen-Teig",
+   "description": "Frisch-saftig mit Zitronenglasur.",
+   "servings": 12,
+   "serving_unit": "Stücke",
+   "time_prep": 300,
+   "time_total": 4200,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Weiche Butter",
+     "note": ""
+    },
+    {
+     "amount": 180,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Pck.",
+     "name": "Backpulver",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zitronen",
+     "note": "Saft + Abrieb"
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Butter und Zucker schaumig rühren",
+     "time": 40,
+     "speed": "4",
+     "ingredients": [
+      "200 g Weiche Butter",
+      "180 g Zucker"
+     ]
+    },
+    {
+     "text": "Eier zugeben und Zitronenabrieb einwiegen",
+     "time": 40,
+     "speed": "4",
+     "ingredients": [
+      "4 Eier",
+      "2 Zitronen"
+     ]
+    },
+    {
+     "text": "Mehl und Backpulver einwiegen",
+     "ingredients": [
+      "250 g Mehl",
+      "1 Pck. Backpulver"
+     ]
+    },
+    {
+     "text": "Zitronensaft und Milch zugeben",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "2 Zitronen",
+      "60 g Milch"
+     ]
+    },
+    {
+     "text": "Im Ofen 45 Min. bei 180°C backen",
+     "time": 2700,
+     "tip": "Manueller Ofen-Schritt. Nach dem Abkühlen mit Zitronenglasur bestreichen."
+    }
+   ]
+  },
+  {
+   "title": "Marmorkuchen-Teig",
+   "description": "Klassiker mit Kakaomarmor.",
+   "servings": 12,
+   "serving_unit": "Stücke",
+   "time_prep": 300,
+   "time_total": 4200,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Weiche Butter",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Pck.",
+     "name": "Backpulver",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Kakao",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Butter und Zucker schaumig rühren",
+     "time": 40,
+     "speed": "4",
+     "ingredients": [
+      "250 g Weiche Butter",
+      "200 g Zucker"
+     ]
+    },
+    {
+     "text": "Eier einzeln zugeben",
+     "time": 60,
+     "speed": "4",
+     "ingredients": [
+      "4 Eier"
+     ]
+    },
+    {
+     "text": "Mehl und Backpulver zugeben, Milch zugeben, glatt rühren",
+     "time": 40,
+     "speed": "4",
+     "ingredients": [
+      "300 g Mehl",
+      "1 Pck. Backpulver",
+      "80 g Milch"
+     ]
+    },
+    {
+     "text": "Ein Drittel Teig entnehmen, Kakao unter den Rest-Teil rühren",
+     "time": 15,
+     "speed": "3",
+     "ingredients": [
+      "2 EL Kakao"
+     ]
+    },
+    {
+     "text": "Hell und dunkel marmoriert in die Form füllen, im Ofen 50 Min. bei 180°C backen",
+     "time": 3000,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Apfelkuchen-Belag (auf Mürbeteig)",
+   "description": "Der Belag für den Apfelkuchen.",
+   "servings": 1,
+   "serving_unit": "Form",
+   "time_prep": 600,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Äpfel",
+     "note": "geschält, in Scheiben"
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Zimt",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Butter",
+     "note": "Flöckchen"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Äpfel, Zucker und Zimt in den Mixtopf geben und vorkochen",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "reverse": true,
+     "ingredients": [
+      "800 g Äpfel",
+      "60 g Zucker",
+      "1 TL Zimt"
+     ]
+    },
+    {
+     "text": "Auf den Mürbeteigboden füllen, Butterflöckchen auflegen",
+     "ingredients": [
+      "50 g Butter"
+     ]
+    },
+    {
+     "text": "Im Ofen 40 Min. bei 180°C backen",
+     "time": 2400,
+     "tip": "Manueller Ofen-Schritt."
+    }
+   ]
+  },
+  {
+   "title": "Brownies-Teig",
+   "description": "Fudgy Schokoladen-Brownies.",
+   "servings": 16,
+   "serving_unit": "Stücke",
+   "time_prep": 300,
+   "time_total": 3600,
+   "difficulty": "einfach",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Zartbitter-Schokolade",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 120,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 30,
+     "unit": "g",
+     "name": "Kakao",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Schokolade und Butter bei 50°C schmelzen",
+     "time": 180,
+     "temperature": "50",
+     "speed": "2",
+     "ingredients": [
+      "200 g Zartbitter-Schokolade",
+      "200 g Butter"
+     ]
+    },
+    {
+     "text": "Zucker und Eier zugeben",
+     "time": 30,
+     "speed": "4",
+     "ingredients": [
+      "250 g Zucker",
+      "4 Eier"
+     ]
+    },
+    {
+     "text": "Mehl und Kakao einwiegen und kurz rühren",
+     "time": 20,
+     "speed": "3",
+     "tip": "Nicht zu lange rühren — Brownies bleiben fudgy.",
+     "ingredients": [
+      "120 g Mehl",
+      "30 g Kakao"
+     ]
+    },
+    {
+     "text": "Im Ofen 25 Min. bei 180°C backen",
+     "time": 1500,
+     "tip": "Manueller Ofen-Schritt — Mitte darf noch leicht feucht sein."
+    }
+   ]
+  },
+  {
+   "title": "Churros-Teig",
+   "description": "Spanische Frittenteig-Stangen.",
+   "servings": 6,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "mittel",
+   "tags": [
+    "Backen & Teige",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Butter",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 3,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser, Butter und Salz in den Mixtopf aufkochen",
+     "time": 300,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "250 g Wasser",
+      "50 g Butter",
+      "1 Msp. Salz"
+     ]
+    },
+    {
+     "text": "Mehl einwiegen und zu Brandteig rühren",
+     "time": 90,
+     "temperature": "100",
+     "speed": "4",
+     "ingredients": [
+      "150 g Mehl"
+     ]
+    },
+    {
+     "text": "Eier einzeln zugeben",
+     "time": 45,
+     "speed": "4",
+     "tip": "In Fritteuse bei 180°C frittieren, in Zucker wälzen.",
+     "ingredients": [
+      "3 Eier"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Mango-Lassi",
+   "description": "Indisches Joghurt-Getränk.",
+   "servings": 2,
+   "serving_unit": "Gläser",
+   "time_prep": 60,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Getränke & Smoothies",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Mango",
+     "note": "in Stücken"
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Joghurt",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Honig",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben",
+     "ingredients": [
+      "300 g Mango",
+      "250 g Joghurt",
+      "100 g Milch",
+      "1 EL Honig"
+     ]
+    },
+    {
+     "text": "Fein mixen",
+     "time": 30,
+     "speed": "8"
+    }
+   ]
+  },
+  {
+   "title": "Erdbeer-Limonade",
+   "description": "Fruchtige Limonade für heiße Tage.",
+   "servings": 6,
+   "serving_unit": "Gläser",
+   "time_prep": 120,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Getränke & Smoothies",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Erdbeeren",
+     "note": ""
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zitronen",
+     "note": "Saft"
+    },
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Wasser",
+     "note": "kalt"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Minze",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Erdbeeren mit Zucker mixen",
+     "time": 20,
+     "speed": "8",
+     "ingredients": [
+      "300 g Erdbeeren",
+      "100 g Zucker"
+     ]
+    },
+    {
+     "text": "Zitronensaft und kaltes Wasser zugeben",
+     "time": 20,
+     "speed": "4",
+     "ingredients": [
+      "2 Zitronen",
+      "800 g Wasser"
+     ]
+    },
+    {
+     "text": "Minze zugeben und kurz rühren, über Eis servieren",
+     "time": 10,
+     "speed": "3",
+     "ingredients": [
+      "1 Minze"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Himbeer-Sirup (Basis)",
+   "description": "Sirup für Getränke & Desserts.",
+   "servings": 8,
+   "serving_unit": "Gläser",
+   "time_prep": 120,
+   "time_total": 900,
+   "difficulty": "einfach",
+   "tags": [
+    "Getränke & Smoothies",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "TK-Himbeeren",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben und köcheln",
+     "time": 600,
+     "temperature": "100",
+     "speed": "2",
+     "ingredients": [
+      "500 g TK-Himbeeren",
+      "400 g Zucker",
+      "200 g Wasser"
+     ]
+    },
+    {
+     "text": "Durch ein feines Sieb abseihen und in Flaschen füllen",
+     "time": 20,
+     "speed": "8"
+    }
+   ]
+  },
+  {
+   "title": "Ingwer-Shot",
+   "description": "Kurzer Energie-Kick.",
+   "servings": 4,
+   "serving_unit": "Shots",
+   "time_prep": 120,
+   "time_total": 300,
+   "difficulty": "einfach",
+   "tags": [
+    "Getränke & Smoothies",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Ingwer",
+     "note": "geschält"
+    },
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zitronen",
+     "note": "Saft"
+    },
+    {
+     "amount": 40,
+     "unit": "g",
+     "name": "Honig",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Ingwer in den Mixtopf geben und fein zerkleinern",
+     "time": 10,
+     "speed": "10",
+     "ingredients": [
+      "100 g Ingwer"
+     ]
+    },
+    {
+     "text": "Zitronensaft, Honig und Wasser zugeben",
+     "ingredients": [
+      "2 Zitronen",
+      "40 g Honig",
+      "200 g Wasser"
+     ]
+    },
+    {
+     "text": "Mixen und durch Sieb abseihen",
+     "time": 20,
+     "speed": "8"
+    }
+   ]
+  },
+  {
+   "title": "Pumpkin Spice Latte",
+   "description": "Herbstlicher Kaffee-Klassiker.",
+   "servings": 2,
+   "serving_unit": "Tassen",
+   "time_prep": 120,
+   "time_total": 900,
+   "difficulty": "einfach",
+   "tags": [
+    "Getränke & Smoothies",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Kürbispüree",
+     "note": "Dose"
+    },
+    {
+     "amount": 2,
+     "unit": "TL",
+     "name": "Pumpkin Spice",
+     "note": "Gewürzmischung"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Zucker",
+     "note": ""
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Starker Kaffee",
+     "note": "vorgekocht"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Milch mit Kürbispüree, Gewürzen und Zucker erwärmen",
+     "time": 240,
+     "temperature": "70",
+     "speed": "3",
+     "ingredients": [
+      "500 g Milch",
+      "2 EL Kürbispüree",
+      "2 TL Pumpkin Spice",
+      "2 EL Zucker"
+     ]
+    },
+    {
+     "text": "Kaffee einwiegen und aufschäumen",
+     "time": 120,
+     "temperature": "70",
+     "speed": "4",
+     "ingredients": [
+      "200 g Starker Kaffee"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Heiße Schokolade (cremig)",
+   "description": "Schokoladig wie aus dem Café.",
+   "servings": 2,
+   "serving_unit": "Tassen",
+   "time_prep": 60,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Getränke & Smoothies",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 80,
+     "unit": "g",
+     "name": "Schokolade",
+     "note": "in Stücken"
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Kakaopulver",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zucker",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Milch in den Mixtopf geben und erwärmen",
+     "time": 180,
+     "temperature": "80",
+     "speed": "2",
+     "ingredients": [
+      "500 g Milch"
+     ]
+    },
+    {
+     "text": "Schokolade, Kakao und Zucker einwiegen",
+     "ingredients": [
+      "80 g Schokolade",
+      "1 EL Kakaopulver",
+      "1 EL Zucker"
+     ]
+    },
+    {
+     "text": "Aufschäumen bis geschmolzen",
+     "time": 120,
+     "temperature": "80",
+     "speed": "4"
+    }
+   ]
+  },
+  {
+   "title": "Bulgur garen",
+   "description": "Fluffiger Bulgur für Salate & Bowls.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Beilagen",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Bulgur",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Wasser",
+     "note": "kochend"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Bulgur und Salz in eine Schüssel geben",
+     "ingredients": [
+      "250 g Bulgur",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Wasser aufkochen",
+     "time": 300,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "400 g Wasser"
+     ]
+    },
+    {
+     "text": "Kochendes Wasser über den Bulgur gießen und quellen lassen",
+     "time": 1200,
+     "tip": "Abgedeckt — Restwasser abgießen, auflockern."
+    }
+   ]
+  },
+  {
+   "title": "Linsen garen (Basis)",
+   "description": "Feste Linsen für Salate & Eintöpfe.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 2100,
+   "difficulty": "einfach",
+   "tags": [
+    "Beilagen",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 300,
+     "unit": "g",
+     "name": "Beluga-Linsen",
+     "note": ""
+    },
+    {
+     "amount": 700,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser in den Mixtopf geben und aufkochen",
+     "time": 480,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "700 g Wasser"
+     ]
+    },
+    {
+     "text": "Gewaschene Linsen zugeben und garen",
+     "time": 1200,
+     "temperature": "95",
+     "speed": "1",
+     "ingredients": [
+      "300 g Beluga-Linsen"
+     ]
+    },
+    {
+     "text": "Salz zugeben und abtropfen lassen",
+     "time": 30,
+     "speed": "1",
+     "reverse": true,
+     "tip": "Salz erst am Ende — sonst werden die Linsen hart.",
+     "ingredients": [
+      "1 TL Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Gemüse-Couscous",
+   "description": "Leichte Beilage mit Gemüse.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Beilagen",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Couscous",
+     "note": ""
+    },
+    {
+     "amount": 400,
+     "unit": "g",
+     "name": "Gemüsebrühe",
+     "note": "heiß"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Karotte",
+     "note": "klein gewürfelt"
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Zucchini",
+     "note": "klein gewürfelt"
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Olivenöl",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Karotte und Zucchini in den Mixtopf geben und klein würfeln",
+     "time": 6,
+     "speed": "5",
+     "ingredients": [
+      "1 Karotte",
+      "1 Zucchini"
+     ]
+    },
+    {
+     "text": "Olivenöl zugeben und andünsten",
+     "time": 120,
+     "temperature": "120",
+     "speed": "1",
+     "ingredients": [
+      "1 EL Olivenöl"
+     ]
+    },
+    {
+     "text": "Heiße Brühe zugeben und aufkochen",
+     "time": 240,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "400 g Gemüsebrühe"
+     ]
+    },
+    {
+     "text": "Couscous einwiegen und quellen lassen",
+     "time": 600,
+     "temperature": "100",
+     "speed": "1",
+     "tip": "Vom Herd ziehen, abgedeckt 5 Min. quellen, auflockern.",
+     "ingredients": [
+      "250 g Couscous"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Gnocchi garen (Gareinsatz)",
+   "description": "Perfekt gegarte Gnocchi ohne Pfanne.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 60,
+   "time_total": 1200,
+   "difficulty": "einfach",
+   "tags": [
+    "Beilagen",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 800,
+     "unit": "g",
+     "name": "Gnocchi",
+     "note": "Frischpackung"
+    },
+    {
+     "amount": 700,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser in den Mixtopf geben und aufkochen",
+     "time": 480,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "700 g Wasser"
+     ]
+    },
+    {
+     "text": "Gnocchi in den Gareinsatz füllen und einsetzen",
+     "ingredients": [
+      "800 g Gnocchi"
+     ]
+    },
+    {
+     "text": "Gnocchi dämpfen",
+     "time": 600,
+     "temperature": "Varoma",
+     "speed": "1"
+    }
+   ]
+  },
+  {
+   "title": "Bratkartoffel-Vorbereitung (vorgaren)",
+   "description": "Vorgegarte Kartoffeln für die Pfanne.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Beilagen",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 1000,
+     "unit": "g",
+     "name": "Kartoffeln",
+     "note": "festkochend, in Scheiben"
+    },
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser und Salz in den Mixtopf geben und aufkochen",
+     "time": 480,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "600 g Wasser",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Kartoffelscheiben im Gareinsatz vorgaren",
+     "time": 1200,
+     "temperature": "Varoma",
+     "speed": "1",
+     "tip": "Danach in der Pfanne knusprig braten.",
+     "ingredients": [
+      "1000 g Kartoffeln"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Süßkartoffel-Würfel (Gareinsatz)",
+   "description": "Weiche Süßkartoffel-Würfel für Bowls.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 300,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Beilagen",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 700,
+     "unit": "g",
+     "name": "Süßkartoffeln",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 600,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser in den Mixtopf geben und aufkochen",
+     "time": 480,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "600 g Wasser"
+     ]
+    },
+    {
+     "text": "Süßkartoffel-Würfel im Gareinsatz garen",
+     "time": 1200,
+     "temperature": "Varoma",
+     "speed": "1",
+     "ingredients": [
+      "700 g Süßkartoffeln"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Eiersalat-Aufstrich",
+   "description": "Klassiker aufs Brot.",
+   "servings": 4,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 300,
+   "difficulty": "einfach",
+   "tags": [
+    "Frühstück & Aufstriche",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 6,
+     "unit": "",
+     "name": "Eier",
+     "note": "hart gekocht"
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Mayonnaise",
+     "note": "nach Grundrezept"
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Senf",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Schnittlauch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Hartgekochte Eier in den Mixtopf geben und grob zerkleinern",
+     "time": 6,
+     "speed": "4",
+     "ingredients": [
+      "6 Eier"
+     ]
+    },
+    {
+     "text": "Mayonnaise, Senf, Schnittlauch und Salz zugeben",
+     "time": 20,
+     "speed": "2",
+     "reverse": true,
+     "ingredients": [
+      "150 g Mayonnaise",
+      "1 TL Senf",
+      "2 EL Schnittlauch",
+      "1 Msp. Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Avocado-Creme",
+   "description": "Grüne Creme fürs Frühstücksbrot.",
+   "servings": 2,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Frühstück & Aufstriche",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Reife Avocados",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Zitronensaft",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Chiliflocken",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Avocados und Zitronensaft in den Mixtopf geben",
+     "ingredients": [
+      "2 Reife Avocados",
+      "1 EL Zitronensaft"
+     ]
+    },
+    {
+     "text": "Salz und Chiliflocken zugeben und cremig mixen",
+     "time": 20,
+     "speed": "5",
+     "ingredients": [
+      "1 Msp. Salz",
+      "1 Msp. Chiliflocken"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Hafer-Joghurt-Basis (Overnight-Oats)",
+   "description": "Vorbereitung für den morgigen Morgen.",
+   "servings": 2,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 60,
+   "difficulty": "einfach",
+   "tags": [
+    "Frühstück & Aufstriche",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Haferflocken",
+     "note": ""
+    },
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Joghurt",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Honig",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Alle Zutaten in den Mixtopf geben und verrühren",
+     "time": 20,
+     "speed": "3",
+     "ingredients": [
+      "100 g Haferflocken",
+      "250 g Joghurt",
+      "150 g Milch",
+      "2 EL Honig"
+     ]
+    },
+    {
+     "text": "In Gläser füllen und über Nacht kühlen",
+     "time": 60,
+     "tip": "Manueller Schritt: mind. 6 Std. im Kühlschrank."
+    }
+   ]
+  },
+  {
+   "title": "Tomaten-Aufstrich (vegetarisch)",
+   "description": "Fruchtiger Brotaufstrich.",
+   "servings": 6,
+   "serving_unit": "Gläser",
+   "time_prep": 300,
+   "time_total": 1500,
+   "difficulty": "einfach",
+   "tags": [
+    "Frühstück & Aufstriche",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 500,
+     "unit": "g",
+     "name": "Tomaten",
+     "note": "geviertelt"
+    },
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Zwiebeln",
+     "note": ""
+    },
+    {
+     "amount": 50,
+     "unit": "g",
+     "name": "Olivenöl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "TL",
+     "name": "Salz",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Basilikum",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Tomaten und Zwiebeln in den Mixtopf geben und zerkleinern",
+     "time": 6,
+     "speed": "6",
+     "ingredients": [
+      "500 g Tomaten",
+      "100 g Zwiebeln"
+     ]
+    },
+    {
+     "text": "Olivenöl und Salz zugeben und einkochen",
+     "time": 900,
+     "temperature": "Varoma",
+     "speed": "2",
+     "ingredients": [
+      "50 g Olivenöl",
+      "1 TL Salz"
+     ]
+    },
+    {
+     "text": "Basilikum zugeben und fein mixen",
+     "time": 15,
+     "speed": "6",
+     "ingredients": [
+      "1 EL Basilikum"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Quark-Eierkuchen-Teig (fettarm)",
+   "description": "Proteinreicher Pfannkuchenteig.",
+   "servings": 2,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 420,
+   "difficulty": "einfach",
+   "tags": [
+    "Frühstück & Aufstriche",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Magerquark",
+     "note": ""
+    },
+    {
+     "amount": 4,
+     "unit": "",
+     "name": "Eier",
+     "note": ""
+    },
+    {
+     "amount": 60,
+     "unit": "g",
+     "name": "Mehl",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Salz",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Quark und Eier in den Mixtopf geben",
+     "ingredients": [
+      "200 g Magerquark",
+      "4 Eier"
+     ]
+    },
+    {
+     "text": "Mehl und Salz einwiegen und glatt rühren",
+     "time": 30,
+     "speed": "5",
+     "ingredients": [
+      "60 g Mehl",
+      "1 Msp. Salz"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Obst-Quark-Schale (Kindergarten)",
+   "description": "Kinder-Liebling in 2 Minuten.",
+   "servings": 2,
+   "serving_unit": "Portionen",
+   "time_prep": 120,
+   "time_total": 240,
+   "difficulty": "einfach",
+   "tags": [
+    "Frühstück & Aufstriche",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 250,
+     "unit": "g",
+     "name": "Quark",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Obst",
+     "note": "nach Saison"
+    },
+    {
+     "amount": 2,
+     "unit": "EL",
+     "name": "Honig",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Obst in den Mixtopf geben und zerkleinern",
+     "time": 10,
+     "speed": "6",
+     "ingredients": [
+      "150 g Obst"
+     ]
+    },
+    {
+     "text": "Quark und Honig zugeben und verrühren",
+     "time": 15,
+     "speed": "3",
+     "ingredients": [
+      "250 g Quark",
+      "2 EL Honig"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Hähnchen-Gemüse-Babybrei (ab 8. Monat)",
+   "description": "Mit Fleisch für den Mittagsbrei.",
+   "servings": 2,
+   "serving_unit": "Gläser",
+   "time_prep": 300,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Baby & Familie",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 100,
+     "unit": "g",
+     "name": "Hähnchenbrust",
+     "note": "in Stücken"
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Gemüse",
+     "note": "z. B. Karotte + Zucchini"
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Rapsöl",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser in den Mixtopf geben",
+     "ingredients": [
+      "200 g Wasser"
+     ]
+    },
+    {
+     "text": "Hähnchen und Gemüse in den Gareinsatz füllen und dämpfen",
+     "time": 1200,
+     "temperature": "Varoma",
+     "speed": "1",
+     "ingredients": [
+      "100 g Hähnchenbrust",
+      "200 g Gemüse"
+     ]
+    },
+    {
+     "text": "Rapsöl zugeben und sehr fein pürieren",
+     "time": 40,
+     "speed": "8",
+     "tip": "Für kleine Babys extra lang pürieren — keine Stückchen.",
+     "ingredients": [
+      "1 EL Rapsöl"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Kartoffel-Gemüse-Babybrei",
+   "description": "Klassischer Mittagsbrei.",
+   "servings": 2,
+   "serving_unit": "Gläser",
+   "time_prep": 300,
+   "time_total": 1800,
+   "difficulty": "einfach",
+   "tags": [
+    "Baby & Familie",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Kartoffeln",
+     "note": "gewürfelt"
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Gemüse",
+     "note": "z. B. Brokkoli + Karotte"
+    },
+    {
+     "amount": 200,
+     "unit": "g",
+     "name": "Wasser",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "EL",
+     "name": "Rapsöl",
+     "note": ""
+    }
+   ],
+   "steps": [
+    {
+     "text": "Wasser in den Mixtopf geben",
+     "ingredients": [
+      "200 g Wasser"
+     ]
+    },
+    {
+     "text": "Kartoffeln und Gemüse in den Gareinsatz füllen und dämpfen",
+     "time": 1200,
+     "temperature": "Varoma",
+     "speed": "1",
+     "ingredients": [
+      "150 g Kartoffeln",
+      "150 g Gemüse"
+     ]
+    },
+    {
+     "text": "Rapsöl zugeben und fein pürieren",
+     "time": 30,
+     "speed": "8",
+     "ingredients": [
+      "1 EL Rapsöl"
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Apfel-Zwieback-Brei (ab 6. Monat)",
+   "description": "Weicher Brei vom Zwieback.",
+   "servings": 1,
+   "serving_unit": "Gläschen",
+   "time_prep": 120,
+   "time_total": 600,
+   "difficulty": "einfach",
+   "tags": [
+    "Baby & Familie",
+    "Grundrezept"
+   ],
+   "source": "Koch-I-Doo Grundrezepte",
+   "tm_versions": [
+    "TM5",
+    "TM6"
+   ],
+   "ingredients": [
+    {
+     "amount": 2,
+     "unit": "",
+     "name": "Zwiebackscheiben",
+     "note": ""
+    },
+    {
+     "amount": 150,
+     "unit": "g",
+     "name": "Milch",
+     "note": ""
+    },
+    {
+     "amount": 1,
+     "unit": "",
+     "name": "Apfel",
+     "note": "geschält"
+    },
+    {
+     "amount": 1,
+     "unit": "Msp.",
+     "name": "Zimt",
+     "note": "optional"
+    }
+   ],
+   "steps": [
+    {
+     "text": "Milch in den Mixtopf geben und erwärmen",
+     "time": 120,
+     "temperature": "80",
+     "speed": "2",
+     "ingredients": [
+      "150 g Milch"
+     ]
+    },
+    {
+     "text": "Zwieback und geschälten Apfel einwiegen und weich kochen",
+     "time": 240,
+     "temperature": "90",
+     "speed": "2",
+     "ingredients": [
+      "2 Zwiebackscheiben",
+      "1 Apfel"
+     ]
+    },
+    {
+     "text": "Fein pürieren",
+     "time": 30,
+     "speed": "8",
+     "ingredients": [
+      "1 Msp. Zimt"
      ]
     }
    ]
