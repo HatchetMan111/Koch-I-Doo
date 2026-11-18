@@ -50,7 +50,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.1.1 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.1.2 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
     </div>
   );
