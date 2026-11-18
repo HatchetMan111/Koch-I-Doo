@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Mock für curl auf dem HOST: gibt HTTP-Code ohne Zeilenumbruch aus
+# (Grube: `printf '200'` – sonst schlägt `[[ "$code" == 200 ]]` fehl oder
+# `000000`-False-Positives entstehen).
+set -u
+STATE="${HARNESS_STATE:?HARNESS_STATE fehlt}"
+echo "curl $*" >> "$STATE/curl.log"
+code=$(cat "$STATE/host_curl_code" 2>/dev/null || echo 200)
+printf '%s' "$code"
+exit 0

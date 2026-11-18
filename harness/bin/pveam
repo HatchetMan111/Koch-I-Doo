@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Mock für `pveam` (Template-Verwaltung)
+set -u
+STATE="${HARNESS_STATE:?HARNESS_STATE fehlt}"
+LOG="$STATE/pveam.log"
+touch "$LOG"
+cmd="${1:-}"; shift || true
+echo "pveam $cmd $*" >> "$LOG"
+
+case "$cmd" in
+    list)
+        if [[ -f "$STATE/pveam_list" ]]; then cat "$STATE/pveam_list"; fi
+        ;;
+    available)
+        if [[ -f "$STATE/pveam_avail" ]]; then cat "$STATE/pveam_avail"; fi
+        ;;
+    update|download)
+        exit 0
+        ;;
+    *)
+        exit 0
+        ;;
+esac

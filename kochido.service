@@ -1,0 +1,19 @@
+# Referenz-Unit – der Installer schreibt diese Datei ins LXC
+# (/etc/systemd/system/kochido.service, PORT dort per Variable).
+[Unit]
+Description=Kochido – Guided Cooking Server (lokaler Cookidoo-Ersatz)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/kochido/app
+Environment=PORT=8090
+Environment=KOCHIDO_DATA=/opt/kochido/data
+Environment=KOCHIDO_DIST=/opt/kochido/app/dist
+ExecStart=/opt/kochido/venv/bin/python /opt/kochido/app/main.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

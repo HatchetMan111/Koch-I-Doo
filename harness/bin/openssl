@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Mock für openssl (deterministisches Passwort)
+case "${1:-}" in
+    rand) echo "harness-password" ;;
+    *) exit 0 ;;
+esac

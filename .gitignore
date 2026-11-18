@@ -1,0 +1,13 @@
+# Node
+frontend/node_modules/
+frontend/.vite/
+
+# Lokale Laufzeitdaten (DB/Bilder) – nur der dist-Build wird committed
+backend/data/
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

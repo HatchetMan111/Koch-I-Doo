@@ -1,0 +1,93 @@
+[
+  {
+    "title": "Kartoffelsuppe aus dem Thermomix",
+    "description": "Klassische, cremige Kartoffelsuppe – demonstriert Kochen bei 100 °C mit Löffel-Stufe.",
+    "servings": 4,
+    "serving_unit": "Portionen",
+    "time_prep": 600,
+    "time_total": 1800,
+    "difficulty": "einfach",
+    "tags": ["Thermomix", "Suppe", "Demo"],
+    "image": "",
+    "source": "Kochido Demo",
+    "tm_versions": ["TM5", "TM6"],
+    "ingredients": [
+      {"amount": 1000, "unit": "g", "name": "Kartoffeln", "note": "mehligkochend, gewürfelt"},
+      {"amount": 2, "unit": "", "name": "Zwiebeln", "note": "halbiert"},
+      {"amount": 1, "unit": "EL", "name": "Öl", "note": ""},
+      {"amount": 1000, "unit": "g", "name": "Gemüsebrühe", "note": ""},
+      {"amount": 200, "unit": "g", "name": "Sahne", "note": ""},
+      {"amount": 1, "unit": "TL", "name": "Salz", "note": ""},
+      {"amount": 1, "unit": "Prise(n)", "name": "Muskatnuss", "note": "gemahlen"},
+      {"amount": 100, "unit": "g", "name": "Kochspeck", "note": "optional, gewürfelt"}
+    ],
+    "steps": [
+      {"text": "Zwiebeln und Öl in den Mixtopf geben", "time": 3, "temperature": "", "speed": "6", "reverse": false, "mode": "", "ingredients": ["2 Zwiebeln", "1 EL Öl"], "tip": ""},
+      {"text": "Kartoffeln schälen, würfeln und mit Gemüsebrühe in den Mixtopf geben", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": ["1000 g Kartoffeln", "1000 g Gemüsebrühe"], "tip": "Kartoffeln ca. 1 cm groß würfeln, dann werden sie gleichmäßig gar."},
+      {"text": "Kochen", "time": 1500, "temperature": "100", "speed": "1", "reverse": false, "mode": "", "ingredients": [], "tip": "Mixtopf-Deckel absetzen, Messbecher oben auflegen."},
+      {"text": "Sahne, Salz und Muskatnuss einwiegen", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": ["200 g Sahne", "1 TL Salz", "1 Prise(n) Muskatnuss"], "tip": ""},
+      {"text": "Aufmixen und abschmecken", "time": 10, "temperature": "", "speed": "4", "reverse": false, "mode": "", "ingredients": [], "tip": "Für eine gröbere Textur nur 5 Sekunden mixen."},
+      {"text": "Kochspeck in einer Pfanne knusprig auslassen und auf der Suppe servieren", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": ["100 g Kochspeck"], "tip": ""}
+    ]
+  },
+  {
+    "title": "Bolognese aus dem Thermomix",
+    "description": "Ragù alla Bolognese – angedünstet und langsam geschmort, das Herzstück zeigt Varoma-freies Kochen auf Stufe sanft.",
+    "servings": 6,
+    "serving_unit": "Portionen",
+    "time_prep": 900,
+    "time_total": 3600,
+    "difficulty": "einfach",
+    "tags": ["Thermomix", "Hauptgericht", "Demo"],
+    "image": "",
+    "source": "Kochido Demo",
+    "tm_versions": ["TM5", "TM6"],
+    "ingredients": [
+      {"amount": 2, "unit": "", "name": "Zwiebeln", "note": "geviertelt"},
+      {"amount": 2, "unit": "Zehe(n)", "name": "Knoblauch", "note": ""},
+      {"amount": 2, "unit": "EL", "name": "Olivenöl", "note": ""},
+      {"amount": 500, "unit": "g", "name": "Rinderhackfleisch", "note": ""},
+      {"amount": 800, "unit": "g", "name": "Passierte Tomaten", "note": ""},
+      {"amount": 100, "unit": "g", "name": "Rotwein", "note": "optional"},
+      {"amount": 2, "unit": "TL", "name": "Salz", "note": ""},
+      {"amount": 1, "unit": "TL", "name": "Zucker", "note": ""},
+      {"amount": 2, "unit": "Zweig(e)", "name": "Thymian", "note": ""}
+    ],
+    "steps": [
+      {"text": "Zwiebeln und Knoblauch in den Mixtopf geben und zerkleinern", "time": 5, "temperature": "", "speed": "8", "reverse": false, "mode": "", "ingredients": ["2 Zwiebeln", "2 Zehe(n) Knoblauch"], "tip": ""},
+      {"text": "Olivenöl zugeben und andünsten", "time": 180, "temperature": "120", "speed": "1", "reverse": false, "mode": "", "ingredients": ["2 EL Olivenöl"], "tip": ""},
+      {"text": "Rinderhackfleisch zugeben und anbraten", "time": 600, "temperature": "120", "speed": "2", "reverse": true, "mode": "", "ingredients": ["500 g Rinderhackfleisch"], "tip": "Linkslauf, damit das Hackfleisch nicht zerkleinert wird."},
+      {"text": "Rotwein zugeben und abdampfen lassen", "time": 300, "temperature": "Varoma", "speed": "1", "reverse": true, "mode": "", "ingredients": ["100 g Rotwein"], "tip": "Ohne Alkohol: einfach Brühe verwenden."},
+      {"text": "Passierte Tomaten, Salz, Zucker und Thymian einwiegen", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": ["800 g Passierte Tomaten", "2 TL Salz", "1 TL Zucker", "2 Zweig(e) Thymian"], "tip": ""},
+      {"text": "Schmoren lassen", "time": 1800, "temperature": "100", "speed": "1", "reverse": true, "mode": "", "ingredients": [], "tip": "Gareinsatz als Spritzschutz auflegen."},
+      {"text": "Mit Salz abschmecken und zu Pasta servieren", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": [], "tip": ""}
+    ]
+  },
+  {
+    "title": "Hefeteig für 2 Pizzen (TM5/TM6)",
+    "description": "Gummizug-Teig mit sanfter Knetstufe – zeigt den Teigmodus und die Gärzeit als Schritt ohne Maschinenzeit.",
+    "servings": 2,
+    "serving_unit": "Pizzen",
+    "time_prep": 600,
+    "time_total": 5400,
+    "difficulty": "einfach",
+    "tags": ["Thermomix", "Backen", "Demo"],
+    "image": "",
+    "source": "Kochido Demo",
+    "tm_versions": ["TM5", "TM6"],
+    "ingredients": [
+      {"amount": 500, "unit": "g", "name": "Mehl", "note": "Type 405 oder 550"},
+      {"amount": 320, "unit": "g", "name": "Wasser", "note": "lauwarm"},
+      {"amount": 10, "unit": "g", "name": "Frischhefe", "note": "oder 1 TL Trockenhefe"},
+      {"amount": 1, "unit": "TL", "name": "Salz", "note": ""},
+      {"amount": 1, "unit": "Prise(n)", "name": "Zucker", "note": ""}
+    ],
+    "steps": [
+      {"text": "Wasser, Hefe und Zucker in den Mixtopf geben und auflösen", "time": 90, "temperature": "37", "speed": "2", "reverse": false, "mode": "", "ingredients": ["320 g Wasser", "10 g Frischhefe", "1 Prise(n) Zucker"], "tip": ""},
+      {"text": "Mehl und Salz einwiegen", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": ["500 g Mehl", "1 TL Salz"], "tip": ""},
+      {"text": "Kneten", "time": 120, "temperature": "", "speed": "", "reverse": false, "mode": "dough", "ingredients": [], "tip": "Der Teig sollte sich vom Rand lösen."},
+      {"text": "Teig in eine geölte Schüssel geben und abgedeckt an einem warmen Ort gehen lassen", "time": 3600, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": [], "tip": "Die Zeit läuft als reiner Timer – die Maschine ist nicht beteiligt."},
+      {"text": "Teig auf bemehlter Fläche teilen und dünn ausrollen", "time": 0, "temperature": "", "speed": "", "reverse": false, "mode": "", "ingredients": [], "tip": ""}
+    ]
+  }
+]

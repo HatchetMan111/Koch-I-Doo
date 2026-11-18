@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# Mock für `pct` – steuert den Installationsfluss über State-Dateien.
+# HARNESS_STATE muss gesetzt sein.
+set -u
+STATE="${HARNESS_STATE:?HARNESS_STATE fehlt}"
+mkdir -p "$STATE"
+LOG="$STATE/pct.log"
+touch "$LOG"
+cmd="${1:-}"; shift || true
+echo "pct $cmd $*" >> "$LOG"
+
+case "$cmd" in
+    list)
+        # Spalten variieren live (Lock kann leer sein) – Name ist $NF
+        if [[ -f "$STATE/ct_list" ]]; then cat "$STATE/ct_list"; fi
+        ;;
+    create)
+        exit 0
+        ;;
+    status)
+        local_id="$1"
+        if grep -q "^${local_id} stopped" "$STATE/ct_list" 2>/dev/null; then
+            echo "status: stopped"
+            exit 0
+        fi
+        echo "status: running"
+        ;;
+    start)
+        echo "startet"
+        ;;
+    stop)
+        exit 0
+        ;;
+    destroy)
+        if [[ -f "$STATE/ct_list" ]]; then
+            grep -v "^$1 " "$STATE/ct_list" > "$STATE/ct_list.tmp" || true
+            mv "$STATE/ct_list.tmp" "$STATE/ct_list" 2>/dev/null || true
+        fi
+        exit 0
+        ;;
+    exec)
+        ct_id="$1"; shift
+        args="$*"
+        case "$args" in
+            *"hostname -I"*)
+                echo "${HARNESS_CT_IP:-10.0.0.77} "
+                ;;
+            *"systemctl is-active --quiet kochido"*)
+                if [[ "$(cat "$STATE/svc" 2>/dev/null || echo active)" == "active" ]]; then
+                    exit 0
+                fi
+                exit 3
+                ;;
+            *"getent hosts"*)
+                # DNS-Fail-Szenario: getent schlägt fehl, bis der Fallback geschrieben wurde
+                if [[ "$(cat "$STATE/dnsfail" 2>/dev/null || echo 0)" == "1" ]]; then
+                    if [[ -f "$STATE/dnsfix" ]]; then
+                        exit 0
+                    fi
+                    exit 2
+                fi
+                exit 0
+                ;;
+            *"resolv.conf"*)
+                if [[ "$args" == *"nameserver"* && "$args" == *"sh -c"* ]]; then
+                    touch "$STATE/dnsfix"
+                fi
+                exit 0
+                ;;
+            *"dhclient-enter-hooks"*)
+                touch "$STATE/dnsfix"   # Hook-Schreiben fixt ebenfalls
+                exit 0
+                ;;
+            *"setup-inner.sh"*)
+                touch "$STATE/inner-run"
+                exit 0
+                ;;
+            *"curl -s -o /dev/null"*)
+                code=$(cat "$STATE/curl_code" 2>/dev/null || echo 200)
+                printf '%s' "$code"
+                exit 0
+                ;;
+            *"test -f"*)
+                exit 0
+                ;;
+            *"grep -m1 -oP"*)
+                echo "${HARNESS_APP_VERSION:-1.0.0}"
+                ;;
+            *"journalctl"*)
+                echo "(mock-journal)"
+                ;;
+            *"tar -C"*)
+                exit 0
+                ;;
+            *"ss -tlnp"*)
+                echo "LISTEN 0 511 0.0.0.0:${HARNESS_PORT:-8090} *:*"
+                ;;
+            *)
+                exit 0
+                ;;
+        esac
+        ;;
+    *)
+        exit 0
+        ;;
+esac
