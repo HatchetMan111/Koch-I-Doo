@@ -34,7 +34,9 @@ export default function Home() {
   const allTags = useMemo(() => {
     const counts = {};
     (recipes || []).forEach((r) => (r.tags || []).forEach((t) => (counts[t] = (counts[t] || 0) + 1)));
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return Object.entries(counts)
+      .filter(([t]) => t !== "Grundrezept")   // Meta-Tag: 65× wäre nur Noise
+      .sort((a, b) => b[1] - a[1]);
   }, [recipes]);
 
   const toggleFav = async (recipe) => {

@@ -32,17 +32,17 @@ export default function App() {
           </span>
         </Link>
         <nav className="topnav">
-          <Link to="/entdecken" className="btn btn-outline">
-            🧭 Entdecken
+          <Link to="/entdecken" className="btn btn-outline" title="Entdecken">
+            🧭 <span className="nav-label">Entdecken</span>
           </Link>
-          <Link to="/plan" className="btn btn-outline">
-            📅 Woche
+          <Link to="/plan" className="btn btn-outline" title="Wochenplan">
+            📅 <span className="nav-label">Woche</span>
           </Link>
-          <Link to="/import" className="btn btn-outline">
-            ⤓ Importieren
+          <Link to="/import" className="btn btn-outline" title="Importieren">
+            ⤓ <span className="nav-label">Importieren</span>
           </Link>
-          <Link to="/neu" className="btn btn-primary">
-            + Neues Rezept
+          <Link to="/neu" className="btn btn-primary" title="Neues Rezept">
+            + <span className="nav-label">Rezept</span>
           </Link>
         </nav>
       </header>
@@ -60,7 +60,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.2.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.2.1 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
     </div>
   );
