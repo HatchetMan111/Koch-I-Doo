@@ -15,10 +15,12 @@ from pydantic import BaseModel
 import db
 from importers.chefkoch import ImportFehler, USER_AGENT, import_from_url
 from importers.cookidoo import import_cookidoo
+from importers.cookidoo_account import fetch_cookidoo_account
 from importers.textimport import import_from_text
+from importers.tm_convert import convert_recipe_to_tm
 
-APP_NAME = "Kochido"
-APP_VERSION = "1.0.0"
+APP_NAME = "Koch-I-Doo"
+APP_VERSION = "1.1.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -87,6 +89,14 @@ class ImportCookidooBody(BaseModel):
 
 class FavoriteBody(BaseModel):
     favorite: bool
+
+
+class CookidooAccountBody(BaseModel):
+    email: str
+    password: str
+    country: str = "de"
+    language: str = "de-DE"
+    max_recipes: int = 0  # 0 = alle
 
 
 def _fail_400(exc: Exception) -> HTTPException:
@@ -219,6 +229,28 @@ def api_import_cookidoo(body: ImportCookidooBody):
     return {"recipes": recipes, "source": "cookidoo",
             "count": len(recipes),
             "hint": "Vorschau prüfen und unten auf „Alle importieren“ klicken."}
+
+
+@app.post("/api/import/cookidoo-account")
+async def api_import_cookidoo_account(body: CookidooAccountBody):
+    """Direkter Import aus dem Cookidoo-Konto (OAuth-Login über cookidoo-api)."""
+    try:
+        recipes, warnings = await fetch_cookidoo_account(
+            body.email, body.password, body.country, body.language, body.max_recipes
+        )
+    except ImportFehler as exc:
+        raise _fail_400(exc) from None
+    return {"recipes": recipes, "source": "cookidoo-account", "count": len(recipes),
+            "warnings": warnings,
+            "hint": "Vorschau prüfen und auf „Alle importieren“ klicken – danach kannst du das Abo kündigen."}
+
+
+@app.post("/api/import/convert-tm")
+def api_convert_tm(recipe: RecipeModel):
+    """Heuristik: Schritte ohne TM-Parameter in Thermomix-Schritte übersetzen."""
+    data = recipe.to_dict()
+    converted, warnings = convert_recipe_to_tm(data)
+    return {"recipe": converted, "warnings": warnings}
 
 
 class RecipeBatchBody(BaseModel):

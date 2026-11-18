@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  🍳 Kochido – One-Click-Installer (Proxmox VE)
-#  https://github.com/HatchetMan111/Kochido
+#  🍳 Koch-I-Doo – One-Click-Installer (Proxmox VE)
+#  https://github.com/HatchetMan111/Koch-I-Doo
 #
-#  Erstellt einen unprivilegierten LXC-Container und installiert darin Kochido:
+#  Erstellt einen unprivilegierten LXC-Container und installiert darin Koch-I-Doo:
 #  den lokalen Cookidoo-Ersatz – Schritt-für-Schritt-Guided-Cooking für den
 #  Thermomix (TM5/TM6) OHNE Abo, mit Rezept-Import von Chefkoch-URLs,
 #  Freitext und cookidump-Exporten.
@@ -12,7 +12,7 @@
 #  gebaut bei (dist/ ist committed) → im Container wird KEIN Node gebaut.
 #
 #  Installation (auf dem Proxmox-Host als root):
-#    bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Kochido/main/install/kochido.sh)"
+#    bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Doo/main/install/kochido.sh)"
 #
 #  Mit Optionen (direkt hinter dem schließenden Anführungszeichen):
 #    ... " --id 210 --memory 2048 --port 8090
@@ -53,7 +53,7 @@ FORCE_RECREATE=false
 ASSUME_YES=false
 TMP_DIR=""
 LOG_FILE="/tmp/${APP_NAME}-installer-$(date +%Y%m%d-%H%M%S).log"
-ONE_LINER='bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Kochido/main/install/kochido.sh)"'
+ONE_LINER='bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Doo/main/install/kochido.sh)"'
 
 # ── Farben & Logging ───────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -262,9 +262,9 @@ parse_args() {
 
 print_help() {
     cat <<'EOF'
-🍳 Kochido – Proxmox-Installer (lokaler Cookidoo-Ersatz, TM5/TM6)
+🍳 Koch-I-Doo – Proxmox-Installer (lokaler Cookidoo-Ersatz, TM5/TM6)
 
-Installation:   bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Kochido/main/install/kochido.sh)"
+Installation:   bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Doo/main/install/kochido.sh)"
 
 Optionen (hinter dem schließenden Anführungszeichen anhängen, z. B. ... " --id 210):
   --id ID          Container-ID (Default: nächste freie ab 200)
@@ -300,7 +300,7 @@ write_inner_script() {
     cat > "$TMP_DIR/setup-inner.sh" <<'INNEREOF'
 #!/usr/bin/env bash
 # =============================================================================
-# Kochido In-Container-Setup (idempotent – safe für Update & Re-Run)
+# Koch-I-Doo In-Container-Setup (idempotent – safe für Update & Re-Run)
 # Variablen via env: PORT, HOST_DNS, UPSTREAM_TARBALL_URL, APP_NAME
 # =============================================================================
 set -Eeuo pipefail
@@ -321,7 +321,7 @@ apt-get install -y -qq python3-venv python3-pip curl ca-certificates >/dev/null
 
 echo ">>> DNS festschreiben (DHCP-DNS des Netzes ist unzuverlässig) ..."
 mkdir -p /etc/dhcp/dhclient-enter-hooks.d
-printf '# Kochido: resolv.conf nicht von DHCP überschreiben lassen\nmake_resolv_conf() { :; }\n' > /etc/dhcp/dhclient-enter-hooks.d/no-dns
+printf '# Koch-I-Doo: resolv.conf nicht von DHCP überschreiben lassen\nmake_resolv_conf() { :; }\n' > /etc/dhcp/dhclient-enter-hooks.d/no-dns
 printf 'domain home.arpa\nsearch home.arpa\nnameserver %s\nnameserver 1.1.1.1\nnameserver 8.8.8.8\nnameserver 9.9.9.9\n' "${HOST_DNS}" > /etc/resolv.conf
 
 echo ">>> Kochido-Quellcode von GitHub laden ..."
@@ -358,7 +358,7 @@ mkdir -p /opt/kochido/data/images
 echo ">>> systemd-Unit kochido.service schreiben (Port ${PORT}) ..."
 cat > /etc/systemd/system/kochido.service <<UNITEOF
 [Unit]
-Description=Kochido – Guided Cooking Server (lokaler Cookidoo-Ersatz)
+Description=Koch-I-Doo – Guided Cooking Server (lokaler Cookidoo-Ersatz)
 Wants=network-online.target
 After=network-online.target
 
@@ -500,7 +500,7 @@ ${diag}
 
 # ── Zusammenfassung ────────────────────────────────────────────────────────
 print_summary() {
-    header "🍳  Kochido ist bereit!"
+    header "🍳  Koch-I-Doo ist bereit!"
 
     local ct_ip app_version=""
     ct_ip=$(get_ct_ip "$CT_ID")
@@ -511,7 +511,7 @@ print_summary() {
 
     echo ""
     echo -e "  ${GREEN}${BOLD}════════════════════════════════════════════════════════════${NC}"
-    echo -e "  ${GREEN}  🌐 Kochido:   http://${ct_ip}:${PORT}${NC}"
+    echo -e "  ${GREEN}  🌐 Koch-I-Doo: http://${ct_ip}:${PORT}${NC}"
     echo -e "  ${GREEN}  🐚 Terminal:  pct enter ${CT_ID}${NC}"
     if [[ -n "$CT_PASSWORD" ]]; then
         echo -e "  ${GREEN}  🔑 Root-PW:   ${CT_PASSWORD}${NC}"
@@ -526,7 +526,7 @@ print_summary() {
     echo "  1. http://${ct_ip}:${PORT} öffnen (Tablett/Handy im gleichen Netz)"
     echo "  2. „⤓ Importieren“ → Rezept-URL von Chefkoch einfügen (TM-Schritte"
     echo "     wie „3 Min./100°C/Stufe 2“ werden automatisch als Badges erkannt)"
-    echo "  3. Tab „Cookidoo / cookidump“: einmalig mit deinem Abo cookidump"
+    echo "  3. Tab „Cookidoo-Konto“: direkter Export aus deinem Abo (oder cookidump) –"
     echo "     (github.com/auino/cookidump) laufen lassen und data.json hier laden –"
     echo "     danach brauchst du Cookidoo nicht mehr."
     echo "  4. „🍳 Kochen starten“ → Vollbild Schritt für Schritt wie bei Cookidoo:"
@@ -544,7 +544,7 @@ print_summary() {
 
 # ── Install ────────────────────────────────────────────────────────────────
 do_install() {
-    header "🍳 Installiere Kochido (LXC)"
+    header "🍳 Installiere Koch-I-Doo (LXC)"
     info "Installer-Version: v${INSTALLER_VERSION}"
 
     if [[ $EUID -ne 0 ]]; then
@@ -579,13 +579,13 @@ do_install() {
 
     header "🧱 Container-Template"
     local template=""
-    template=$(pveam list local 2>/dev/null | awk '{print $1}' | grep -o 'debian-12-standard[^ ]*' | sort -rV | head -1 || true)
+    template=$(pveam list local 2>/dev/null | awk '{print $1}' | grep -o 'debian-1[23]-standard[^ ]*' | sort -rV | head -1 || true)
     if [[ -z "$template" ]]; then
-        info "Kein Debian-12-Template vorhanden – lade es herunter ..."
+        info "Kein Debian-12/13-Template vorhanden – lade es herunter ..."
         pveam update
-        template=$(pveam available --section system 2>/dev/null | grep -o 'debian-12-standard[^ ]*' | sort -rV | head -1 || true)
+        template=$(pveam available --section system 2>/dev/null | grep -o 'debian-1[23]-standard[^ ]*' | sort -rV | head -1 || true)
         if [[ -z "$template" ]]; then
-            die "Kein debian-12-standard-Template gefunden (pveam available leer?)."
+            die "Kein debian-12/13-standard-Template gefunden (pveam available leer?).\n  Koch-I-Doo braucht für den Cookidoo-Konto-Import Python ≥ 3.12 (Debian 13)."
         fi
         pveam download local "$template"
     fi

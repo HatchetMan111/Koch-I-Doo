@@ -41,7 +41,7 @@ class TestHealth:
         assert r.status_code == 200
         body = r.json()
         assert body["ok"] is True
-        assert body["app"] == "Kochido"
+        assert body["app"] == "Koch-I-Doo"
         assert "recipes" in body
 
 
@@ -150,12 +150,12 @@ class TestSpa:
     def test_index_wird_ausgeliefert(self, client):
         r = client.get("/")
         assert r.status_code == 200
-        assert "Kochido" in r.text
+        assert "Koch-I-Doo" in r.text
 
     def test_spa_fallback_fuer_client_routen(self, client):
         r = client.get("/kochen/1")
         assert r.status_code == 200
-        assert "Kochido" in r.text
+        assert "Koch-I-Doo" in r.text
 
     def test_unbekannter_api_pfad_404(self, client):
         assert client.get("/api/irgendwas").status_code == 404

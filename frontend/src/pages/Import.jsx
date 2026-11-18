@@ -1,13 +1,35 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { createRecipe, importBatch, importCookidoo, importFromText, importFromUrl } from "../api.js";
+import { useNavigate } from "react-router-dom";
+import { api, createRecipe, importBatch, importCookidoo, importFromText, importFromUrl } from "../api.js";
 import TmBadges from "../components/TmBadges.jsx";
 
 const TABS = [
   { id: "url", label: "🔗 Von URL (Chefkoch & Co.)" },
   { id: "text", label: "📝 Text einfügen" },
-  { id: "cookidoo", label: "🍜 Cookidoo / cookidump" },
+  { id: "account", label: "🥘 Cookidoo-Konto" },
+  { id: "cookidoo", label: "🍜 Cookidoo-Dump (cookidump)" },
 ];
+
+// Heuristik-Schalter: Chefkoch-Import in Thermomix-Schritte übersetzen
+function TmConvertToggle({ checked, onChange }) {
+  return (
+    <label className="check tm-convert-toggle">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span>
+        🥢 Schritte automatisch <b>in Thermomix-Schritte umwandeln</b> (heuristisch:
+        schneiden → 5 Sek./Stufe 6, kochen → 100 °C/Stufe 1, Ofen/Pfanne bleiben manuell …)
+      </span>
+    </label>
+  );
+}
+
+async function convertToTm(recipe) {
+  const res = await api("/api/import/convert-tm", {
+    method: "POST",
+    body: JSON.stringify(recipe),
+  });
+  return { recipe: res.recipe, warnings: res.warnings || [] };
+}
 
 export default function Import() {
   const [tab, setTab] = useState("url");
@@ -16,7 +38,7 @@ export default function Import() {
       <h1>Rezept importieren</h1>
       <p className="muted">
         Bestehende Rezepte werden automatisch ins Schritt-für-Schritt-Format
-        überführt – inkl. Thermomix-Parameter (Zeit / Temperatur / Stufe / Linkslauf), wenn sie im Text stehen.
+        überführt – inkl. Thermomix-Parameter (Zeit / Temperatur / Stufe / Linkslauf).
       </p>
       <div className="tabbar">
         {TABS.map((t) => (
@@ -31,6 +53,7 @@ export default function Import() {
       </div>
       {tab === "url" && <UrlTab />}
       {tab === "text" && <TextTab />}
+      {tab === "account" && <AccountTab />}
       {tab === "cookidoo" && <CookidooTab />}
     </div>
   );
@@ -104,26 +127,52 @@ function WarningBox({ warnings }) {
 
 function UrlTab() {
   const [url, setUrl] = useState("");
+  const [rawPreview, setRawPreview] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [tmConvert, setTmConvert] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [warning, setWarning] = useState("");
-  const [savedId, setSavedId] = useState(null);
+  const [warnings, setWarnings] = useState([]);
   const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
     setError("");
+    setWarnings([]);
     setPreview(null);
-    setSavedId(null);
+    setRawPreview(null);
     try {
       const result = await importFromUrl(url.trim());
-      setPreview(result.recipes[0]);
+      setRawPreview(result.recipes[0]);
+      if (tmConvert) {
+        const conv = await convertToTm(result.recipes[0]);
+        setPreview(conv.recipe);
+        setWarnings(conv.warnings);
+      } else {
+        setPreview(result.recipes[0]);
+      }
     } catch (err) {
       setError(String(err.message || err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleConvert = async (next) => {
+    setTmConvert(next);
+    if (!rawPreview) return;
+    if (next) {
+      try {
+        const conv = await convertToTm(rawPreview);
+        setPreview(conv.recipe);
+        setWarnings(conv.warnings);
+      } catch (err) {
+        setError(String(err.message || err));
+      }
+    } else {
+      setPreview(rawPreview);
+      setWarnings([]);
     }
   };
 
@@ -155,18 +204,20 @@ function UrlTab() {
       <p className="hint">
         Funktioniert mit Chefkoch und allen Seiten, die schema.org-Rezeptdaten
         (JSON-LD) einbetten. TM-Schritte wie „3 Min./Stufe 2“ werden automatisch
-        erkannt.
+        erkannt – fehlen sie, wandelt der Schalter unten die Schritte in
+        Thermomix-typische Guided-Schritte um.
       </p>
+      <TmConvertToggle checked={tmConvert} onChange={toggleConvert} />
       <ErrorBox error={error} />
       {preview && (
         <PreviewList
           recipes={[preview]}
           onSaveOne={save}
           saving={saving}
-          savedIds={savedId === null ? new Set() : new Set([0])}
+          savedIds={new Set()}
         />
       )}
-      {warning && <WarningBox warnings={[warning]} />}
+      <WarningBox warnings={warnings} />
     </div>
   );
 }
@@ -174,23 +225,52 @@ function UrlTab() {
 function TextTab() {
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
+  const [rawPreview, setRawPreview] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [tmConvert, setTmConvert] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [warnings, setWarnings] = useState([]);
   const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
     setError("");
+    setWarnings([]);
     setPreview(null);
+    setRawPreview(null);
     try {
       const result = await importFromText(text, title);
-      setPreview(result.recipes[0]);
+      setRawPreview(result.recipes[0]);
+      if (tmConvert) {
+        const conv = await convertToTm(result.recipes[0]);
+        setPreview(conv.recipe);
+        setWarnings(conv.warnings);
+      } else {
+        setPreview(result.recipes[0]);
+      }
     } catch (err) {
       setError(String(err.message || err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleConvert = async (next) => {
+    setTmConvert(next);
+    if (!rawPreview) return;
+    if (next) {
+      try {
+        const conv = await convertToTm(rawPreview);
+        setPreview(conv.recipe);
+        setWarnings(conv.warnings);
+      } catch (err) {
+        setError(String(err.message || err));
+      }
+    } else {
+      setPreview(rawPreview);
+      setWarnings([]);
     }
   };
 
@@ -225,6 +305,7 @@ function TextTab() {
       <button className="btn btn-primary" onClick={load} disabled={!text.trim() || loading}>
         {loading ? "Analysiere …" : "Rezept erkennen"}
       </button>
+      <TmConvertToggle checked={tmConvert} onChange={toggleConvert} />
       <ErrorBox error={error} />
       {preview && (
         <PreviewList
@@ -234,6 +315,135 @@ function TextTab() {
           savedIds={new Set()}
         />
       )}
+      <WarningBox warnings={warnings} />
+    </div>
+  );
+}
+
+function AccountTab() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [country, setCountry] = useState("de");
+  const [language, setLanguage] = useState("de-DE");
+  const [maxRecipes, setMaxRecipes] = useState(0);
+  const [previews, setPreviews] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [warnings, setWarnings] = useState([]);
+  const [savedIdx, setSavedIdx] = useState(new Set());
+  const navigate = useNavigate();
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    setWarnings([]);
+    setPreviews(null);
+    setSavedIdx(new Set());
+    try {
+      const result = await api("/api/import/cookidoo-account", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          country: country.trim() || "de",
+          language: language.trim() || "de-DE",
+          max_recipes: Number(maxRecipes) || 0,
+        }),
+      });
+      setPreviews(result.recipes);
+      setWarnings(result.warnings || []);
+    } catch (err) {
+      setError(String(err.message || err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveAll = async () => {
+    setSaving(true);
+    try {
+      const { warnings: warns } = await importBatch(previews);
+      setWarnings(warns || []);
+      navigate("/");
+    } catch (err) {
+      setError(String(err.message || err));
+      setSaving(false);
+    }
+  };
+
+  const saveOne = async (recipe, idx) => {
+    try {
+      await createRecipe(recipe);
+      setSavedIdx((prev) => new Set([...prev, idx]));
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
+  return (
+    <div>
+      <div className="card hint-card">
+        <b>Direkt aus deinem Cookidoo-Konto importieren:</b>
+        <ol>
+          <li>Cookidoo-Zugangsdaten eingeben (Login läuft direkt gegen Cookidoo –
+            das Passwort wird <b>nicht gespeichert</b>, nur ein Sitzungs-Token im
+            Datenordner des Containers).</li>
+          <li>Katalog-Rezepte werden gesucht und Schritt für Schritt übernommen –
+            TM-Badges (Zeit/Temperatur/Stufe) werden aus den Schritten geparst,
+            eigene „Created Recipes“ kommen mit ihren Original-Einstellungen.</li>
+          <li><b>Einmal mit Probe-/Abo exportieren, dann Abo kündigen</b> – ab da
+            reicht Koch-I-Doo ohne Cookidoo.</li>
+        </ol>
+        <p className="muted">
+          2FA/MFA- oder CAPTCHA-geschützte Konten: Login schlägt fehl → bitte den
+          Tab „Cookidoo-Dump (cookidump)“ nutzen. Bei großen Sammlungen (500+)
+          dauert der Abruf einige Minuten – Live-Fortschritt zeigt die Vorschau erst am Ende.
+        </p>
+      </div>
+      <div className="field-row">
+        <label className="field">
+          <span>Cookidoo-E-Mail</span>
+          <input className="input" type="email" autoComplete="off"
+            value={email} onChange={(e) => setEmail(e.target.value)} />
+        </label>
+        <label className="field">
+          <span>Passwort</span>
+          <input className="input" type="password" autoComplete="off"
+            value={password} onChange={(e) => setPassword(e.target.value)} />
+        </label>
+        <label className="field field-narrow">
+          <span>Land</span>
+          <input className="input" value={country} onChange={(e) => setCountry(e.target.value)} />
+        </label>
+        <label className="field field-narrow">
+          <span>Sprache</span>
+          <input className="input" value={language} onChange={(e) => setLanguage(e.target.value)} />
+        </label>
+        <label className="field field-narrow">
+          <span>Max. Rezepte (0 = alle)</span>
+          <input className="input" type="number" min={0}
+            value={maxRecipes} onChange={(e) => setMaxRecipes(e.target.value)} />
+        </label>
+      </div>
+      <button
+        className="btn btn-primary"
+        onClick={load}
+        disabled={!email.trim() || !password || loading}
+      >
+        {loading ? "Verbinde & hole Rezepte (kann dauern) …" : "🥘 Verbinden & Rezepte holen"}
+      </button>
+      <ErrorBox error={error} />
+      {previews && (
+        <PreviewList
+          recipes={previews}
+          onSaveAll={saveAll}
+          onSaveOne={saveOne}
+          saving={saving}
+          savedIds={savedIdx}
+        />
+      )}
+      <WarningBox warnings={warnings} />
     </div>
   );
 }
@@ -272,8 +482,8 @@ function CookidooTab() {
   const saveAll = async () => {
     setSaving(true);
     try {
-      const { count, warnings } = await importBatch(previews);
-      setWarnings(warnings || []);
+      const { warnings: warns } = await importBatch(previews);
+      setWarnings(warns || []);
       navigate("/");
     } catch (err) {
       setError(String(err.message || err));
@@ -293,7 +503,8 @@ function CookidooTab() {
   return (
     <div>
       <div className="card hint-card">
-        <b>So bekommst du deine Cookidoo-Rezepte hierher:</b>
+        <b>Ohne Login: Rezepte per cookidump-Export laden</b> (für
+        2FA-Konten oder wenn du den Dump schon hast):
         <ol>
           <li>
             Einmalig mit deinem Abo <b>cookidump</b> laufen lassen
@@ -309,10 +520,6 @@ function CookidooTab() {
             werden erkannt – inkl. vorgegebener TM-Parameter.
           </li>
         </ol>
-        <p className="muted">
-          Die Parametererkennung liest die Schritte und setzt Zeit, Temperatur,
-          Stufe, Linkslauf und Teigmodus als Cookidoo-artige Badges.
-        </p>
       </div>
       <input
         type="file"

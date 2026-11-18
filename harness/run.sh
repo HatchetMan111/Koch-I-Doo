@@ -43,7 +43,7 @@ new_state() {
     local st="$WORK/$name"
     mkdir -p "$st"
     # pveam available liefert (nach Download-Pfad) ein Debian-12-Template
-    printf 'vztmpl/debian-12-standard_12.2-1_amd64.tar.zst\n' > "$st/pveam_avail"
+    printf 'vztmpl/debian-13-standard_13.0-1_amd64.tar.zst\n' > "$st/pveam_avail"
     echo "$st"
 }
 
@@ -263,8 +263,8 @@ else
 fi
 
 # ── 11) ONE_LINER konsistent ───────────────────────────────────────────────
-if grep -qF 'raw.githubusercontent.com/HatchetMan111/Kochido/main/install/kochido.sh' "$INSTALLER"; then
-    ok_case "ONE_LINER zeigt auf Repo-Raw-URL (HatchetMan111/Kochido)"
+if grep -qF 'raw.githubusercontent.com/HatchetMan111/Koch-I-Doo/main/install/kochido.sh' "$INSTALLER"; then
+    ok_case "ONE_LINER zeigt auf Repo-Raw-URL (HatchetMan111/Koch-I-Doo)"
 else
     fail_case "ONE_LINER" "Raw-URL stimmt nicht mit Repo überein"
 fi

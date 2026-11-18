@@ -25,7 +25,7 @@ export default function App() {
         <Link to="/" className="brand">
           <span className="brand-icon">🍳</span>
           <span className="brand-text">
-            Kochido
+            Koch-I-Doo
             <small>Schritt für Schritt kochen – ohne Abo</small>
           </span>
         </Link>
@@ -50,7 +50,7 @@ export default function App() {
         </Routes>
       </main>
       <footer className="footer">
-        Kochido v1.0.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.1.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
     </div>
   );

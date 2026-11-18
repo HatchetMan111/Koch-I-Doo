@@ -347,9 +347,80 @@ code { background: #f3f0ea; padding: 1px 5px; border-radius: 5px; font-size: 0.9
 
 .footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding: 18px; }
 
+/* ── Import-Erweiterungen ───────────────────────────────────────────────── */
+
+.tm-convert-toggle {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 12px 0; padding: 12px 14px;
+  background: #fff7ed; border: 1.5px solid #fed7aa; border-radius: var(--radius-sm);
+  font-size: 0.9rem; line-height: 1.45; cursor: pointer;
+}
+.tm-convert-toggle input { width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
+.field-narrow { max-width: 150px; }
+.field-narrow .input { min-width: 120px; }
+
+/* ── Mobil-Optimierung (Tablett/Handy in der Küche) ─────────────────────── */
+
+button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
+
 @media (max-width: 640px) {
-  .topbar { flex-wrap: wrap; gap: 8px; }
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
   .topnav { width: 100%; justify-content: flex-end; }
   .toolbar { flex-direction: column; }
+  .main { padding: 14px 12px 50px; }
+
+  /* Tag-Filter: horizontal wischbar statt umgebunden */
+  .tagbar {
+    flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px; margin-bottom: 14px; scrollbar-width: none;
+  }
+  .tagbar::-webkit-scrollbar { display: none; }
+  .tagbar .chip { flex-shrink: 0; }
+
+  /* Größere Touch-Ziele für Filter-Chips */
+  .chip { padding: 8px 14px; font-size: 0.9rem; }
+
+  .recipe-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .recipe-card-img { height: 110px; }
+
+  .detail-hero { gap: 14px; }
+  .detail-img { width: 100%; height: 200px; }
   .detail-actions .btn-big { width: 100%; }
+  .detail-actions { position: sticky; bottom: 0; z-index: 20;
+    background: linear-gradient(transparent, var(--bg) 24%);
+    padding: 14px 0 6px; margin-top: 4px;
+  }
+
+  /* Editor: Zutaten-Zeilen umbrechen statt gequetscht */
+  .ing-row { flex-wrap: wrap; }
+  .ing-row .input { flex: 1 1 140px; }
+  .ing-amount-input { flex: 0 0 80px !important; }
+  .ing-unit-input { flex: 0 0 80px !important; }
+  .field-row .field { min-width: 130px; }
+
+  .form-row { flex-direction: column; }
+  .preview-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+
+  /* Koch-Modus: Fingersatz */
+  .dot { width: 18px; height: 18px; }
+  .cook-nav .btn-big { min-width: 130px; }
+  .cook-nav { gap: 10px; }
+  .timer-controls { flex-wrap: wrap; }
+  .timer-controls .btn-cook, .timer-controls .btn-cook-ghost { padding: 13px 22px; font-size: 1.1rem; }
+  .cook-ings-chips .cook-ing { padding: 14px 20px; font-size: 1.2rem; }
+  .cook-title { font-size: 0.95rem; }
+}
+
+@media (min-width: 641px) {
+  .tm-convert-toggle { max-width: 720px; }
+}
+
+/* iOS-Input-Zoom verhindern (Inputs bleiben ≥ 16px) */
+@media (max-width: 640px) {
+  .input, .textarea, select.input { font-size: 16px; }
+}
+
+/* Standalone-PWA (vom Homescreen): weniger Chrome-Nutzung nötig */
+@media (display-mode: standalone) {
+  .footer { display: none; }
 }

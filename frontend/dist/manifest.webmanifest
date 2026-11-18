@@ -1,0 +1,17 @@
+{
+  "name": "Koch-I-Doo",
+  "short_name": "Koch-I-Doo",
+  "description": "Schritt für Schritt kochen ohne Abo – Thermomix TM5/TM6",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7f2",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

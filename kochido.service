@@ -1,7 +1,7 @@
 # Referenz-Unit – der Installer schreibt diese Datei ins LXC
 # (/etc/systemd/system/kochido.service, PORT dort per Variable).
 [Unit]
-Description=Kochido – Guided Cooking Server (lokaler Cookidoo-Ersatz)
+Description=Koch-I-Doo – Guided Cooking Server (lokaler Cookidoo-Ersatz)
 Wants=network-online.target
 After=network-online.target
 
