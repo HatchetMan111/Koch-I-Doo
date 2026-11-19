@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, createRecipe, fetchCookidooCollections, importBatch, importCookidoo, importFromText, importFromUrl } from "../api.js";
 import TmBadges from "../components/TmBadges.jsx";
@@ -7,7 +7,8 @@ const TABS = [
   { id: "url", label: "🔗 Von URL (Chefkoch & Co.)" },
   { id: "text", label: "📝 Text einfügen" },
   { id: "account", label: "🥘 Cookidoo-Konto" },
-  { id: "cookidoo", label: "🍜 Cookidoo-Dump (cookidump)" },
+  { id: "dump", label: "🍲 Cookidoo-Export (alle Rezepte)" },
+  { id: "cookidoo", label: "🍜 Cookidoo-Dump-Dateien" },
 ];
 
 // Heuristik-Schalter: Chefkoch-Import in Thermomix-Schritte übersetzen
@@ -54,6 +55,7 @@ export default function Import() {
       {tab === "url" && <UrlTab />}
       {tab === "text" && <TextTab />}
       {tab === "account" && <AccountTab />}
+      {tab === "dump" && <DumpTab />}
       {tab === "cookidoo" && <CookidooTab />}
     </div>
   );
@@ -583,6 +585,178 @@ function AccountTab() {
     </div>
   );
 }
+
+
+// ── 🍲 Natives cookidump: kompletter Export als Hintergrund-Job ──────────────
+function DumpTab() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [country, setCountry] = useState("de");
+  const [language, setLanguage] = useState("de-DE");
+  const [maxRecipes, setMaxRecipes] = useState(0);
+  const [job, setJob] = useState(null);
+  const [error, setError] = useState("");
+  const [starting, setStarting] = useState(false);
+  const navigate = useNavigate();
+
+  // Status pollen, solange ein Job läuft (überlebt Seitenwechsel/Reload)
+  useEffect(() => {
+    let alive = true;
+    const poll = async () => {
+      try {
+        const st = await api("/api/dump/status");
+        if (alive) setJob(st);
+      } catch {
+        /* Backend kurz nicht erreichbar — nächster Poll */
+      }
+    };
+    poll();
+    const t = setInterval(poll, 2000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
+
+  const running = job?.status === "running";
+  const finished = job?.status === "done" || job?.status === "cancelled" || job?.status === "failed";
+
+  const start = async () => {
+    setStarting(true);
+    setError("");
+    try {
+      const st = await api("/api/dump/start", {
+        method: "POST",
+        body: JSON.stringify({
+          email: email.trim(), password,
+          country: country.trim() || "de", language: language.trim() || "de-DE",
+          max_recipes: Number(maxRecipes) || 0,
+        }),
+      });
+      setJob(st.status);
+    } catch (err) {
+      setError(String(err.message || err));
+    } finally {
+      setStarting(false);
+    }
+  };
+
+  const cancel = async () => {
+    try {
+      await api("/api/dump/cancel", { method: "POST" });
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
+  const pct = job && job.total > 0 ? Math.min(100, Math.round((job.done / job.total) * 100)) : 0;
+
+  return (
+    <div>
+      <div className="card hint-card">
+        <b>🍲 cookidump nativ — kompletter Cookidoo-Export mit einem Klick:</b>
+        <ol>
+          <li>Cookidoo-Zugangsdaten eingeben (Login direkt gegen Cookidoo,
+            Passwort wird nicht gespeichert).</li>
+          <li>Export starten — Koch-I-Doo holt <b>ALLE Rezepte</b> Seiten für
+            Seiten (wie cookidump, aber ohne Chrome/Selenium: direkt über die
+            Cookidoo-App-Schnittstelle).</li>
+          <li>Jedes Rezept wird <b>sofort gespeichert</b> (inkrementell) — du
+            kannst den Tab schließen, den Fortschritt hier live verfolgen und
+            jederzeit abbrechen: alles bisher Geladene bleibt erhalten.</li>
+        </ol>
+        <p className="muted">
+          Benötigt einmal ein aktives (Probe-)Abo. Danach kündigen — die
+          Rezepte bleiben lokal. Bei 1000+ Rezepten 10–30 Minuten einplanen.
+        </p>
+      </div>
+
+      {!running && (
+        <>
+          <div className="field-row">
+            <label className="field">
+              <span>Cookidoo-E-Mail</span>
+              <input className="input" type="email" autoComplete="off"
+                value={email} onChange={(e) => setEmail(e.target.value)} />
+            </label>
+            <label className="field">
+              <span>Passwort</span>
+              <input className="input" type="password" autoComplete="off"
+                value={password} onChange={(e) => setPassword(e.target.value)} />
+            </label>
+            <label className="field field-narrow">
+              <span>Land</span>
+              <input className="input" value={country} onChange={(e) => setCountry(e.target.value)} />
+            </label>
+            <label className="field field-narrow">
+              <span>Sprache</span>
+              <input className="input" value={language} onChange={(e) => setLanguage(e.target.value)} />
+            </label>
+            <label className="field field-narrow">
+              <span>Max. (0 = alle)</span>
+              <input className="input" type="number" min={0}
+                value={maxRecipes} onChange={(e) => setMaxRecipes(e.target.value)} />
+            </label>
+          </div>
+          <button
+            className="btn btn-primary btn-big"
+            onClick={start}
+            disabled={!email.trim() || !password || starting}
+          >
+            {starting ? "Starte Export …" : "🍲 Kompletten Export starten"}
+          </button>
+        </>
+      )}
+
+      {job && job.status !== "idle" && (
+        <div className="card dump-status">
+          <div className="dump-head">
+            <b>
+              {job.status === "running" && "🍲 Export läuft …"}
+              {job.status === "done" && "✅ Export abgeschlossen"}
+              {job.status === "cancelled" && "⏸ Export abgebrochen"}
+              {job.status === "failed" && "⚠ Export fehlgeschlagen"}
+            </b>
+            <span className="muted">
+              {job.total > 0 ? `${job.done} / ${job.total}` : `${job.done} geladen`}
+              {" · "}
+              ✔ {job.imported} importiert
+              {" · "}
+              ⤼ {job.skipped} übersprungen
+              {job.errors.length > 0 ? ` · ⚠ ${job.errors.length} Fehler` : ""}
+            </span>
+          </div>
+          <div className="dump-bar">
+            <div className="dump-bar-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <p className="dump-current">{job.current}</p>
+          {running && (
+            <button className="btn btn-danger" onClick={cancel}>
+              ⏹ Export abbrechen (Bisheriges bleibt gespeichert)
+            </button>
+          )}
+          {finished && (
+            <div className="dump-done-actions">
+              <button className="btn btn-primary" onClick={() => navigate("/")}>
+                → Zur Rezeptliste
+              </button>
+              {job.errors.length > 0 && (
+                <details>
+                  <summary className="muted">⚠ {job.errors.length} Fehler anzeigen</summary>
+                  <ul className="dump-errors">
+                    {job.errors.slice(0, 10).map((e, i) => (
+                      <li key={i} className="muted">{e}</li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <ErrorBox error={error} />
+    </div>
+  );
+}
+
 
 function CookidooTab() {
   const [payload, setPayload] = useState("");

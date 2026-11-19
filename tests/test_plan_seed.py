@@ -276,3 +276,43 @@ class TestKochbuecher:
         db.init_db()
         titles = [r["title"] for r in client.get("/api/recipes").json()]
         assert len(titles) == len(set(titles))
+
+
+class TestDump:
+    def test_status_idle(self, client):
+        st = client.get("/api/dump/status").json()
+        assert st["status"] == "idle"
+
+    def test_start_validierung(self, client):
+        assert client.post("/api/dump/start", json={"email": "", "password": ""}).status_code == 400
+
+    def test_start_mit_gefaktem_lauf(self, client, monkeypatch):
+        """Start + Status + Cancel — der eigentliche Lauf wird gefaked."""
+        import dump_job
+
+        async def fake_run(job, password):
+            job["total"] = 3
+            job["current"] = "Lade: Fake-Rezept"
+            job["done"] = 3
+            job["imported"] = 2
+            job["skipped"] = 1
+            job["status"] = "done"
+            job["finished_at"] = 1.0
+
+        monkeypatch.setattr(dump_job, "_run", fake_run)
+        assert client.post("/api/dump/start", json={
+            "email": "x@y", "password": "pw"}).status_code == 200
+        st = client.get("/api/dump/status").json()
+        assert st["status"] == "done"
+        assert st["imported"] == 2
+        assert "email" not in st  # Zugangsdaten nie im Status
+
+        # zweiter Start während "done" ist ok (Slot frei), während running → 409
+        dump_job.JOB["status"] = "running"
+        assert client.post("/api/dump/start", json={"email": "x@y", "password": "pw"}).status_code == 409
+        assert client.post("/api/dump/cancel").status_code == 200
+
+    def test_cancel_ohne_lauf(self, client):
+        dump = client.post("/api/dump/cancel")
+        # kein Job läuft → 409 (oder cancel-Flag gesetzt, falls Race)
+        assert dump.status_code in (200, 409)

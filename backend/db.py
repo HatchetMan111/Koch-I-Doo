@@ -250,6 +250,23 @@ def get_meta(key: str, conn=None) -> str | None:
             conn.close()
 
 
+def get_id_by_source(source: str, conn=None) -> int | None:
+    """Rezept-ID zur Source-URL (Duplikat-Schutz beim Cookidoo-Dump)."""
+    if not source:
+        return None
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        row = conn.execute(
+            "SELECT id FROM recipes WHERE data LIKE ? LIMIT 1",
+            (f'%{source}%',),
+        ).fetchone()
+        return int(row["id"]) if row else None
+    finally:
+        if own:
+            conn.close()
+
+
 def set_meta(key: str, value: str, conn=None) -> None:
     own = conn is None
     conn = conn or _connect()

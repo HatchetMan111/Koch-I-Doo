@@ -1,11 +1,8 @@
 # Kochido – FastAPI-Backend (API + Auslieferung der React/Vite-SPA).
 # Port via $PORT (Default 8090), Datenordner via $KOCHIDO_DATA.
-import hashlib
 import json
 import os
 import re
-import urllib.error
-import urllib.request
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -15,6 +12,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import db
+import dump_job
+from imaging import localize_image
 from importers.chefkoch import ImportFehler, USER_AGENT, import_from_url_multi
 from importers.cookidoo import import_cookidoo
 from importers.cookidoo_account import fetch_cookidoo_collections, fetch_cookidoo_account
@@ -22,7 +21,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.7.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -116,51 +115,7 @@ def _fail_400(exc: Exception) -> HTTPException:
     return HTTPException(status_code=400, detail=detail)
 
 
-# ── Bild-Lokalisierung ──────────────────────────────────────────────────────
-
-_IMG_EXT = {
-    "image/jpeg": ".jpg",
-    "image/png": ".png",
-    "image/webp": ".webp",
-    "image/gif": ".gif",
-}
-
-
-def localize_image(recipe: dict) -> tuple[dict, str | None]:
-    """Lädt das Rezeptbild lokal in data/images (best effort, offline-tauglich).
-    Bei 403/401 (Hotlink-Schutz) zweiter Versuch mit Referer der Rezept-URL."""
-    url = recipe.get("image") or ""
-    if not url or not url.startswith("http"):
-        return recipe, None
-
-    attempts = [{"User-Agent": USER_AGENT}]
-    source = recipe.get("source") or ""
-    if source.startswith("http"):
-        attempts.append({
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
-            "Referer": source,
-            "Accept": "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-        })
-
-    last_err: Exception | None = None
-    for headers in attempts:
-        try:
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                raw = resp.read(10 * 1024 * 1024)
-                ctype = resp.headers.get_content_type()
-            ext = _IMG_EXT.get(ctype)
-            if not ext:
-                return recipe, f"Bildtyp {ctype} nicht unterstützt – URL bleibt extern."
-            name = hashlib.sha256(url.encode()).hexdigest()[:16] + ext
-            (db.IMG_DIR / name).write_bytes(raw)
-            recipe = {**recipe, "image": f"/images/{name}"}
-            return recipe, None
-        except Exception as exc:  # noqa: BLE001 – Bild ist optional
-            last_err = exc
-            print(f"[import] Bild-Versuch fehlgeschlagen ({url}): {type(exc).__name__}: {exc}")
-    return recipe, f"Bild konnte nicht lokal gespeichert werden ({type(last_err).__name__}) – externe URL bleibt (evtl. Hotlink-Schutz)."
-
+# Bild-Lokalisierung lebt jetzt in imaging.py (auch vom Dump-Job genutzt).
 
 # ── API-Routen ──────────────────────────────────────────────────────────────
 
@@ -319,6 +274,43 @@ async def api_import_cookidoo_collections(body: CookidooCollectionsBody):
     except ImportFehler as exc:
         raise _fail_400(exc) from None
     return {"collections": collections, "warnings": warnings}
+
+
+# ── Natives cookidump: Export-Job ───────────────────────────────────────────
+
+class DumpStartBody(BaseModel):
+    email: str
+    password: str
+    country: str = "de"
+    language: str = "de-DE"
+    max_recipes: int = 0  # 0 = alle
+
+
+@app.post("/api/dump/start")
+async def api_dump_start(body: DumpStartBody):
+    """Startet den nativen cookidump-Export (Hintergrund-Job)."""
+    if not body.email.strip() or not body.password:
+        raise HTTPException(status_code=400, detail="E-Mail und Passwort werden benötigt")
+    ok = dump_job.start(
+        body.email.strip(), body.password,
+        body.country.strip() or "de", body.language.strip() or "de-DE",
+        max(0, int(body.max_recipes or 0)),
+    )
+    if not ok:
+        raise HTTPException(status_code=409, detail="Es läuft bereits ein Export – bitte abwarten oder abbrechen.")
+    return {"ok": True, "status": dump_job.snapshot()}
+
+
+@app.get("/api/dump/status")
+def api_dump_status():
+    return dump_job.snapshot()
+
+
+@app.post("/api/dump/cancel")
+def api_dump_cancel():
+    if not dump_job.request_cancel():
+        raise HTTPException(status_code=409, detail="Kein laufender Export zum Abbrechen")
+    return {"ok": True}
 
 
 @app.post("/api/import/convert-tm")
