@@ -131,6 +131,9 @@ export default function Discover() {
         <button className="btn btn-cook btn-big" onClick={surprise} disabled={!recipes?.length}>
           🎲 Überrasch mich!
         </button>
+        <Link to="/listen" className="btn btn-outline btn-big">
+          📋 Meine Listen
+        </Link>
       </div>
 
       {error && <div className="alert alert-error">⚠ {error}</div>}

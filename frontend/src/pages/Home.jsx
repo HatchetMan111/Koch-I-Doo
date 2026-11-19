@@ -65,6 +65,9 @@ export default function Home() {
         >
           {favOnly ? "★ Favoriten" : "☆ Favoriten"}
         </button>
+        <button className="btn btn-outline" onClick={() => navigate("/listen")}>
+          📋 Listen
+        </button>
       </div>
 
       {allTags.length > 0 && (
