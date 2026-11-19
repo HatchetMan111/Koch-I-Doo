@@ -86,6 +86,16 @@ def init_db(seed_file: Path | None = None) -> None:
             # gleichem Titel bleiben unangetastet, Neues wird eingefügt.
             _sync_seed_recipes(conn, grund or [])
             set_meta("seed_grundrezepte", grund_ver, conn=conn)
+
+        # Open-Source-Kochbücher (Grokhnarsh/Kochbuch → Thermomix-Heuristik):
+        # Sync überspringt Titel, die es schon gibt (Grundrezepte/User-Importe)
+        kb_ver, kochbuecher = None, None
+        kb_file = Path(__file__).parent / "seed" / "kochbuecher.json"
+        if kb_file.exists():
+            kb_ver, kochbuecher = _load_seed_file(kb_file)
+        if kochbuecher and kb_ver != (get_meta("seed_kochbuch", conn=conn) or ""):
+            _sync_seed_recipes(conn, kochbuecher or [])
+            set_meta("seed_kochbuch", kb_ver, conn=conn)
         conn.commit()
     finally:
         conn.close()
@@ -142,6 +152,7 @@ _CATEGORY_ICONS = {
     "Vegetarisch & Vegan": "🥗", "Fisch & Meeresfrüchte": "🐟",
     "Beilagen": "🥔", "Frühstück & Aufstriche": "🥐",
     "Getränke & Smoothies": "🥤", "Desserts": "🍮", "Baby & Familie": "🍼",
+    "Vorspeisen": "🧆", "Grundrezepte-Basis": "🥄",
 }
 
 
@@ -216,7 +227,7 @@ def _sync_seed_recipes(conn, recipes) -> None:
         _seed_image(recipe)
         mapped = match_ingredients_to_steps(recipe)
         row = rows.get(mapped.get("title"))
-        if row and row["source"] == SEED_SOURCE:
+        if row and row["source"] == (mapped.get("source") or SEED_SOURCE):
             payload = {k: v for k, v in mapped.items() if k not in ("id", "favorite", "created_at", "updated_at")}
             payload["favorite"] = 1 if row["favorite"] else 0
             conn.execute(

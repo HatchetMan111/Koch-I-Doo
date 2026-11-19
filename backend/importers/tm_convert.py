@@ -9,11 +9,18 @@ import re
 from .common import _parse_time_seconds
 
 # Schritte, die bewusst OHNE Thermomix bleiben (Ofen, Pfanne, Ruhezeiten…)
-_MANUAL_RE = re.compile(
-    r"\b(backen|ofen|im ofen|pfanne|pfanne braten|zugedeckt|gehen lassen|"
-    r"ziehen lassen|abkühlen|abk?ü?hlen lassen|kühlschrank|über nacht|"
-    r"servieren|abschmecken|marinieren|einwiegen|wiegen|abdecken|"
-    r"auskühlen|abkuehlen|stehen lassen|ruhen lassen|braten)\b",
+# Hart-manuell: Pfanne/Ofen etc. gewinnt IMMER gegen TM-Regeln
+_MANUAL_HARD_RE = re.compile(
+    r"\b(backen|ofen|im ofen|pfanne|marinieren|einwiegen|wiegen|"
+    r"servieren|abschmecken|\bbraten\b)\b",
+    re.IGNORECASE,
+)
+# Soft-manuell: Ruhe/Zustand — wird von klaren Koch-Aktionen überstimmt
+# („zugedeckt schmoren" ist TM-tauglich, „zugedeckt gehen lassen" nicht)
+_MANUAL_SOFT_RE = re.compile(
+    r"\b(zugedeckt|abgedeckt|abdecken|gehen lassen|ziehen lassen|abkühlen|"
+    r"abk?ü?hlen lassen|kühlschrank|über nacht|auskühlen|abkuehlen|"
+    r"stehen lassen|ruhen lassen)\b",
     re.IGNORECASE,
 )
 
@@ -27,6 +34,8 @@ _TM_RULES = [
      {"time": 300, "temperature": "Varoma", "speed": "1"}),
     (re.compile(r"\banbraten\b", re.I),
      {"time": 600, "temperature": "120", "speed": "2", "reverse": True}),
+    (re.compile(r"\b(schmoren|schmorte|geschmort)\b", re.I),
+     {"time": 1800, "temperature": "100", "speed": "1", "reverse": True}),
     (re.compile(r"\b(kochen|garen|brodeln|köcheln|simmer)\b", re.I),
      {"time": 900, "temperature": "100", "speed": "1"}),
     (re.compile(r"\b(pürieren|püriere|mixen|fein mixen|durchmixen)\b", re.I),
@@ -42,6 +51,8 @@ _TM_RULES = [
      {"time": 120, "mode": "dough"}),
 ]
 
+_COOK_ACTION_RE = re.compile(r"\b(schmoren|kochen|garen|köcheln|dünsten|andünsten|braten|anbraten)\b", re.IGNORECASE)
+
 _CONVERTED_TIP = "⚙ Automatisch als TM-Schritt vorgeschlagen – im Editor prüfen."
 
 
@@ -52,24 +63,41 @@ def _has_params(step: dict) -> bool:
     )
 
 
+def _is_soft_only(step: dict) -> bool:
+    """Nur „Sanft rühren" erkannt, sonst nichts (kein Zeit/Temp) — solche
+    Schritte dürfen von einer passenden Regel übernommen werden, z. B.
+    „sanft schmoren" → 100 °C/Stufe 1 Linkslauf."""
+    return (
+        step.get("speed") == "soft"
+        and not step.get("time")
+        and not step.get("temperature")
+        and not step.get("reverse")
+        and not step.get("mode")
+    )
+
+
 def convert_recipe_to_tm(recipe: dict):
     """Übersetzt schrittweise in TM-Schritte; gibt (rezept, warnungen) zurück."""
     warnings: list[str] = []
     changed = 0
     for step in recipe.get("steps") or []:
-        if _has_params(step):
+        soft_only = _is_soft_only(step)
+        if _has_params(step) and not soft_only:
             continue  # enthält schon TM-Parameter – nicht anfassen
         text = str(step.get("text") or "")
         if not text:
             continue
-        if _MANUAL_RE.search(text):
+        manual = _MANUAL_HARD_RE.search(text) or (
+            _MANUAL_SOFT_RE.search(text) and not _COOK_ACTION_RE.search(text)
+        )
+        if manual:
             continue  # Ofen/Pfanne/Ruhezeit bleiben bewusst manuell
         rule = next((params for rx, params in _TM_RULES if rx.search(text)), None)
         if not rule:
             continue
         new = dict(step)
         for key, value in rule.items():
-            if not new.get(key):
+            if not new.get(key) or (soft_only and key in ("time", "temperature", "speed", "reverse", "mode")):
                 new[key] = value
         # Zeitangabe aus dem Text (z. B. „20 Min. kochen“) hat Vorrang
         parsed_time = _parse_time_seconds(text)

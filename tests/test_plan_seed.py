@@ -243,3 +243,36 @@ class TestListen:
         lst = client.post("/api/lists", json={"name": "X"}).json()
         r = client.post(f"/api/lists/{lst['id']}/items", json={"recipe_ids": [9999]})
         assert r.status_code == 404
+
+
+class TestKochbuecher:
+    def test_kochbuch_paket_geladen(self, client):
+        """Open-Source-Kochbücher sind als Seed-Paket da (≥ 130 Rezepte)."""
+        import db
+
+        db.init_db()
+        recipes = client.get("/api/recipes").json()
+        books = [r for r in recipes if (r["tags"] and "Open Source" in r["tags"])]
+        assert len(books) >= 130
+        titles = [r["title"] for r in recipes]
+        assert any("Sauerbraten" in t for t in titles)
+
+    def test_sauerbraten_tm_badges(self, client):
+        """Schmoren-Schritt bekommt TM-Parameter (Linkslauf + Zeit)."""
+        import db
+
+        db.init_db()
+        recipes = client.get("/api/recipes").json()
+        r = next(x for x in recipes if "Sauerbraten" in x["title"])
+        full = client.get(f"/api/recipes/{r['id']}").json()
+        schmoren = [s for s in full["steps"] if "schmoren" in s["text"].lower()]
+        assert schmoren and schmoren[0]["time"] >= 900
+        assert schmoren[0]["reverse"] is True
+
+    def test_kochbuch_titel_keine_duplikate(self, client):
+        import db
+
+        db.init_db()
+        db.init_db()
+        titles = [r["title"] for r in client.get("/api/recipes").json()]
+        assert len(titles) == len(set(titles))

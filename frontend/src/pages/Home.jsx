@@ -35,7 +35,7 @@ export default function Home() {
     const counts = {};
     (recipes || []).forEach((r) => (r.tags || []).forEach((t) => (counts[t] = (counts[t] || 0) + 1)));
     return Object.entries(counts)
-      .filter(([t]) => t !== "Grundrezept")   // Meta-Tag: 65× wäre nur Noise
+      .filter(([t]) => t !== "Grundrezept" && t !== "Open Source")   // Meta-Tags raus
       .sort((a, b) => b[1] - a[1]);
   }, [recipes]);
 

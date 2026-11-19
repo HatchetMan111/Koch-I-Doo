@@ -5,7 +5,7 @@ import { fmtDuration } from "../format.js";
 
 // Kategorien-Emojis für die Entdecken-Seite (Fallback: 🍽)
 // Diese Meta-Tags sind keine echten Koch-Kategorien → nicht als Karten zeigen
-const HIDDEN_CATEGORIES = new Set(["Grundrezept"]);
+const HIDDEN_CATEGORIES = new Set(["Grundrezept", "Open Source"]);
 
 const CATEGORY_ICONS = {
   "Suppen": "🥣",
@@ -21,6 +21,8 @@ const CATEGORY_ICONS = {
   "Getränke & Smoothies": "🥤",
   "Desserts": "🍮",
   "Baby & Familie": "🍼",
+  "Vorspeisen": "🧆",
+  "Grundrezepte-Basis": "🥄",
   "Thermomix": "🧡",
   "Demo": "✨",
 };
@@ -104,8 +106,11 @@ export default function Discover() {
 
   const filtered = useMemo(() => {
     if (!recipes) return [];
-    if (!active) return recipes;
-    return recipes.filter((r) => (r.tags || []).includes(active));
+    const list = active
+      ? recipes.filter((r) => (r.tags || []).includes(active))
+      : recipes;
+    // „Alle Rezepte" limitieren — bei 300+ Karten wird die Seite träge
+    return active ? list : list.slice(0, 60);
   }, [recipes, active]);
 
   const surprise = () => {
@@ -149,7 +154,13 @@ export default function Discover() {
           </div>
 
           <h2>
-            {active || "Alle Rezepte"} <span className="muted">({filtered.length})</span>
+            {active || "Alle Rezepte"}{" "}
+            <span className="muted">
+              ({active
+                ? filtered.length
+                : `${filtered.length} von ${recipes?.length || 0} — Kategorie wählen oder suchen`}
+              )
+            </span>
           </h2>
           <div className="discover-list">
             {filtered.map((r) => (
