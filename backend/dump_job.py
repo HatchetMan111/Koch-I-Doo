@@ -142,6 +142,7 @@ async def _run(job: dict, password: str) -> None:
                 if page >= 60:  # Sicherheitsgrenze: max. ~6000 Rezepte
                     break
                 page += 1
+                await asyncio.sleep(1.0)  # Pause zwischen Suchseiten
 
             for hit in hit_queue:
                 if job["cancel"]:
@@ -182,7 +183,7 @@ async def _run(job: dict, password: str) -> None:
                 job["imported"] += 1
                 job["done"] += 1
                 job["current"] = f"Gespeichert: {recipe['title']}"
-                await asyncio.sleep(0.15)  # höflich gegen die Cookidoo-API
+                await asyncio.sleep(0.5)  # höflich gegen die Cookidoo-API (Rate-Limit-Vorsorge)
 
             job["status"] = "done"
             job["current"] = "Export abgeschlossen."

@@ -474,6 +474,12 @@ function AccountTab() {
 
   return (
     <div>
+      <div className="privacy-note">
+        <b>🔐 Deine Zugangsdaten bleiben auf deinem Server:</b> Sie werden nur
+        für den Login bei Cookidoo benutzt, nirgends gespeichert und nicht
+        weitergegeben — außer an Cookidoo selbst (der Login selbst). Sitzungs-
+        Token liegen lokal im Datenordner deines Containers.
+      </div>
       <div className="card hint-card">
         <b>Direkt aus deinem Cookidoo-Konto importieren:</b>
         <ol>
@@ -664,8 +670,28 @@ function DumpTab() {
         </ol>
         <p className="muted">
           Benötigt einmal ein aktives (Probe-)Abo. Danach kündigen — die
-          Rezepte bleiben lokal. Bei 1000+ Rezepten 10–30 Minuten einplanen.
+          Rezepte bleiben lokal. Bei 1000+ Rezepten ca. 15–30 Minuten einplanen
+          (der Export arbeitet bewusst langsam und höflich).
         </p>
+        <div className="privacy-note">
+          <b>🔐 Deine Zugangsdaten bleiben auf deinem Server:</b> E-Mail und
+          Passwort werden ausschließlich für den Login bei Cookidoo verwendet,
+          <b> nirgends gespeichert</b> und an niemanden weitergegeben — außer
+          an Cookidoo selbst (das ist der Login selbst). Die Rezepte landen
+          ausschließlich in deiner lokalen Datenbank.
+        </div>
+        <div className="privacy-note privacy-warn">
+          <b>⚖️ Hinweis zum Sperr-Risiko:</b> Der Export nutzt dieselbe
+          Schnittstelle wie die offizielle Thermomix-App (kein Website-Scraping)
+          und arbeitet bewusst langsam (kurze Pausen zwischen jedem Rezept).
+          Für cookidump-Nutzer sind seit Jahren keine Konto-Sperren bekannt —
+          <b> garantiert ist das aber nicht:</b> Automatisierter Massenexport
+          steht in den Cookidoo-AGB in einem Graubereich und Vorwerk könnte
+          theoretisch Accounts vorübergehend einschränken. Empfehlung: nur den
+          eigenen Account, Export nicht parallel zur Cookidoo-App laufen lassen,
+          Dumps nicht teilen (Rechte liegen bei Vorwerk/Rezeptautoren). Nutzung
+          auf eigenes Risiko — für die private Nutzung deiner eigenen Rezepte.
+        </div>
       </div>
 
       {!running && (
