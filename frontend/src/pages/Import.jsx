@@ -388,6 +388,7 @@ function AccountTab() {
   const [country, setCountry] = useState("de");
   const [language, setLanguage] = useState("de-DE");
   const [maxRecipes, setMaxRecipes] = useState(0);
+  const [listName, setListName] = useState("");
   const [previews, setPreviews] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -454,9 +455,9 @@ function AccountTab() {
   const saveAll = async () => {
     setSaving(true);
     try {
-      const { warnings: warns } = await importBatch(previews);
+      const { warnings: warns } = await importBatch(previews, listName.trim(), "Cookidoo-Konto");
       setWarnings(warns || []);
-      navigate("/");
+      navigate(listName.trim() ? "/listen" : "/");
     } catch (err) {
       setError(String(err.message || err));
       setSaving(false);
@@ -603,6 +604,8 @@ function DumpTab() {
   const [job, setJob] = useState(null);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
+  const [dumpListName, setDumpListName] = useState("");
+  const [dumpListSaved, setDumpListSaved] = useState(false);
   const navigate = useNavigate();
 
   // Status pollen, solange ein Job läuft (überlebt Seitenwechsel/Reload)
@@ -758,10 +761,41 @@ function DumpTab() {
               ⏹ Export abbrechen (Bisheriges bleibt gespeichert)
             </button>
           )}
+          {finished && job.recipe_ids?.length > 0 && (
+            <div className="dump-list-save">
+              <input
+                className="input"
+                placeholder={`📋 Diese ${job.recipe_ids.length} Rezepte als Liste speichern — Name`}
+                value={dumpListName}
+                onChange={(e) => setDumpListName(e.target.value)}
+              />
+              <button
+                className="btn btn-outline"
+                disabled={!dumpListName.trim() || dumpListSaved}
+                onClick={async () => {
+                  try {
+                    await api("/api/lists", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        name: dumpListName.trim(),
+                        recipe_ids: job.recipe_ids,
+                        source: "Cookidoo-Export",
+                      }),
+                    });
+                    setDumpListSaved(true);
+                  } catch (err) {
+                    setError(String(err.message || err));
+                  }
+                }}
+              >
+                {dumpListSaved ? "✓ Liste gespeichert" : "📋 Als Liste speichern"}
+              </button>
+            </div>
+          )}
           {finished && (
             <div className="dump-done-actions">
-              <button className="btn btn-primary" onClick={() => navigate("/")}>
-                → Zur Rezeptliste
+              <button className="btn btn-primary" onClick={() => navigate(dumpListSaved ? "/listen" : "/")}>
+                → {dumpListSaved ? "Zur Listen-Übersicht" : "Zur Rezeptliste"}
               </button>
               {job.errors.length > 0 && (
                 <details>
@@ -818,9 +852,9 @@ function CookidooTab() {
   const saveAll = async () => {
     setSaving(true);
     try {
-      const { warnings: warns } = await importBatch(previews);
+      const { warnings: warns } = await importBatch(previews, listName.trim(), "Cookidoo-Konto");
       setWarnings(warns || []);
-      navigate("/");
+      navigate(listName.trim() ? "/listen" : "/");
     } catch (err) {
       setError(String(err.message || err));
       setSaving(false);

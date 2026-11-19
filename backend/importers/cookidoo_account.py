@@ -392,6 +392,21 @@ async def fetch_cookidoo_collections(email: str, password: str,
                 ) from exc
 
         collections = []
+        fallback_count = {"n": 0}
+
+        def _collection_name(col, label, index) -> str:
+            """Sammlungsname so holen, wie der Nutzer ihn in Cookidoo vergeben hat:
+            title → name → erster Kapitel-Titel → Fallback 'Katalog-Sammlung N'."""
+            for attr in ("title", "name"):
+                raw = str(getattr(col, attr, "") or "").strip()
+                if raw:
+                    return raw
+            for ch in getattr(col, "chapters", []) or []:
+                raw = str(getattr(ch, "title", "") or "").strip()
+                if raw:
+                    return raw
+            fallback_count["n"] += 1
+            return f"{label} {index}"
 
         async def _collect(fetcher, label):
             try:
@@ -403,7 +418,7 @@ async def fetch_cookidoo_collections(email: str, password: str,
                     for col in result:
                         chapters = list(getattr(col, "chapters", []) or [])
                         rec_ids = []
-                        name = str(getattr(col, "title", "") or f"{label} {len(collections) + 1}")
+                        name = _collection_name(col, label, len(collections) + 1)
                         for ch in chapters:
                             for cr in getattr(ch, "recipes", []) or []:
                                 rid = getattr(cr, "id", None)
@@ -422,14 +437,23 @@ async def fetch_cookidoo_collections(email: str, password: str,
                                 "name": name,
                                 "description": str(getattr(col, "description", "") or ""),
                                 "recipes": recipes,
+                                "source_type": label,
                             })
                     page += 1
+                    await asyncio.sleep(0.3)
             except Exception as exc:
                 warnings.append(f"{label} nicht abrufbar: {type(exc).__name__}: {exc}")
 
-        # Katalog-Sammlungen (braucht Premium) + eigene Sammlungen (immer)
-        await _collect(cookidoo.get_managed_collections, "Katalog-Sammlung")
+        # Eigene Sammlungen ZUERST (die haben die vom Nutzer vergebenen Namen),
+        # danach die Katalog-Sammlungen
         await _collect(cookidoo.get_custom_collections, "Eigene Sammlung")
+        await _collect(cookidoo.get_managed_collections, "Katalog-Sammlung")
+        if fallback_count["n"]:
+            warnings.append(
+                f"Hinweis: {fallback_count['n']} Sammlungen lieferten keinen Namen "
+                f"(Fallback ‚Katalog-Sammlung N‘). In Cookidoo umbenannte Sammlungen "
+                f"sollten künftig mit ihrem Namen erscheinen."
+            )
 
     if not collections:
         raise ImportFehler(

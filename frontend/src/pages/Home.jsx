@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { getRecipes, setFavorite } from "../api.js";
+import { addToList, createList, getLists, getRecipes, setFavorite } from "../api.js";
 import { fmtDuration } from "../format.js";
 
 export default function Home() {
@@ -9,6 +9,12 @@ export default function Home() {
   const [q, setQ] = useState("");
   const [tag, setTag] = useState("");
   const [favOnly, setFavOnly] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState(new Set());
+  const [showListPick, setShowListPick] = useState(false);
+  const [lists, setLists] = useState(null);
+  const [newListName, setNewListName] = useState("");
+  const [bulkMsg, setBulkMsg] = useState("");
   const navigate = useNavigate();
 
   const load = async (query = q, tagFilter = tag, fav = favOnly) => {
@@ -68,6 +74,16 @@ export default function Home() {
         <button className="btn btn-outline" onClick={() => navigate("/listen")}>
           📋 Listen
         </button>
+        <button
+          className={`btn ${selecting ? "btn-primary" : "btn-outline"}`}
+          onClick={() => {
+            setSelecting(!selecting);
+            setSelected(new Set());
+          }}
+          title="Mehrere Rezepte auswählen (z. B. alle importierten) und gemeinsam in eine Liste schieben"
+        >
+          {selecting ? "✕ Auswahl beenden" : "☑️ Auswählen"}
+        </button>
       </div>
 
       {allTags.length > 0 && (
@@ -110,19 +126,123 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <div className="recipe-grid">
+        <div className={`recipe-grid ${selecting ? "select-mode" : ""}`}>
           {recipes.map((r) => (
-            <RecipeCard key={r.id} recipe={r} onFav={() => toggleFav(r)} />
+            <RecipeCard
+              key={r.id}
+              recipe={r}
+              onFav={() => toggleFav(r)}
+              selecting={selecting}
+              checked={selected.has(r.id)}
+              onToggle={() =>
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(r.id)) next.delete(r.id);
+                  else next.add(r.id);
+                  return next;
+                })
+              }
+            />
           ))}
         </div>
       )}
+
+      {selecting && (
+        <div className="bulk-bar">
+          <b>{selected.size} ausgewählt</b>
+          <button
+            className="btn btn-primary"
+            disabled={selected.size === 0}
+            onClick={async () => {
+              setLists(await getLists().catch(() => []));
+              setShowListPick(true);
+            }}
+          >
+            📋 Zur Liste hinzufügen
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={() => setSelected(new Set(recipes.map((r) => r.id)))}
+          >
+            Alle auswählen
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={() => {
+              setSelecting(false);
+              setSelected(new Set());
+            }}
+          >
+            ✕ Fertig
+          </button>
+        </div>
+      )}
+
+      {showListPick && (
+        <div className="picker-overlay" onClick={() => setShowListPick(false)}>
+          <div className="picker-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="picker-head">
+              <b>📋 {selected.size} Rezepte in Liste schieben</b>
+              <button className="picker-close" onClick={() => setShowListPick(false)}>✕</button>
+            </div>
+            <div className="picker-list">
+              {(lists || []).map((l) => (
+                <button
+                  key={l.id}
+                  className="picker-item"
+                  onClick={async () => {
+                    await addToList(l.id, [...selected]);
+                    setShowListPick(false);
+                    setBulkMsg(`📋 ${selected.size} Rezepte zu „${l.name}“ hinzugefügt`);
+                    setSelecting(false);
+                    setSelected(new Set());
+                    setTimeout(() => setBulkMsg(""), 4000);
+                  }}
+                >
+                  <b>{l.name}</b>
+                  <small>{l.recipe_count} Rezepte{l.source ? ` · ${l.source.startsWith("http") ? "Import" : l.source}` : ""}</small>
+                </button>
+              ))}
+            </div>
+            <div className="bulk-new-list">
+              <input
+                className="input"
+                placeholder="…oder neue Liste anlegen"
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+              />
+              <button
+                className="btn btn-primary"
+                disabled={!newListName.trim()}
+                onClick={async () => {
+                  const name = newListName.trim();
+                  await createList(name, [...selected], "Manuell");
+                  setShowListPick(false);
+                  setBulkMsg(`📋 ${selected.size} Rezepte zu „${name}“ hinzugefügt`);
+                  setNewListName("");
+                  setSelecting(false);
+                  setSelected(new Set());
+                  setTimeout(() => setBulkMsg(""), 4000);
+                }}
+              >
+                Anlegen & einfügen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bulkMsg && <div className="alert alert-success">{bulkMsg}</div>}
     </div>
   );
 }
 
-function RecipeCard({ recipe, onFav }) {
+function RecipeCard({ recipe, onFav, selecting, checked, onToggle }) {
   return (
-    <div className="recipe-card">
+    <div
+      className={`recipe-card ${selecting ? "selectable" : ""} ${checked ? "selected" : ""}`}
+      onClick={selecting ? onToggle : undefined}
+    >
       <Link to={`/rezept/${recipe.id}`} className="recipe-card-link">
         <div className="recipe-card-img">
           {recipe.image ? (
@@ -159,13 +279,19 @@ function RecipeCard({ recipe, onFav }) {
           )}
         </div>
       </Link>
-      <button
-        className={`fav-btn ${recipe.favorite ? "fav-active" : ""}`}
-        title={recipe.favorite ? "Favorit entfernen" : "Als Favorit merken"}
-        onClick={onFav}
-      >
-        {recipe.favorite ? "★" : "☆"}
-      </button>
+      {selecting ? (
+        <span className={`select-check ${checked ? "checked" : ""}`}>
+          {checked ? "✓" : ""}
+        </span>
+      ) : (
+        <button
+          className={`fav-btn ${recipe.favorite ? "fav-active" : ""}`}
+          title={recipe.favorite ? "Favorit entfernen" : "Als Favorit merken"}
+          onClick={onFav}
+        >
+          {recipe.favorite ? "★" : "☆"}
+        </button>
+      )}
     </div>
   );
 }
