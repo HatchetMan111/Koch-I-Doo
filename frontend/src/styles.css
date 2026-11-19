@@ -725,3 +725,11 @@ button, .btn, .chip, .tab, .step-num { touch-action: manipulation; }
 
 .dump-list-save { display: flex; gap: 8px; margin: 8px 0 10px; flex-wrap: wrap; }
 .dump-list-save .input { flex: 1; min-width: 200px; }
+
+.seed-panel { border-left: 4px solid var(--danger); }
+.seed-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px dashed var(--border); flex-wrap: wrap;
+}
+.seed-row:last-child { border-bottom: none; }
+.seed-row span:first-child { flex: 1; min-width: 200px; }

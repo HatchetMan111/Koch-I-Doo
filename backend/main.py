@@ -21,7 +21,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.7.1"
+APP_VERSION = "1.7.3"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -311,6 +311,33 @@ def api_dump_cancel():
     if not dump_job.request_cancel():
         raise HTTPException(status_code=409, detail="Kein laufender Export zum Abbrechen")
     return {"ok": True}
+
+
+# ── Standard-Seed-Pakete entfernen ──────────────────────────────────────────
+
+class SeedRemoveBody(BaseModel):
+    package: str  # "kochbuch" | "grundrezepte" | "demo"
+
+
+@app.get("/api/seed/status")
+def api_seed_status():
+    """Anzahl der Standard-Rezepte je Paket (für Entfernen-Buttons)."""
+    return {
+        "kochbuch": db.count_seed_package("kochbuch"),
+        "grundrezepte": db.count_seed_package("grundrezepte"),
+        "demo": db.count_seed_package("demo"),
+    }
+
+
+@app.post("/api/seed/remove")
+def api_seed_remove(body: SeedRemoveBody):
+    if body.package not in db.SEED_PACKAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unbekanntes Paket: {body.package} (kochbuch|grundrezepte|demo)",
+        )
+    deleted = db.delete_seed_package(body.package)
+    return {"ok": True, "deleted": deleted, "package": body.package}
 
 
 @app.post("/api/import/convert-tm")

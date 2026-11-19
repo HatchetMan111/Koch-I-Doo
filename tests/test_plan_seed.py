@@ -316,3 +316,52 @@ class TestDump:
         dump = client.post("/api/dump/cancel")
         # kein Job läuft → 409 (oder cancel-Flag gesetzt, falls Race)
         assert dump.status_code in (200, 409)
+
+
+class TestSeedRemove:
+    def test_status_und_einklick_remove(self, client):
+        import db
+
+        # deterministisch: kompletter Reset, dann frisches Seeding
+        conn = db._connect()
+        for tbl in ("recipes", "plan", "meta", "list_items", "lists"):
+            conn.execute(f"DELETE FROM {tbl}")
+        conn.commit()
+        conn.close()
+        import main
+        db.init_db(seed_file=main.SEED_FILE)
+        st = client.get("/api/seed/status").json()
+        assert st["kochbuch"] >= 130
+        assert st["grundrezepte"] >= 160
+        assert st["demo"] == 3
+
+        r = client.post("/api/seed/remove", json={"package": "kochbuch"})
+        assert r.status_code == 200
+        assert r.json()["deleted"] >= 130
+        titles = [x["title"] for x in client.get("/api/recipes").json()]
+        assert not any("Sauerbraten" in t for t in titles)
+
+        client.post("/api/seed/remove", json={"package": "grundrezepte"})
+        client.post("/api/seed/remove", json={"package": "demo"})
+        rest = client.get("/api/recipes").json()
+        assert len(rest) == 0  # nur noch eigene Importe (hier: keine)
+
+    def test_entferntes_paket_kommt_nicht_zuruck(self, client):
+        import db
+
+        conn = db._connect()
+        for tbl in ("recipes", "plan", "meta", "list_items", "lists"):
+            conn.execute(f"DELETE FROM {tbl}")
+        conn.commit()
+        conn.close()
+        import main
+        db.init_db(seed_file=main.SEED_FILE)
+        client.post("/api/seed/remove", json={"package": "kochbuch"})
+        n_before = len(client.get("/api/recipes").json())
+        db.init_db()  # gleiche Version → KEIN Re-Insert nach Entfernen
+        n_after = len(client.get("/api/recipes").json())
+        assert n_after == n_before
+        assert (db.get_meta("seed_kochbuch") or "").startswith("removed:")
+
+    def test_validierung(self, client):
+        assert client.post("/api/seed/remove", json={"package": "quatsch"}).status_code == 400

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getRecipes } from "../api.js";
+import { api, getRecipes } from "../api.js";
 import { fmtDuration } from "../format.js";
 
 // Kategorien-Emojis für die Entdecken-Seite (Fallback: 🍽)
@@ -88,7 +88,21 @@ export default function Discover() {
   const [recipes, setRecipes] = useState(null);
   const [error, setError] = useState("");
   const [active, setActive] = useState("");
+  const [showSeedPanel, setShowSeedPanel] = useState(false);
+  const [seedStatus, setSeedStatus] = useState(null);
   const navigate = useNavigate();
+
+  const loadSeeds = async () => {
+    setSeedStatus(await api("/api/seed/status").catch(() => null));
+  };
+
+  const removeSeed = async (pkg, label) => {
+    const n = seedStatus?.[pkg] ?? 0;
+    if (!window.confirm(`${n} Standard-Rezepte entfernen (${label})?\nDeine eigenen importierten Rezepte bleiben unberührt.\n\nHinweis: Das Paket kommt erst wieder, wenn eine neuere Version der Standard-Rezepte erscheint.`)) return;
+    await api("/api/seed/remove", { method: "POST", body: JSON.stringify({ package: pkg }) });
+    setRecipes(await getRecipes().catch(() => recipes));
+    loadSeeds();
+  };
 
   useEffect(() => {
     getRecipes()
@@ -134,7 +148,46 @@ export default function Discover() {
         <Link to="/listen" className="btn btn-outline btn-big">
           📋 Meine Listen
         </Link>
+        <button
+          className="btn btn-outline btn-big"
+          onClick={() => {
+            setShowSeedPanel(!showSeedPanel);
+            if (!showSeedPanel) loadSeeds();
+          }}
+          title="Standard-Rezepte (Kochbücher, Grundrezepte, Demo) entfernen"
+        >
+          🗑 Standard-Rezepte
+        </button>
       </div>
+
+      {showSeedPanel && seedStatus && (
+        <div className="card seed-panel">
+          <b>🗑 Standard-Rezepte entfernen</b>
+          <p className="muted">
+            Ein Klick entfernt das jeweilige Paket — deine importierten Rezepte,
+            Listen und Pläne bleiben unberührt. Gelöschte Pakete kommen erst mit
+            einer <b>neueren Version</b> der Standard-Rezepte wieder.
+          </p>
+          {[
+            ["kochbuch", "📚 Open-Source-Kochbücher (Davidis, Wikibooks …)"],
+            ["grundrezepte", "🥄 Grundrezept-Bibliothek (162 TM-Grundrezepte)"],
+            ["demo", "✨ Demo-Rezepte"],
+          ].map(([pkg, label]) => (
+            <div key={pkg} className="seed-row">
+              <span>{label}</span>
+              <span className="chip chip-mini">{seedStatus[pkg]} Rezepte</span>
+              <button
+                className="btn btn-danger btn-icon"
+                disabled={!seedStatus[pkg]}
+                title="Paket entfernen"
+                onClick={() => removeSeed(pkg, label)}
+              >
+                🗑 Entfernen
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {error && <div className="alert alert-error">⚠ {error}</div>}
 

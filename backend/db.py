@@ -80,7 +80,10 @@ def init_db(seed_file: Path | None = None) -> None:
             _insert_seed_recipes(conn, recipes)
             if grund_ver:
                 set_meta("seed_grundrezepte", grund_ver, conn=conn)
-        elif grund_ver and grund_ver != (get_meta("seed_grundrezepte", conn=conn) or ""):
+        grund_stored = get_meta("seed_grundrezepte", conn=conn) or ""
+        # "removed:X" = Nutzer hat das Paket gelöscht → nicht automatisch
+        # wieder einfügen (erst eine NEUE Seed-Version bringt es zurück)
+        if grund_ver and grund_ver != grund_stored and not grund_stored.startswith("removed:"):
             # Grundrezept-Paket versioniert nachziehen: Original-Seeds werden
             # ersetzt (bessere Schrittqualität/Bilder), User-Importe mit
             # gleichem Titel bleiben unangetastet, Neues wird eingefügt.
@@ -93,7 +96,8 @@ def init_db(seed_file: Path | None = None) -> None:
         kb_file = Path(__file__).parent / "seed" / "kochbuecher.json"
         if kb_file.exists():
             kb_ver, kochbuecher = _load_seed_file(kb_file)
-        if kochbuecher and kb_ver != (get_meta("seed_kochbuch", conn=conn) or ""):
+        kb_stored = get_meta("seed_kochbuch", conn=conn) or ""
+        if kochbuecher and kb_ver != kb_stored and not kb_stored.startswith("removed:"):
             _sync_seed_recipes(conn, kochbuecher or [])
             set_meta("seed_kochbuch", kb_ver, conn=conn)
         conn.commit()
@@ -652,6 +656,72 @@ def rename_list(list_id: int, name: str, conn=None) -> bool:
         if own:
             conn.commit()
         return cur.rowcount > 0
+    finally:
+        if own:
+            conn.close()
+
+
+# ── Standard-Seed-Pakete entfernen (Ein-Klick) ──────────────────────────────
+
+# Paket → (meta_key, tag/Source-Kriterium)
+SEED_PACKAGES = {
+    "kochbuch": ("seed_kochbuch", "Open Source"),        # Tag
+    "grundrezepte": ("seed_grundrezepte", "Grundrezept"),  # Tag
+    "demo": (None, None),                                 # Quelle "Kochido Demo"
+}
+
+
+def count_seed_package(package: str, conn=None) -> int:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        if package == "demo":
+            row = conn.execute(
+                "SELECT COUNT(*) FROM recipes WHERE data LIKE ?",
+                ('%"Kochido Demo"%',),
+            ).fetchone()
+        else:
+            _, tag = SEED_PACKAGES[package]
+            row = conn.execute(
+                "SELECT COUNT(*) FROM recipes WHERE (',' || tags || ',') LIKE ?",
+                (f"%,{tag},%",),
+            ).fetchone()
+        return int(row[0])
+    finally:
+        if own:
+            conn.close()
+
+
+def delete_seed_package(package: str, conn=None) -> int:
+    """Entfernt ein Standard-Paket (Kochbücher / Grundrezepte / Demo).
+    Die meta-Version bleibt stehen → das gleiche Paket kommt bei Updates
+    NICHT automatisch zurück (erst mit einer neuen Seed-Version)."""
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        if package == "demo":
+            cur = conn.execute(
+                "DELETE FROM recipes WHERE data LIKE ?",
+                ('%"Kochido Demo"%',),
+            )
+        else:
+            _, tag = SEED_PACKAGES[package]
+            cur = conn.execute(
+                "DELETE FROM recipes WHERE (',' || tags || ',') LIKE ?",
+                (f"%,{tag},%",),
+            )
+        deleted = cur.rowcount
+        meta_key = SEED_PACKAGES[package][0]
+        if meta_key:
+            ver = get_meta(meta_key, conn=conn)
+            if ver:
+                conn.execute(
+                    "UPDATE meta SET value=? WHERE key=?",
+                    (f"removed:{ver}", meta_key),
+                )
+        if own:
+            conn.commit()
+        return deleted
     finally:
         if own:
             conn.close()
