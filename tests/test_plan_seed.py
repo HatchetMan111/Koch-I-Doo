@@ -443,9 +443,11 @@ class TestCookidooHtmlNobr:
         r = recipes[0]
         joined = " ".join(s["text"] for s in r["steps"])
         assert "<NOBR" not in joined and "NOBR" not in joined
-        assert "3 Min." in joined and "Stufe" in joined
+        # TM-Parameter (aus dem NOBR-Rohtext) landen als Badges, nicht im Text
+        assert r["steps"][0]["time"] == 180
+        assert r["steps"][0]["speed"] == "8"
         # mehrzeiliges NOBR: Zeit erkannt?
         assert r["steps"][1]["time"] == 600
-        # Hinweis als description + Tipp
+        # Hinweis als description
         assert "geh. TL" in r["description"]
         assert "<NOBR" not in r["description"]

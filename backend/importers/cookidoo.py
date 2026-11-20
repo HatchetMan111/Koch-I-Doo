@@ -196,12 +196,7 @@ def _html_list(html: str, marker_id: str):
     if not m:
         return []
     items = re.findall(r"<li[^>]*>(.*?)</li>", m.group(1), re.DOTALL | re.IGNORECASE)
-    out = []
-    for it in items:
-        text = _strip_tags(it)
-        if text:
-            out.append(text)
-    return out
+    return [_strip_tags(it) for it in items if _strip_tags(it)]
 
 
 def _html_feature_map(html: str) -> dict:
@@ -237,6 +232,17 @@ def recipe_from_cookidoo_html(page_html: str) -> dict:
         "Cookidoo (HTML-Dump)",
         tm_versions or ["TM5", "TM6"],
     )
+    # Rohtext je Schritt (NOBR-Badges enthalten) für die TM-Parameter
+    m_steps = re.search(
+        r'id=["\']preparation-steps["\'][^>]*>(.*?)</(?:ol|ul)>',
+        page_html, re.DOTALL | re.IGNORECASE,
+    )
+    raw_step_texts = []
+    if m_steps:
+        raw_step_texts = [
+            _strip_tags(li)
+            for li in re.findall(r"<li[^>]*>(.*?)</li>", m_steps.group(1), re.DOTALL | re.IGNORECASE)
+        ]
     # Bild aus dem Dump (og:image oder recipe-card-Bild)
     m_img = re.search(
         r'(?:property=["\']og:image["\']|id=["\']recipe-card__image-loader["\'][^>]*<img[^>]*src=["\'])([^"\' >]+)',
@@ -254,6 +260,14 @@ def recipe_from_cookidoo_html(page_html: str) -> dict:
             recipe["ingredients"].append(parsed)
 
     steps = _build_steps(_html_list(page_html, "preparation-steps"))
+    # TM-Parameter aus dem Rohtext (inkl. NOBR-Badges) nachziehen
+    from .common import parse_step_params as _psp
+    for st, raw in zip(steps, raw_step_texts):
+        if not (st.get("time") or st.get("speed") or st.get("temperature")):
+            p2 = _psp(raw)
+            for k in ("time", "temperature", "speed", "reverse", "mode"):
+                if p2.get(k) and not st.get(k):
+                    st[k] = p2[k]
     # Hinweis-/Tipp-Texte (Cookidoo-Blöcke nach den Zutaten, oft mit <NOBR>)
     m_notes = re.search(
         r'id=["\']recipe-notes["\'][^>]*>(.*?)</(?:div|section)>',
