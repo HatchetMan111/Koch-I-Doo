@@ -674,3 +674,49 @@ class TestBatchFilter:
         assert out == "OK"
         # Modell wurde dauerhaft auf ein Chat-fähiges umgestellt
         assert "batch" not in (db.get_setting("chat_model") or "")
+
+
+class TestEinkaufsliste:
+    def test_refresh_aus_wochenplan(self, client):
+        """Zutaten geplanter Rezepte werden zusammengefasst + skaliert."""
+        import db
+        from datetime import date, timedelta
+
+        conn = db._connect()
+        for tbl in ("shopping", "plan"):
+            conn.execute(f"DELETE FROM {tbl}")
+        conn.commit()
+        conn.close()
+
+        # 2 Rezepte, eins mit Mengenangaben, heute geplant
+        r1 = client.post("/api/recipes", json={
+            "title": "Einkauf A", "servings": 4, "serving_unit": "Portionen",
+            "ingredients": [
+                {"amount": 200, "unit": "g", "name": "Mehl", "note": ""},
+                {"amount": 2, "unit": "", "name": "Zwiebeln", "note": ""},
+            ],
+            "steps": [{"text": "Mixen", "time": 60, "temperature": "", "speed": "3"}],
+        }).json()["id"]
+        today = date.today()
+        client.post("/api/plan", json={"plan_date": today.isoformat(), "recipe_id": r1, "servings": 8})  # 2× Portionen
+
+        res = client.post("/api/shopping/refresh", json={}).json()
+        assert res["ok"] is True
+        items = {i["name"]: i for i in res["items"]}
+        assert items["Mehl"]["amount"] == 400      # 200 g × 2 (Portionen 4 → 8)
+        assert items["Zwiebeln"]["amount"] == 4    # 2 × 2
+
+    def test_toggle_persistiert(self, client):
+        client.post("/api/shopping/refresh", json={})
+        items = client.get("/api/shopping").json()
+        if not items:
+            import pytest
+            pytest.skip("keine geplanten Rezepte in dieser Umgebung")
+        iid = items[0]["id"]
+        r = client.post(f"/api/shopping/{iid}/toggle", json={"checked": True}).json()
+        assert r["checked"] is True
+        assert any(i["id"] == iid and i["checked"] for i in client.get("/api/shopping").json())
+        assert client.delete("/api/shopping").json()["ok"] is True
+
+    def test_toggle_unbekannt(self, client):
+        assert client.post("/api/shopping/9999/toggle", json={"checked": True}).status_code == 404

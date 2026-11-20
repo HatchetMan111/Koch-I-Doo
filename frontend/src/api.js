@@ -65,6 +65,14 @@ export const importBatch = (recipes, listName = "", listSource = "") =>
     body: JSON.stringify({ recipes, list_name: listName, list_source: listSource }),
   });
 
+// Einkaufsliste
+export const getShopping = () => api("/api/shopping");
+export const refreshShopping = () =>
+  api("/api/shopping/refresh", { method: "POST", body: JSON.stringify({}) });
+export const toggleShopping = (id, checked) =>
+  api(`/api/shopping/${id}/toggle`, { method: "POST", body: JSON.stringify({ checked }) });
+export const clearShopping = () => api("/api/shopping", { method: "DELETE" });
+
 // Profil
 export const getProfile = () => api("/api/profile");
 export const saveProfile = (profile) =>

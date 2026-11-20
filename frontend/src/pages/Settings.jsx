@@ -12,6 +12,7 @@ export default function Settings() {
   const [error, setError] = useState("");
   const [savedProfile, setSavedProfile] = useState(false);
   const [savedCookidoo, setSavedCookidoo] = useState(false);
+  const [savedHousehold, setSavedHousehold] = useState(false);
   const [savedChat, setSavedChat] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [seedStatus, setSeedStatus] = useState(null);
@@ -41,6 +42,16 @@ export default function Settings() {
       try { localStorage.removeItem("kochido-theme"); } catch {}
       setSavedProfile(true);
       setSavedCookidoo(false);
+      setError("");
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
+  const saveHousehold = async () => {
+    try {
+      await saveProfile(profile);
+      setSavedHousehold(true);
       setError("");
     } catch (err) {
       setError(String(err.message || err));
@@ -133,6 +144,14 @@ export default function Settings() {
             onChange={(e) => setP({ diet: e.target.value })}
             placeholder="Vegetarisch am Montag, keine Erdnüsse, mögen keine Pilze …" />
         </label>
+        <button className="btn btn-primary" onClick={saveHousehold}>
+          💾 Für wen & wie speichern
+        </button>
+        {savedHousehold && (
+          <div className="alert alert-success">
+            ✅ Gespeichert — der KI-Assistent berücksichtigt das ab der nächsten Frage.
+          </div>
+        )}
       </section>
 
       <section className="card">

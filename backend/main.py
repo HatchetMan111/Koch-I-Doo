@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.12.1"
+APP_VERSION = "1.13.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -172,6 +172,54 @@ def api_favorite(recipe_id: int, body: FavoriteBody):
     if not db.set_favorite(recipe_id, body.favorite):
         raise HTTPException(status_code=404, detail=f"Rezept {recipe_id} nicht gefunden")
     return {"ok": True, "favorite": body.favorite}
+
+
+# ── Einkaufsliste ───────────────────────────────────────────────────────────
+
+class ShoppingRefreshRequest(BaseModel):
+    from_date: str | None = None
+    to_date: str | None = None
+
+
+class ShoppingToggleBody(BaseModel):
+    checked: bool | None = None
+
+
+@app.get("/api/shopping")
+def api_shopping():
+    return db.shopping_items()
+
+
+@app.post("/api/shopping/refresh")
+def api_shopping_refresh(body: ShoppingRefreshRequest | None = None):
+    """Baut die Liste aus dem Wochenplan neu auf (Standard: aktuelle Woche)."""
+    from_date = (body.from_date if body else None) or ""
+    to_date = (body.to_date if body else None) or ""
+    if not from_date or not to_date:
+        today = date.today()
+        monday = today - timedelta(days=today.weekday())
+        from_date = from_date or monday.isoformat()
+        to_date = to_date or (monday + timedelta(days=6)).isoformat()
+    for d in (from_date, to_date):
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", d):
+            raise HTTPException(status_code=400, detail=f"Ungültiges Datum: {d} (YYYY-MM-DD)")
+    result = db.shopping_refresh(from_date, to_date)
+    result["items"] = db.shopping_items()
+    result["ok"] = True
+    return result
+
+
+@app.post("/api/shopping/{item_id}/toggle")
+def api_shopping_toggle(item_id: int, body: ShoppingToggleBody):
+    new = db.shopping_toggle(item_id, body.checked)
+    if new is None:
+        raise HTTPException(status_code=404, detail=f"Einkaufseintrag {item_id} nicht gefunden")
+    return {"ok": True, "checked": new}
+
+
+@app.delete("/api/shopping")
+def api_shopping_clear():
+    return {"ok": True, "deleted": db.shopping_clear()}
 
 
 # ── Wochenplan ──────────────────────────────────────────────────────────────

@@ -34,6 +34,16 @@ CREATE TABLE IF NOT EXISTS meta (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS shopping (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    unit        TEXT NOT NULL DEFAULT '',
+    amount      REAL,
+    note        TEXT NOT NULL DEFAULT '',
+    checked     INTEGER NOT NULL DEFAULT 0,
+    added_at    REAL NOT NULL,
+    UNIQUE(name, unit)
+);
 CREATE TABLE IF NOT EXISTS cook_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     recipe_id   INTEGER NOT NULL,
@@ -832,6 +842,134 @@ def get_cook_log(days: int = 14, conn=None) -> list[dict]:
                 "date": time.strftime("%Y-%m-%d", time.localtime(r["cooked_at"])),
             })
         return out
+    finally:
+        if own:
+            conn.close()
+
+
+# ── Einkaufsliste (aus dem Wochenplan abgeleitet) ──────────────────────────
+
+def shopping_items(conn=None) -> list[dict]:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM shopping ORDER BY checked ASC, name COLLATE NOCASE ASC"
+        ).fetchall()
+        return [{
+            "id": r["id"],
+            "name": r["name"],
+            "unit": r["unit"],
+            "amount": r["amount"],
+            "note": r["note"],
+            "checked": bool(r["checked"]),
+        } for r in rows]
+    finally:
+        if own:
+            conn.close()
+
+
+def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
+    """Baut die Einkaufsliste aus den geplanten Rezepten neu auf.
+
+    Zutaten werden nach Name+Einheit zusammengefasst und – wenn der Plan eine
+    andere Portionszahl als das Rezept vorgibt – entsprechend skaliert. Bereits
+    abgehakte Einträge bleiben bei gleichem Namen erhalten.
+    """
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        checked_state = {
+            (r["name"].strip().lower(), (r["unit"] or "").strip().lower()): bool(r["checked"])
+            for r in conn.execute("SELECT name, unit, checked FROM shopping")
+        }
+        plan_entries = list_plan(date_from, date_to, conn=conn)
+
+        merged: dict[tuple, dict] = {}
+        for e in plan_entries:
+            recipe = get_recipe(e["recipe_id"], conn=conn)
+            if not recipe:
+                continue
+            planned = e.get("servings") or recipe.get("servings") or 1
+            base_servings = recipe.get("servings") or planned
+            factor = (planned / base_servings) if base_servings else 1.0
+            for i in recipe.get("ingredients") or []:
+                key = (str(i.get("name") or "").strip().lower(), str(i.get("unit") or "").strip().lower())
+                if not key[0]:
+                    continue
+                amount = i.get("amount")
+                if amount is not None:
+                    amount = round(amount * factor, 2)
+                cur = merged.get(key)
+                if cur is None:
+                    merged[key] = {
+                        "name": str(i.get("name") or "").strip(),
+                        "unit": str(i.get("unit") or ""),
+                        "amount": amount,
+                        "note": str(i.get("note") or ""),
+                        "recipes": {e["recipe_id"]},
+                    }
+                else:
+                    if amount is not None and cur["amount"] is not None:
+                        cur["amount"] = round(cur["amount"] + amount, 2)
+                    elif amount is not None and cur["amount"] is None:
+                        cur["amount"] = amount
+                    if not cur["note"] and i.get("note"):
+                        cur["note"] = str(i["note"])
+                    cur["recipes"].add(e["recipe_id"])
+
+        conn.execute("DELETE FROM shopping")
+        now = time.time()
+        for (name_l, unit_l), item in merged.items():
+            conn.execute(
+                "INSERT INTO shopping (name, unit, amount, note, checked, added_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (
+                    item["name"], item["unit"], item["amount"], item["note"],
+                    1 if checked_state.get((name_l, unit_l)) else 0,
+                    now,
+                ),
+            )
+        if own:
+            conn.commit()
+        return {
+            "items": len(merged),
+            "from": date_from,
+            "to": date_to,
+            "recipes": len({rid for e in plan_entries for rid in [e["recipe_id"]]}),
+        }
+    finally:
+        if own:
+            conn.close()
+
+
+def shopping_toggle(item_id: int, checked: bool | None = None, conn=None):
+    """Häkchen umschalten (oder explizit setzen). Gibt den neuen Zustand oder
+    None (nicht gefunden) zurück."""
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        row = conn.execute("SELECT checked FROM shopping WHERE id=?", (item_id,)).fetchone()
+        if not row:
+            return None
+        new = (not bool(row["checked"])) if checked is None else bool(checked)
+        conn.execute("UPDATE shopping SET checked=? WHERE id=?", (1 if new else 0, item_id))
+        if own:
+            conn.commit()
+        return new
+    finally:
+        if own:
+            conn.close()
+
+
+def shopping_clear(conn=None) -> int:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        cur = conn.execute("DELETE FROM shopping")
+        if own:
+            conn.commit()
+        return cur.rowcount
     finally:
         if own:
             conn.close()

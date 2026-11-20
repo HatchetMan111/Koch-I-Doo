@@ -112,6 +112,11 @@ export default function Plan() {
   return (
     <div className="plan-page">
       <h1>📅 Meine Woche</h1>
+      <div className="plan-actions">
+        <Link to="/einkauf" className="btn btn-primary">
+          🛒 Einkaufsliste (aus dem Plan)
+        </Link>
+      </div>
       <div className="plan-view-toggle">
         <button className={`tab ${view === "woche" ? "tab-active" : ""}`} onClick={() => setView("woche")}>
           Woche

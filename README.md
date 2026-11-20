@@ -80,6 +80,9 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Do
   Dubletten
 - **📋 Schritt-Übersicht im Koch-Modus:** alle Schritte als Vorschau
   ansehen und direkt anspringen
+- **🛒 Einkaufsliste aus dem Wochenplan:** alle Zutaten der geplanten
+  Rezepte automatisch zusammengefasst, auf die geplanten Portionen
+  umgerechnet, mit Häkchen zum Abhaken (Stand bleibt gespeichert)
 - **🍽 Portions-Skalierung** mit Bruch-Formatierung (½, ¾ …) – Presets
   ½ / 1× / ×2, Einwiegen-Chips und Koch-Modus rechnen mit
 - **Suche, Tags, Favoriten** – und alles läuft **lokal** (FastAPI + SQLite)

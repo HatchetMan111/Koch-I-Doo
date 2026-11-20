@@ -9,6 +9,7 @@ import ChatWidget from "./components/ChatWidget.jsx";
 import Plan from "./pages/Plan.jsx";
 import Lists from "./pages/Lists.jsx";
 import Settings from "./pages/Settings.jsx";
+import Shopping from "./pages/Shopping.jsx";
 import Discover, { DiscoverCategory } from "./pages/Discover.jsx";
 
 // Fängt Render-Fehler und zeigt sie statt weißem Blatt (Debugging-Anforderung)
@@ -78,6 +79,9 @@ export default function App() {
           <Link to="/neu" className="btn btn-primary" title="Neues Rezept">
             + <span className="nav-label">Rezept</span>
           </Link>
+          <Link to="/einkauf" className="btn btn-outline nav-gear" title="Einkaufsliste">
+            🛒
+          </Link>
           <Link to="/einstellungen" className="btn btn-outline nav-gear" title="Einstellungen">
             ⚙
           </Link>
@@ -93,6 +97,7 @@ export default function App() {
           <Route path="/plan" element={<Plan />} />
           <Route path="/listen" element={<Lists />} />
           <Route path="/einstellungen" element={<Settings />} />
+          <Route path="/einkauf" element={<Shopping />} />
           <Route path="/neu" element={<Editor />} />
           <Route path="/rezept/:id" element={<RecipeDetail />} />
           <Route path="/rezept/:id/bearbeiten" element={<Editor />} />
@@ -102,7 +107,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.12.1 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.13.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
       <ChatWidget />
     </div>
