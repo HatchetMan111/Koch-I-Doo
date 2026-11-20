@@ -626,3 +626,51 @@ class TestModellNormalisierung:
                 assert "lyria" not in m["id"]
                 if m.get("in_per_m") is not None:
                     assert m["in_per_m"] > 0
+
+
+class TestBatchFilter:
+    def test_batch_modelle_raus(self):
+        from chatbot import list_free_models
+
+        ids = [m["id"] for m in list_free_models("")]
+        assert not any("batch" in i for i in ids), ids
+        assert not any("lyria" in i for i in ids)
+
+    def test_chat_endpoint_fallback(self, client, monkeypatch):
+        """Batch-Adapter-Fehler → automatisches Wechseln auf ein Chat-Modell."""
+        import urllib.error
+
+        import chatbot
+        import db
+
+        db.set_setting("openrouter_key", "k")
+        db.set_setting("chat_model", "z-ai/glm-5.3-flash:batch")
+
+        calls = {"n": 0}
+
+        class _Ctx:
+            def __init__(self, data): self._d = data
+            def read(self): return self._d
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake_urlopen(req, timeout=None):
+            calls["n"] += 1
+            body = req.data.decode()
+            if "glm-5.3-flash:batch" in body:
+                raise urllib.error.HTTPError(
+                    req.full_url, 404,
+                    "z-ai/glm-5.3-flash:batch cannot be used with the "
+                    "chat/completions endpoint (adapter TogetherBatchAdapter).",
+                    {}, None,
+                )
+            return _Ctx(_json.dumps({
+                "choices": [{"message": {"role": "assistant", "content": "OK"}}],
+            }).encode())
+
+        import json as _json
+        monkeypatch.setattr(chatbot.urllib.request, "urlopen", fake_urlopen)
+        out = chatbot.ask("Hallo", [])
+        assert out == "OK"
+        # Modell wurde dauerhaft auf ein Chat-fähiges umgestellt
+        assert "batch" not in (db.get_setting("chat_model") or "")

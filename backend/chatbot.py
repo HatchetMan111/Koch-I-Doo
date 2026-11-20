@@ -75,7 +75,21 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
                     time.sleep(min(wait, 30))
                     continue
                 raise last
-            # andere Fehler (401, 400 …) nicht wiederholen
+            # 404 = Modell/Endpunkt nicht (mehr) verfügbar (Batch-Adapter,
+            # unfree-modell, gelöscht) → spezialisierter Fehler, damit ask()
+            # automatisch ein funktionierendes Modell wählt. 400 mit Chat-
+            # Endpunkt-Hinweis wird genauso behandelt.
+            text = (raw or "").lower()
+            if exc.code == 404 or (
+                exc.code == 400 and (
+                    "cannot be used with the chat" in text or "endpoint" in text
+                    or "adapter" in text or "batch" in text or "not found" in text
+                )
+            ):
+                raise ChatEndpointError(
+                    f"OpenRouter HTTP {exc.code}: {raw or 'Modell nicht chat-fähig'}"
+                ) from exc
+            # andere Fehler (401 …) nicht wiederholen
             raise RuntimeError(f"OpenRouter HTTP {exc.code}: {raw}") from exc
         except Exception as exc:  # noqa: BLE001 – Netzfehler ggf. wiederholen
             last = RuntimeError(f"OpenRouter-Fehler: {type(exc).__name__}: {exc}")
@@ -159,16 +173,20 @@ def list_free_models(api_key: str = "") -> list[dict]:
         paid.sort(key=lambda m: (m["in"], m["out"]))
         return free + paid[:5]
     except Exception:
-        # Offline/Netzfehler → statische Listen (paid klar markiert)
+        # Offline/Netzfehler → statische Listen (paid klar markiert, keine
+        # Batch-Modelle — die laufen nicht am chat/completions-Endpunkt)
         return (
-            [dict(m, kind="free") for m in FREE_MODELS_FALLBACK]
-            + [dict(m, kind="paid") for m in PAID_CHEAP_FALLBACK]
+            [dict(m, kind="free") for m in FREE_MODELS_FALLBACK
+             if not _NON_CHAT.search(m["id"])]
+            + [dict(m, kind="paid") for m in PAID_CHEAP_FALLBACK
+               if not _NON_CHAT.search(m["id"])]
         )
 
 
 # Modelle, die keine Chat-Modelle sind (Audio/Bild/Embeddings)
 _NON_CHAT = re.compile(
-    r"(lyria|embed|tts|whisper|clip|image|vision-audio|guard|safety|moderation)",
+    r"(lyria|embed|tts|whisper|clip|image|vision-audio|guard|safety|moderation"
+    r"|batch|-batch|:batch|fine-tun|adapter)",
     re.IGNORECASE,
 )
 
@@ -411,6 +429,55 @@ def build_context_note() -> str:
     return "\n\n".join(parts)
 
 
+# Ersatzreihenfolge, wenn ein Modell nicht (mehr) am Chat-Endpunkt läuft
+_SAFE_CHAT_MODELS = [
+    "meta-llama/llama-3.1-8b-instruct",
+    "openai/gpt-oss-20b",
+    "deepseek/deepseek-chat",
+    "mistralai/mistral-small-3.2-24b-instruct",
+    "google/gemini-2.0-flash-001",
+]
+
+
+def _fallback_model(current: str, key: str) -> str | None:
+    """Sucht ein funktionierendes Chat-Modell als Ersatz."""
+    # 1) Aus den live gelisteten Modellen (frei + günstig, sortiert)
+    try:
+        for m in list_free_models(key):
+            mid = m.get("id", "")
+            if mid and mid != current and not _NON_CHAT.search(mid):
+                if m.get("kind") != "paid" or m.get("id"):
+                    return mid
+    except Exception:
+        pass
+    # 2) Bekannte Chat-Modelle
+    for m in _SAFE_CHAT_MODELS:
+        if m != current:
+            return m
+    return None
+
+
+class ChatEndpointError(RuntimeError):
+    """Modell läuft nicht am chat/completions-Endpunkt (Batch-Adapter,
+    unfree-modell, deaktiviert …) — Grund für automatischen Modellwechsel."""
+
+
+def _is_chat_endpoint_error(exc: Exception) -> bool:
+    """True bei Chat-Endpunkt-Problemen. Erkennt den Fehler am Typ (der
+    HTTP-Code + die OpenRouter-Meldung werden mitgegeben) ODER am Text."""
+    if isinstance(exc, ChatEndpointError):
+        return True
+    text = str(exc).lower()
+    return (
+        "cannot be used with the chat" in text
+        or "adapter" in text
+        or "batch" in text and "endpoint" in text
+        or "no endpoints found" in text
+        or "model not found" in text
+        or "is not supported" in text
+    )
+
+
 def ask(user_message: str, history: list[dict]) -> str:
     """Eine Chat-Nachricht an das konfigurierte kostenlose Modell schicken —
     inkl. Werkzeug-Schleife (create_recipe / plan_recipe / search_recipes)."""
@@ -422,6 +489,7 @@ def ask(user_message: str, history: list[dict]) -> str:
         raise RuntimeError("Kein Chat-Modell ausgewählt (Einstellungen).")
 
     context = build_context_note()
+    attempted: set[str] = set()
 
     messages = [
         {"role": "system", "content":
@@ -457,6 +525,18 @@ def ask(user_message: str, history: list[dict]) -> str:
         try:
             data = _post_chat(messages, key, model)
         except RuntimeError as exc:
+            # Modell läuft nicht am Chat-Endpunkt (Batch-Adapter, unfree …) →
+            # automatisch auf ein funktionierendes Modell wechseln und neu
+            # versuchen (max. 2 Wechsel gegen Endlos-Schleifen)
+            if _is_chat_endpoint_error(exc) and model not in attempted and len(attempted) < 2:
+                attempted.add(model)
+                new_model = _fallback_model(model, key)
+                if new_model:
+                    print(f"[chat] Modell '{model}' nicht chat-fähig ({exc}) "
+                          f"→ wechsle zu '{new_model}'")
+                    db.set_setting("chat_model", new_model)  # dauerhaft merken
+                    model = new_model
+                    continue
             # Wichtiger Unterschied: nach einer Rate-Limit-Sperre mitten in der
             # Tool-Schleife darf ALLES, was schon passiert ist, nicht verloren
             # gehen — der User soll es wissen (und nicht blind wiederholen).

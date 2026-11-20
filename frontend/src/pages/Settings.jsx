@@ -188,7 +188,7 @@ export default function Settings() {
               Kein Guthaben nötig, aber stark ratenbegrenzt (ca. 1 Anfrage
               alle paar Sekunden, Tageslimit).
             </p>
-            <select className="input" value={models.some((m) => m.id === settings.chat_model) ? settings.chat_model : ""}
+            <select className="input" value={freeModels.some((m) => m.id === settings.chat_model) ? settings.chat_model : ""}
               onChange={(e) => setSettings({ ...settings, chat_model: e.target.value })}>
               <option value="">— kostenloses Modell wählen —</option>
               {freeModels.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -201,7 +201,7 @@ export default function Settings() {
               Nur ~0,01–0,10 $ pro 1 Mio Token — ein Kochabend kostet
               praktisch nichts, dafür ohne Rate-Limit-Frust.
             </p>
-            <select className="input" value={models.some((m) => m.id === settings.chat_model) ? settings.chat_model : ""}
+            <select className="input" value={paidModels.some((m) => m.id === settings.chat_model) ? settings.chat_model : ""}
               onChange={(e) => setSettings({ ...settings, chat_model: e.target.value })}>
               <option value="">— Bezahl-Modell wählen —</option>
               {paidModels.map((m) => (
