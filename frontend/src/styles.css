@@ -841,3 +841,20 @@ input, textarea, select { max-width: 100%; }
   .quicklink small { display: none; }
   .quick-icon { font-size: 1.35rem; }
 }
+
+/* ── Chat: mehrzeilige, wachsende Eingabe ───────────────────────────────── */
+.chat-textarea {
+  resize: none; min-height: 44px; max-height: 150px; line-height: 1.45;
+  overflow-y: auto; flex: 1;
+}
+.chat-send { align-self: flex-end; padding: 11px 15px; font-size: 1.1rem; }
+
+/* ── Rezept-Detail: Aktionen umbrechen statt einer gequetschten Zeile ──── */
+.detail-actions { flex-direction: column; align-items: stretch; gap: 8px; }
+.detail-actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.detail-actions-row .btn { flex: 1 1 auto; }
+@media (max-width: 640px) {
+  .detail-actions-row { flex-direction: column; }
+  .detail-actions-row .btn { width: 100%; }
+  .detail-actions-main .btn-cook { order: -1; }
+}

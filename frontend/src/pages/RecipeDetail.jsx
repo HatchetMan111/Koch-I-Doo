@@ -132,36 +132,37 @@ export default function RecipeDetail() {
             </div>
           )}
           <div className="detail-actions">
-            <Link
-              to={`/kochen/${recipe.id}?servings=${servings}`}
-              className="btn btn-cook btn-big"
-            >
-              🍳 Kochen starten
-            </Link>
-            <Link to={`/rezept/${recipe.id}/bearbeiten`} className="btn btn-outline">
-              ✎ Bearbeiten
-            </Link>
-            <button
-              className={`btn ${recipe.favorite ? "btn-primary" : "btn-outline"}`}
-              onClick={toggleFav}
-            >
-              {recipe.favorite ? "★ Favorit" : "☆ Merken"}
-            </button>
-            <button className="btn btn-outline plan-quick-btn" onClick={() => setShowPlan(true)}>
-              📅 Zum Plan
-            </button>
-            <button
-              className="btn btn-outline list-quick-btn"
-              onClick={async () => {
+            <div className="detail-actions-row detail-actions-main">
+              <Link
+                to={`/kochen/${recipe.id}?servings=${servings}`}
+                className="btn btn-cook btn-big"
+              >
+                🍳 Kochen starten
+              </Link>
+              <Link to={`/rezept/${recipe.id}/bearbeiten`} className="btn btn-outline">
+                ✎ Bearbeiten
+              </Link>
+              <button
+                className={`btn ${recipe.favorite ? "btn-primary" : "btn-outline"}`}
+                onClick={toggleFav}
+              >
+                {recipe.favorite ? "★ Favorit" : "☆ Merken"}
+              </button>
+            </div>
+            <div className="detail-actions-row">
+              <button className="btn btn-outline plan-quick-btn" onClick={() => setShowPlan(true)}>
+                📅 Zum Plan
+              </button>
+              <button className="btn btn-outline list-quick-btn" onClick={async () => {
                 setShowListPick(true);
                 setLists(await getLists().catch(() => []));
-              }}
-            >
-              📋 Zur Liste
-            </button>
-            <button className="btn btn-danger" onClick={remove}>
-              🗑 Löschen
-            </button>
+              }}>
+                📋 Zur Liste
+              </button>
+              <button className="btn btn-danger" onClick={remove}>
+                🗑 Löschen
+              </button>
+            </div>
           </div>
         </div>
       </div>

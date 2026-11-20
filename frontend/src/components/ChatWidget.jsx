@@ -10,6 +10,7 @@ export default function ChatWidget() {
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState([]);
   const listRef = useRef(null);
+  const taRef = useRef(null);
 
   useEffect(() => {
     getSettings()
@@ -20,6 +21,14 @@ export default function ChatWidget() {
   useEffect(() => {
     listRef.current?.scrollTo({ top: 1e9, behavior: "smooth" });
   }, [history, busy]);
+
+  // Textarea automatisch mitwachsen lassen (1 Zeile → bis max. ~7 Zeilen)
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 150) + "px";
+  }, [input, open]);
 
   if (!checked || !configured) return null;
 
@@ -67,14 +76,21 @@ export default function ChatWidget() {
             {busy && <div className="chat-msg chat-assistant chat-typing">…</div>}
           </div>
           <div className="chat-input">
-            <input
-              className="input"
-              placeholder="Frage eingeben …"
+            <textarea
+              ref={taRef}
+              className="input chat-textarea"
+              rows={1}
+              placeholder="Frage eingeben … (Shift+Enter = neue Zeile)"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
             />
-            <button className="btn btn-primary" onClick={send} disabled={!input.trim() || busy}>
+            <button className="btn btn-primary chat-send" onClick={send} disabled={!input.trim() || busy} title="Senden">
               ➤
             </button>
           </div>
