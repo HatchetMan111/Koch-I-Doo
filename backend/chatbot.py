@@ -29,6 +29,54 @@ def _headers(key: str) -> dict:
     }
 
 
+def _post_chat(messages: list[dict], key: str, model: str) -> dict:
+    """Chat-Completion mit Retry bei Rate-Limits (429) und Serverfehlern.
+
+    OpenRouter-Antworten können mehrere Tool-Runden brauchen; :free-Modelle
+    limitieren aggressiv (oft ~1 Anfrage alle paar Sekunden bzw. ein Tageslimit).
+    Deshalb: bis zu 4 Versuche mit wachsendem Backoff, Retry-After wird beachtet.
+    """
+    body = json.dumps({"model": model, "messages": messages, "tools": TOOLS}).encode("utf-8")
+    last: Exception | None = None
+    for attempt in range(4):
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/chat/completions",
+            data=body, headers=_headers(key), method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return json.loads(resp.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as exc:
+            raw = ""
+            try:
+                raw = exc.read().decode("utf-8", "replace")[:200]
+            except Exception:
+                pass
+            if exc.code == 429 or 500 <= exc.code < 600:
+                last = RuntimeError(f"OpenRouter HTTP {exc.code}: {raw}")
+                if attempt < 3:
+                    retry_after = 0
+                    if exc.code == 429:
+                        m = re.search(r"try again in ([0-9.]+)s", raw or "")
+                        if m:
+                            retry_after = float(m.group(1)) + 1
+                    wait = retry_after or (2 * (attempt + 1))
+                    print(f"[chat] Rate-Limit/Serverfehler – warte {wait}s und versuche erneut "
+                          f"({attempt + 2}/4)")
+                    time.sleep(min(wait, 30))
+                    continue
+                raise last
+            # andere Fehler (401, 400 …) nicht wiederholen
+            raise RuntimeError(f"OpenRouter HTTP {exc.code}: {raw}") from exc
+        except Exception as exc:  # noqa: BLE001 – Netzfehler ggf. wiederholen
+            last = RuntimeError(f"OpenRouter-Fehler: {type(exc).__name__}: {exc}")
+            if attempt < 3:
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise last
+    raise last or RuntimeError("OpenRouter: unbekannter Fehler")
+
+
 def is_configured() -> bool:
     return bool(db.get_setting("openrouter_key")) and bool(db.get_setting("chat_model"))
 
@@ -215,6 +263,15 @@ def _exec_tool(name: str, args: dict) -> str:
         day = str(args.get("date") or "").strip()
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", day):
             day = date.today().isoformat()
+        # Doppel-Schutz: steht das Rezept an dem Tag schon im Plan, NICHT
+        # nochmal eintragen (User wiederholt nach Rate-Limit-Fehlern gern)
+        for e in db.list_plan(day, day):
+            if e.get("recipe_id") == rid:
+                return _json.dumps({
+                    "ok": True, "already_planned": True, "date": day, "recipe_id": rid,
+                    "note": "Dieses Rezept steht an dem Tag bereits im Plan — "
+                            "kein zweiter Eintrag.",
+                }, ensure_ascii=False)
         entry_id = db.add_plan_entry(day, rid)
         return _json.dumps({"ok": True, "plan_entry": entry_id, "date": day,
                             "recipe_id": rid}, ensure_ascii=False)
@@ -293,6 +350,10 @@ def ask(user_message: str, history: list[dict]) -> str:
             "Essgewohnheiten/Allergien bei Vorschlägen und Rezepten. "
             "Bei Rezept-Fragen nenne Zutaten, Mengen und TM-Schritte "
             "(Zeit/Temperatur/Stufe). "
+            "WICHTIG: Wenn du mehrere Aktionen brauchst (z. B. Rezept erstellen "
+            "UND einplanen), rufe ALLE nötigen Werkzeuge in EINER Antwort "
+            "auf (mehrere tool_calls gleichzeitig) — nicht nacheinander über "
+            "mehrere Runden, das spart Rate-Limit. "
             "Wenn der Nutzer ein Rezept ERSTELLEN will, rufe create_recipe mit "
             "vollständigen Guided-Cooking-Schritten auf (Zeit in SEKUNDEN, "
             "Temperatur '37'..'120' oder 'Varoma', speed 'soft'/'0.5'..'10'/"
@@ -306,22 +367,25 @@ def ask(user_message: str, history: list[dict]) -> str:
         messages.append({"role": role, "content": str(m.get("content") or "")[:2000]})
     messages.append({"role": "user", "content": str(user_message)[:2000]})
 
-    for _round in range(4):  # max. 4 Werkzeug-Runden gegen Endlos-Schleifen
-        body = json.dumps({
-            "model": model, "messages": messages, "tools": TOOLS,
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/chat/completions",
-            data=body, headers=_headers(key), method="POST",
-        )
+    done: list[str] = []  # was bereits ausgeführt wurde (für Teil erfolgs-Meldung)
+
+    for _round in range(3):  # max. 3 Werkzeug-Runden gegen Endlos-Schleifen
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode("utf-8", "replace"))
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", "replace")[:300]
-            raise RuntimeError(f"OpenRouter HTTP {exc.code}: {detail}") from exc
-        except Exception as exc:  # noqa: BLE001
-            raise RuntimeError(f"OpenRouter-Fehler: {type(exc).__name__}: {exc}") from exc
+            data = _post_chat(messages, key, model)
+        except RuntimeError as exc:
+            # Wichtiger Unterschied: nach einer Rate-Limit-Sperre mitten in der
+            # Tool-Schleife darf ALLES, was schon passiert ist, nicht verloren
+            # gehen — der User soll es wissen (und nicht blind wiederholen).
+            if done:
+                return (
+                    "Das war leider zu viel für das kostenlose Modell "
+                    "(OpenRouter-Rate-Limit) — aber so weit bin ich gekommen:\n"
+                    + "\n".join(f"• {d}" for d in done)
+                    + "\n\nBitte in ~1 Minute kurz ‚und einplanen' sagen, dann "
+                      "mache ich den Rest. (Das Rezept existiert schon — ich "
+                      "lege keine Dublette an.)"
+                )
+            raise
 
         try:
             msg = data["choices"][0]["message"]
@@ -343,6 +407,20 @@ def ask(user_message: str, history: list[dict]) -> str:
             except ValueError:
                 args = {}
             result = _exec_tool(name, args)
+            try:
+                info = json.loads(result)
+            except ValueError:
+                info = {}
+            if info.get("ok"):
+                if name == "create_recipe":
+                    done.append(f"Rezept „{info.get('title')}“ erstellt (#{info.get('recipe_id')})")
+                elif name == "plan_recipe":
+                    done.append(
+                        f"„{args.get('recipe_title')}“ für {info.get('date')} eingeplant"
+                        + (" (war schon geplant)" if info.get("already_planned") else "")
+                    )
+                elif name == "search_recipes":
+                    done.append(f"{len(info.get('results') or [])} Rezept(e) gefunden")
             messages.append({
                 "role": "tool",
                 "tool_call_id": call.get("id") or "",

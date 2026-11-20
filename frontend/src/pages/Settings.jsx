@@ -189,6 +189,14 @@ export default function Settings() {
           <small className="muted">
             {loadingModels ? "Lade kostenlose Modelle …" : `${models.length} kostenlose Modelle verfügbar`}
           </small>
+          <small className="muted">
+            ⏱️ Die kostenlosen :free-Modelle sind stark ratenbegrenzt (OpenRouter
+            Limit ~1 Anfrage alle paar Sekunden / Tageslimit). Koch-I-Doo wartet
+            bei 429 automatisch bis zu 30 s und versucht es erneut. Wenn „Rezept
+            erstellen“ + „einplanen“ zusammen zu viel wird: einfach in ~1 Minute
+            den zweiten Teil einzeln nachfragen — das Rezept wird nicht doppelt
+            angelegt oder doppelt eingeplant.
+          </small>
         </label>
         <button className="btn btn-primary" onClick={saveChat} disabled={!settings.chat_model}>
           💾 Chat-Einstellungen speichern

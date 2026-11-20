@@ -541,3 +541,62 @@ class TestCookLog:
         assert "2 Erwachsene" in note
         assert "vegan" in note
         assert "Kontext-Eintopf" in note
+
+
+class TestChatRateLimit:
+    def test_retry_bei_429(self, client, monkeypatch):
+        """429 zweimal → dritter Versuch klappt (Backoff wird übersprungen)."""
+        import json as _json
+
+        import urllib.error
+
+        import chatbot
+
+        calls = {"n": 0}
+
+        def fake_urlopen(req, timeout=None):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                raise urllib.error.HTTPError(
+                    req.full_url, 429,
+                    "rate limit: try again in 1s",
+                    {}, None,
+                )
+            payload = _json.dumps({
+                "choices": [{"message": {"role": "assistant", "content": "Hallo!"}}],
+            }).encode()
+            return _Ctx(payload)
+
+        class _Ctx:
+            def __init__(self, data): self._d = data
+            def read(self): return self._d
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        monkeypatch.setattr(chatbot.urllib.request, "urlopen", fake_urlopen)
+        monkeypatch.setattr(chatbot.time, "sleep", lambda s: None)
+
+        import db
+        db.set_setting("openrouter_key", "k")
+        db.set_setting("chat_model", "m/free")
+        out = chatbot.ask("Hallo", [])
+        assert out == "Hallo!"
+        assert calls["n"] == 3
+
+    def test_plan_recipe_doppel_schutz(self, client):
+        """Zweites Einplanen am gleichen Tag erzeugt KEINEN zweiten Eintrag."""
+        import json as _json
+
+        import chatbot
+
+        made = _json.loads(chatbot._exec_tool("create_recipe", {
+            "title": "Doppel-Schutz-Suppe",
+            "ingredients": [{"amount": 300, "unit": "g", "name": "Möhren"}],
+            "steps": [{"text": "Garen", "time": 900, "temperature": "100", "speed": "1"}],
+        }))
+        first = _json.loads(chatbot._exec_tool("plan_recipe", {"recipe_title": "Doppel-Schutz-Suppe"}))
+        second = _json.loads(chatbot._exec_tool("plan_recipe", {"recipe_title": "Doppel-Schutz-Suppe"}))
+        assert first["ok"] and not first.get("already_planned")
+        assert second["ok"] and second.get("already_planned") is True
+        entries = client.get("/api/plan").json()
+        assert len([e for e in entries if e["recipe_id"] == made["recipe_id"]]) == 1
