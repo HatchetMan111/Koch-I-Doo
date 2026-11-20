@@ -62,6 +62,22 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
             except Exception:
                 pass
             if exc.code == 429 or 500 <= exc.code < 600:
+                # Tageslimit/Quote erreicht (nicht nur kurzer Burst) → Modell
+                # wechseln statt 3× erfolglos warten
+                text429 = (raw or "").lower()
+                # Tageslimit-/Quoten-429 (nicht der kurze Burst): free-models-
+                # per-day, daily limit, quota exceeded, rate limit (free) …
+                quota_done = exc.code == 429 and (
+                    "day" in text429
+                    or "daily" in text429
+                    or "quota" in text429
+                    or ("limit" in text429 and "rate" not in text429)
+                    or "exceeded" in text429 and "free" in text429
+                )
+                if quota_done:
+                    raise ChatEndpointError(
+                        f"OpenRouter HTTP 429 (Tageslimit/Quote): {raw or 'limit'}"
+                    ) from exc
                 last = RuntimeError(f"OpenRouter HTTP {exc.code}: {raw}")
                 if attempt < 3:
                     retry_after = 0
@@ -440,19 +456,30 @@ _SAFE_CHAT_MODELS = [
 
 
 def _fallback_model(current: str, key: str) -> str | None:
-    """Sucht ein funktionierendes Chat-Modell als Ersatz."""
-    # 1) Aus den live gelisteten Modellen (frei + günstig, sortiert)
+    """Sucht ein funktionierendes Chat-Modell als Ersatz.
+
+    War das aktuelle ein :free-Modell, wird AUSSCHLIESSLICH ein bezahltes
+    (kein :free) genommen — sonst wäre der nächste Tageslimit-Treffer
+    vorprogrammiert. Sonst frei + bezahlt gemischt.
+    """
+    was_free = ":free" in (current or "")
     try:
-        for m in list_free_models(key):
-            mid = m.get("id", "")
-            if mid and mid != current and not _NON_CHAT.search(mid):
-                if m.get("kind") != "paid" or m.get("id"):
-                    return mid
+        models = list_free_models(key)
     except Exception:
-        pass
-    # 2) Bekannte Chat-Modelle
+        models = []
+    if was_free:
+        # striktes Filter: kein :free im Ersatz
+        for m in models:
+            mid = m.get("id") or ""
+            if mid and ":free" not in mid and mid != current and not _NON_CHAT.search(mid):
+                return mid
+    for m in models:
+        mid = m.get("id", "")
+        if mid and mid != current and not _NON_CHAT.search(mid):
+            return mid
+    # 2) Bekannte Chat-Modelle (alle ohne :free)
     for m in _SAFE_CHAT_MODELS:
-        if m != current:
+        if m != current and ":free" not in m:
             return m
     return None
 
@@ -541,13 +568,26 @@ def ask(user_message: str, history: list[dict]) -> str:
             # Tool-Schleife darf ALLES, was schon passiert ist, nicht verloren
             # gehen — der User soll es wissen (und nicht blind wiederholen).
             if done:
+                is_free = ":free" in (model or "") or model.endswith(":free")
+                if is_free:
+                    return (
+                        "Das kostenlose Modell ist bei OpenRouter gerade "
+                        "über sein Tageslimit — das war leider viel auf einmal "
+                        "(mehrere Werkzeuge in einer Antwort). So weit bin ich "
+                        "gekommen:\n"
+                        + "\n".join(f"• {d}" for d in done)
+                        + "\n\n👉 Tipp: Wähle in ⚙ Einstellungen oben ein "
+                          "Bezahl-Modell (ab ~0,01 $/1 Mio Token) — dann gibt "
+                          "es kein Tageslimit und ich kann alles in einem "
+                          "Durchgang erledigen. Alternativ in ~1 Minute den "
+                          "Rest einzeln nachfragen; Dubletten lege ich nicht an."
+                    )
                 return (
-                    "Das war leider zu viel für das kostenlose Modell "
-                    "(OpenRouter-Rate-Limit) — aber so weit bin ich gekommen:\n"
+                    "Kurzes Rate-Limit (OpenRouter) — einen Moment Geduld oder "
+                    "das Modell in ⚙ wechseln. So weit bin ich gekommen:\n"
                     + "\n".join(f"• {d}" for d in done)
-                    + "\n\nBitte in ~1 Minute kurz ‚und einplanen' sagen, dann "
-                      "mache ich den Rest. (Das Rezept existiert schon — ich "
-                      "lege keine Dublette an.)"
+                    + "\n\nBitte gleich den Rest einzeln nachfragen; "
+                      "Dubletten lege ich nicht an."
                 )
             raise
 

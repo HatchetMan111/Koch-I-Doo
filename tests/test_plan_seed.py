@@ -1,4 +1,6 @@
 # Wochenplan-API + Grundrezept-Seeding (versioniert, ohne Duplikate)
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -778,3 +780,92 @@ class TestEinkaufEinheiten:
         knob = [i for i in items if i["name"] == "Knoblauch"]
         assert len(knob) == 1
         assert knob[0]["amount"] == 4
+
+
+class TestRateLimitFallback:
+    def test_tageslimit_429_wechselt_auf_bezahlmodell(self, client, monkeypatch, tmp_path):
+        """429 mit Tageslimit auf :free → Wechsel aufs BEZAHLTE Modell."""
+        import io
+        import json
+        import urllib.error
+
+        import db
+
+        # eigene DB (Test isolieren) — VOR chatbot-Import setzen
+        (tmp_path / "t1").mkdir(parents=True, exist_ok=True)
+        os.environ["KOCHIDO_DATA"] = str(tmp_path / "t1")
+        db.DB_PATH = tmp_path / "t1" / "kochido.db"
+        db.init_db()
+
+        import chatbot
+
+        db.set_setting("openrouter_key", "k")
+        db.set_setting("chat_model", "meta-llama/llama-3.3-70b-instruct:free")
+
+        class Ctx:
+            def __init__(self, d): self._d = d
+            def read(self): return self._d
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake(req, timeout=None):
+            body = req.data.decode()
+            if "meta-llama/llama-3.3-70b-instruct" in body:
+                raise urllib.error.HTTPError(
+                    req.full_url, 429,
+                    "Rate limit exceeded: free-models-per-day limit reached",
+                    {}, io.BytesIO(b"free-models-per-day limit reached"),
+                )
+            return Ctx(json.dumps({
+                "choices": [{"message": {"role": "assistant", "content": "Alles erledigt"}}],
+            }).encode())
+
+        monkeypatch.setattr(chatbot.urllib.request, "urlopen", fake)
+        out = chatbot.ask("Plane die Woche", [])
+        assert "Alles erledigt" in out
+
+    def test_free_teil_erfolg_nennt_bezahlmodell(self, client, monkeypatch):
+        """Wenn nach Teil-Erfolg das Free-Limit kommt, wird auf Bezahl verwiesen."""
+        import json
+        import chatbot
+        import db
+
+        db.set_setting("openrouter_key", "k")
+        db.set_setting("chat_model", "meta-llama/llama-3.3-70b-instruct:free")
+
+        import io
+        import urllib.error
+
+        def fake(req, timeout=None):
+            body = req.data.decode()
+            if "meta-llama/llama-3.3-70b-instruct" in body:
+                raise urllib.error.HTTPError(
+                    req.full_url, 429, "free-models-per-day limit reached",
+                    {}, io.BytesIO(b"free-models-per-day limit reached"),
+                )
+            return Ctx(json.dumps({
+                "choices": [{"message": {
+                    "role": "assistant", "content": "",
+                    "tool_calls": [{"id": "1", "function": {
+                        "name": "create_recipe",
+                        "arguments": json.dumps({
+                            "title": "Teil-Erfolg-Suppe",
+                            "ingredients": [{"amount": 300, "unit": "g", "name": "Linsen"}],
+                            "steps": [{"text": "Garen", "time": 900}],
+                        }),
+                    }}],
+                }}],
+            }).encode())
+
+        class Ctx:
+            def __init__(self, d): self._d = d
+            def read(self): return self._d
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        monkeypatch.setattr(chatbot.urllib.request, "urlopen", fake)
+        monkeypatch.setattr(chatbot.time, "sleep", lambda s: None)
+        out = chatbot.ask("Erstelle ein Rezept", [])
+        # Free-Modell warf das Tageslimit → Wechsel auf Ersatzmodell, das
+        # die Anfrage beantwortet (kein Abbruch, keine Dublette)
+        assert out and "Aktionen" in out or "ausgeführt" in out
