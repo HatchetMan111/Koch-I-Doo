@@ -758,3 +758,30 @@ def set_setting(key: str, value: str, conn=None) -> None:
     finally:
         if own:
             conn.close()
+
+
+def search_recipes_simple(query: str = "", limit: int = 8) -> list[dict]:
+    """Schlanke Suche für den Chat-Assistenten (Titel-Treffer zuerst)."""
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT id, title, data FROM recipes WHERE title LIKE ? "
+            "ORDER BY updated_at DESC LIMIT ?",
+            (f"%{query}%" if query else "%", limit),
+        ).fetchall()
+        out = []
+        for r in rows:
+            data = json.loads(r["data"])
+            out.append({
+                "id": r["id"],
+                "title": r["title"],
+                "servings": data.get("servings"),
+                "serving_unit": data.get("serving_unit"),
+                "time_total": data.get("time_total", 0),
+                "tags": data.get("tags", []),
+                "step_count": len(data.get("steps") or []),
+                "ingredient_count": len(data.get("ingredients") or []),
+            })
+        return out
+    finally:
+        conn.close()

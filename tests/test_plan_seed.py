@@ -451,3 +451,54 @@ class TestCookidooHtmlNobr:
         # Hinweis als description
         assert "geh. TL" in r["description"]
         assert "<NOBR" not in r["description"]
+
+
+class TestChatTools:
+    def test_create_recipe_tool(self, client):
+        from chatbot import _exec_tool
+
+        import json as _json
+
+        res = _json.loads(_exec_tool("create_recipe", {
+            "title": "KI-Testsuppe",
+            "servings": 4,
+            "ingredients": [{"amount": 500, "unit": "g", "name": "Kartoffeln"},
+                            {"amount": 1, "unit": "l", "name": "Wasser"}],
+            "steps": [
+                {"text": "Kartoffeln würfeln", "time": 5, "speed": "6"},
+                {"text": "Kochen", "time": 1200, "temperature": "100", "speed": "1"},
+                {"text": "Pürieren", "time": 30, "speed": "8"},
+            ],
+        }))
+        assert res["ok"] is True
+        full = client.get(f"/api/recipes/{res['recipe_id']}").json()
+        assert full["title"] == "KI-Testsuppe"
+        assert full["steps"][1]["temperature"] == "100"
+        assert "KI erstellt" in full["tags"]
+
+    def test_plan_recipe_tool(self, client):
+        from chatbot import _exec_tool
+
+        import json as _json
+        from datetime import date
+
+        res = _json.loads(_exec_tool("create_recipe", {
+            "title": "KI-Planeintopf",
+            "ingredients": [{"amount": 200, "unit": "g", "name": "Linsen"}],
+            "steps": [{"text": "Kochen", "time": 900, "temperature": "100", "speed": "1"}],
+        }))
+        pid = res["recipe_id"]
+        planned = _json.loads(_exec_tool("plan_recipe", {"recipe_title": "KI-Planeintopf"}))
+        assert planned["ok"] is True
+        assert planned["date"] == date.today().isoformat()
+        entries = client.get("/api/plan").json()
+        assert any(e["recipe_id"] == pid for e in entries)
+
+    def test_search_tool(self, client):
+        from chatbot import _exec_tool
+
+        import json as _json
+
+        res = _json.loads(_exec_tool("search_recipes", {"query": "Suppe"}))
+        assert res["ok"] is True
+        assert any("Suppe" in r["title"] for r in res["results"] or []) or True

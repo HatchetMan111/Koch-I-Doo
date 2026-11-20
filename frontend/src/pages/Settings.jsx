@@ -144,8 +144,10 @@ export default function Settings() {
       <section className="card">
         <h2>🤖 Chat-Assistent (OpenRouter)</h2>
         <p className="muted">
-          Ein kleiner Koch-Assistent, der Fragen beantwortet (z. B. „Wie viel
-          Stufe bei Zwiebelsuppe?“). Läuft über OpenRouter mit
+          Ein Koch-Assistent, der Fragen beantwortet (z. B. „Wie viel Stufe bei
+          Zwiebelsuppe?“) und Koch-I-Doo <b>bedienen</b> kann: neue
+          Thermomix-Rezepte mit Guided-Cooking-Schritten erstellen und Rezepte
+          für heute in den Wochenplan eintragen. Läuft über OpenRouter mit
           <b> kostenlosen :free-Modellen</b> — du brauchst nur einen kostenlosen
           OpenRouter-API-Key (openrouter.ai → Keys). Der Key bleibt auf deinem
           Server und wird nur an OpenRouter gesendet.

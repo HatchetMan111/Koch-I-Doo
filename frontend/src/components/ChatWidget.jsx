@@ -54,8 +54,10 @@ export default function ChatWidget() {
             {history.length === 0 && (
               <div className="chat-empty">
                 <b>Hallo! Ich bin dein Koch-Assistent.</b>
-                <p>Frag mich z. B. „Wie lange muss Kartoffelsuppe kochen?“
-                  oder „Was passt zu Hähnchen-Curry?“</p>
+                <p>Ich kann Koch-I-Doo <b>bedienen</b> — frag mich z. B.:
+                  „Erstelle ein Rezept für Zwiebelsuppe mit TM-Schritten“,
+                  „Trag Spaghetti Carbonara für heute in den Plan ein“ oder
+                  „Wie lange muss Kartoffelsuppe kochen?“</p>
                 <small className="muted">Antworten über ein kostenloses OpenRouter-Modell.</small>
               </div>
             )}
