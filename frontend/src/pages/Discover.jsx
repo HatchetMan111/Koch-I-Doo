@@ -88,9 +88,29 @@ export default function Discover() {
   const [recipes, setRecipes] = useState(null);
   const [error, setError] = useState("");
   const [active, setActive] = useState("");
+  const [q, setQ] = useState("");
+  const [remote, setRemote] = useState(null);   // Server-Suchtreffer
+  const [searching, setSearching] = useState(false);
   const [showSeedPanel, setShowSeedPanel] = useState(false);
   const [seedStatus, setSeedStatus] = useState(null);
   const navigate = useNavigate();
+
+  // Suche läuft serverseitig (Titel + Zutaten + Quelle) über /api/recipes?q=
+  useEffect(() => {
+    const term = q.trim();
+    if (!term) {
+      setRemote(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const t = setTimeout(() => {
+      getRecipes(term)
+        .then((res) => { setRemote(res); setSearching(false); })
+        .catch(() => setSearching(false));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
 
   const loadSeeds = async () => {
     setSeedStatus(await api("/api/seed/status").catch(() => null));
@@ -118,14 +138,14 @@ export default function Discover() {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [recipes]);
 
+  const searchMode = !!q.trim();
+
   const filtered = useMemo(() => {
     if (!recipes) return [];
-    const list = active
-      ? recipes.filter((r) => (r.tags || []).includes(active))
-      : recipes;
-    // „Alle Rezepte" limitieren — bei 300+ Karten wird die Seite träge
-    return active ? list : list.slice(0, 60);
-  }, [recipes, active]);
+    if (searchMode) return remote || [];         // Server-Treffer (Titel+Zutaten)
+    if (active) return recipes.filter((r) => (r.tags || []).includes(active));
+    return recipes.slice(0, 60);                 // „Alle" begrenzt (300+ träge)
+  }, [recipes, active, searchMode, remote]);
 
   const surprise = () => {
     if (!recipes?.length) return;
@@ -135,28 +155,39 @@ export default function Discover() {
 
   return (
     <div className="discover-page">
-      <h1>🧭 Entdecken</h1>
-      <p className="muted">
-        Stöbere in Kategorien oder lass dich überraschen – alle Rezepte sind schon
-        auf Thermomix-Schritte vorbereitet.
-      </p>
-
-      <div className="discover-actions">
-        <button className="btn btn-cook btn-big" onClick={surprise} disabled={!recipes?.length}>
-          🎲 Überrasch mich!
+      <div className="discover-search">
+        <input
+          className="input search"
+          type="search"
+          autoFocus
+          placeholder="🔍 Rezept oder Zutat suchen (z. B. „Kartoffel“, „Suppe“, „Hackfleisch“) …"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          aria-label="Rezepte durchsuchen"
+        />
+        {q && (
+          <button className="btn btn-outline" onClick={() => setQ("")} title="Suche leeren">✕</button>
+        )}
+        <button className="btn btn-cook" onClick={surprise} disabled={!recipes?.length} title="Zufallsrezept">
+          🎲
         </button>
-        <Link to="/listen" className="btn btn-outline btn-big">
-          📋 Meine Listen
-        </Link>
+      </div>
+      <div className="discover-subbar">
+        <span className="muted">
+          {searchMode
+            ? (searching ? "Suche …" : `${filtered.length} Treffer für „${q.trim()}“`)
+            : `${filtered.length} Rezepte`}
+        </span>
+        <Link to="/listen" className="btn btn-outline btn-sm">📋 Meine Listen</Link>
         <button
-          className="btn btn-outline btn-big"
+          className="btn btn-outline btn-sm"
           onClick={() => {
             setShowSeedPanel(!showSeedPanel);
             if (!showSeedPanel) loadSeeds();
           }}
-          title="Standard-Rezepte (Kochbücher, Grundrezepte, Demo) entfernen"
+          title="Standard-Rezepte entfernen"
         >
-          🗑 Standard-Rezepte
+          🗑 Standard
         </button>
       </div>
 
