@@ -176,6 +176,7 @@ export default function Lists() {
           {lists.map((l) => (
             <button key={l.id} className="card list-card" onClick={() => setOpenId(l.id)}>
               <div className="list-card-head">
+                <span className="list-card-icon">📋</span>
                 <b>{l.name}</b>
                 {l.source && (
                   <span className={`chip chip-mini ${l.source.startsWith("http") ? "" : "chip-tm"}`}>
@@ -188,14 +189,23 @@ export default function Lists() {
                 )}
               </div>
               <div className="list-thumbs">
-                {l.recipes.slice(0, 5).map((r) => (
-                  <span key={r.id} className="plan-thumb">
+                {l.recipes.slice(0, 4).map((r) => (
+                  <span key={r.id} className="list-thumb-sm">
                     {r.image ? <img src={r.image} alt="" onError={(e) => (e.currentTarget.style.display = "none")} /> : "🍲"}
                   </span>
                 ))}
-                {l.recipe_count > 5 && <span className="muted list-more">+{l.recipe_count - 5}</span>}
+                {l.recipe_count === 0 && <span className="list-thumb-sm list-empty">–</span>}
+                {l.recipe_count > 4 && <span className="muted list-more">+{l.recipe_count - 4}</span>}
               </div>
-              <small className="muted">{l.recipe_count} Rezepte</small>
+              <div className="list-card-foot">
+                <small className="muted">{l.recipe_count} Rezepte</small>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={(ev) => { ev.stopPropagation(); setOpenId(l.id); }}
+                >
+                  Öffnen →
+                </button>
+              </div>
             </button>
           ))}
         </div>

@@ -720,3 +720,61 @@ class TestEinkaufsliste:
 
     def test_toggle_unbekannt(self, client):
         assert client.post("/api/shopping/9999/toggle", json={"checked": True}).status_code == 404
+
+
+class TestEinkaufEinheiten:
+    def test_kg_und_g_werden_eine_zeile(self, client):
+        """0,5 kg + 200 g gleiche Zutat = 700 g (nicht zwei Zeilen)."""
+        import db
+        from datetime import date
+
+        conn = db._connect()
+        for t in ("shopping", "plan", "recipes"):
+            conn.execute(f"DELETE FROM {t}")
+        conn.commit()
+        conn.close()
+
+        r1 = client.post("/api/recipes", json={
+            "title": "Einheiten A", "servings": 4, "serving_unit": "Portionen",
+            "ingredients": [{"amount": 0.5, "unit": "kg", "name": "Mehl", "note": ""}],
+            "steps": [{"text": "x", "time": 0, "temperature": "", "speed": ""}],
+        }).json()["id"]
+        r2 = client.post("/api/recipes", json={
+            "title": "Einheiten B", "servings": 4, "serving_unit": "Portionen",
+            "ingredients": [{"amount": 200, "unit": "g", "name": "Mehl", "note": ""}],
+            "steps": [{"text": "x", "time": 0, "temperature": "", "speed": ""}],
+        }).json()["id"]
+        today = date.today().isoformat()
+        client.post("/api/plan", json={"plan_date": today, "recipe_id": r1})
+        client.post("/api/plan", json={"plan_date": today, "recipe_id": r2})
+
+        items = client.post("/api/shopping/refresh", json={}).json()["items"]
+        mehl = [i for i in items if i["name"] == "Mehl"]
+        assert len(mehl) == 1
+        assert mehl[0]["amount"] == 700
+        assert mehl[0]["unit"] == "g"
+
+    def test_zaehleinheiten_addieren(self, client):
+        import db
+        from datetime import date
+
+        conn = db._connect()
+        for t in ("shopping", "plan", "recipes"):
+            conn.execute(f"DELETE FROM {t}")
+        conn.commit()
+        conn.close()
+        ids = []
+        for t in ("A", "B"):
+            ids.append(client.post("/api/recipes", json={
+                "title": f"Zehen {t}", "servings": 4, "serving_unit": "Portionen",
+                "ingredients": [{"amount": 2, "unit": "Zehen", "name": "Knoblauch", "note": ""}],
+                "steps": [{"text": "x", "time": 0, "temperature": "", "speed": ""}],
+            }).json()["id"])
+        today = date.today().isoformat()
+        for i in ids:
+            client.post("/api/plan", json={"plan_date": today, "recipe_id": i})
+
+        items = client.post("/api/shopping/refresh", json={}).json()["items"]
+        knob = [i for i in items if i["name"] == "Knoblauch"]
+        assert len(knob) == 1
+        assert knob[0]["amount"] == 4

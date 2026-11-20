@@ -101,6 +101,23 @@ export default function Home() {
 
   return (
     <div>
+      {/* ── Suche ganz oben: direkt finden, was man kochen will ── */}
+      <div className="hero-search">
+        <input
+          className="input search"
+          type="search"
+          placeholder="🔍 Was möchtest du kochen? Rezept, Zutat oder Tag …"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          aria-label="Rezepte durchsuchen"
+        />
+        {q && (
+          <button className="btn btn-outline" onClick={() => setQ("")} title="Suche leeren">
+            ✕
+          </button>
+        )}
+      </div>
+
       {/* ── Begrüßung & Tagesvorschlag ── */}
       <section className="hero">
         <div className="hero-greeting">{greeting} 👋</div>
@@ -186,14 +203,8 @@ export default function Home() {
         </section>
       )}
 
-      {/* ── Suche & Filter ── */}
+      {/* ── Filter ── */}
       <div className="toolbar">
-        <input
-          className="input search"
-          placeholder="🔍 Rezept, Zutat oder Quelle suchen …"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
         <button className={`btn ${favOnly ? "btn-primary" : "btn-outline"}`} onClick={() => setFavOnly(!favOnly)}>
           {favOnly ? "★ Favoriten" : "☆ Favoriten"}
         </button>

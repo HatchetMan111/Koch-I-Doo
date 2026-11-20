@@ -41,8 +41,7 @@ CREATE TABLE IF NOT EXISTS shopping (
     amount      REAL,
     note        TEXT NOT NULL DEFAULT '',
     checked     INTEGER NOT NULL DEFAULT 0,
-    added_at    REAL NOT NULL,
-    UNIQUE(name, unit)
+    added_at    REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS cook_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -869,12 +868,107 @@ def shopping_items(conn=None) -> list[dict]:
             conn.close()
 
 
+_UNIT_ALIASES = {
+    "kg": "kg", "kilo": "kg", "kg.": "kg",
+    "g": "g", "gr": "g", "gramm": "g", "g.": "g", "mg": "mg",
+    "l": "l", "liter": "l", "l.": "l", "ml": "ml", "ml.": "ml",
+    "dl": "dl", "cl": "cl",
+    "el": "EL", "essl": "EL", "esslöffel": "EL", "eßlöffel": "EL", "el.": "EL", "tbsp": "EL",
+    "tl": "TL", "teelöffel": "TL", "tl.": "TL", "tsp": "TL",
+    "prise": "Prise(n)", "prisen": "Prise(n)", "prise(n)": "Prise(n)", "pr.": "Prise(n)",
+    "msp": "Msp.", "msp.": "Msp.",
+    "stk": "Stück", "stk.": "Stück", "stück": "Stück", "stueck": "Stück",
+    "zehe": "Zehe(n)", "zehen": "Zehe(n)", "zehe(n)": "Zehe(n)",
+    "pck": "Pck.", "pck.": "Pck.", "packung": "Pck.", "packungen": "Pck.",
+    "dose": "Dose(n)", "dosen": "Dose(n)", "dose(n)": "Dose(n)",
+    "glas": "Glas", "gläser": "Glas",
+    "bund": "Bund", "bunde": "Bund",
+    "scheibe": "Scheibe(n)", "scheiben": "Scheibe(n)", "scheibe(n)": "Scheibe(n)",
+    "tasse": "Tasse(n)", "tassen": "Tasse(n)",
+    "zweig": "Zweig(e)", "zweige": "Zweig(e)",
+    "blatt": "Blatt", "blätter": "Blatt",
+    "rolle": "Rolle(n)", "rollen": "Rolle(n)",
+    "kugel": "Kugel(n)", "kugeln": "Kugel(n)",
+    "flasche": "Flasche", "flaschen": "Flasche",
+}
+
+# Metrische Einheiten → (Anzeige-Einheit, Faktor in Basiseinheit)
+# Basis: g bzw. ml. kg/l sind nur Anzeigeformen.
+_METRIC = {
+    "kg": ("kg", 1000.0),
+    "g": ("g", 1.0),
+    "mg": ("mg", 0.001),
+    "l": ("l", 1000.0),
+    "ml": ("ml", 1.0),
+    "dl": ("dl", 100.0),
+    "cl": ("cl", 10.0),
+}
+# Basiseinheit je metrischer Familie
+_METRIC_BASE = {"kg": "g", "g": "g", "mg": "g", "l": "ml", "ml": "ml", "dl": "ml", "cl": "ml"}
+
+# Einheiten mit „1.0“-Anzeige vermeiden (Zähleinheiten)
+_INT_UNITS = {"Stück", "Zehe(n)", "Scheibe(n)", "Rolle(n)", "Kugel(n)", "Bund", "Glas", "Dose(n)", "Pck.", "Tasse(n)", "Flasche"}
+
+
+def _canon_unit(unit: str) -> str:
+    """Roh-Einheit → kanonische Einheit ('' = keine)."""
+    u = (unit or "").strip()
+    if not u:
+        return ""
+    key = u.lower().rstrip(".")
+    return _UNIT_ALIASES.get(key) or _UNIT_ALIASES.get(key + ".") or u
+
+
+def _to_base(amount, unit: str):
+    """(Betrag in Basiseinheit, Basiseinheit) – nur metrische Einheiten."""
+    canon = _canon_unit(unit)
+    if canon in _METRIC:
+        return float(amount) * _METRIC[canon][1], _METRIC_BASE[canon]
+    return None, None
+
+
+def _from_base(amount_base, base: str, prefer_unit: str = ""):
+    """Basiseinheit → Anzeige (kg/g bzw. l/ml, ab 1000 in die große Einheit)."""
+    if base == "g":
+        if prefer_unit == "kg":
+            return round(amount_base / 1000, 3), "kg"
+        if prefer_unit == "g":
+            return round(amount_base, 3), "g"
+        if amount_base >= 1000:
+            return round(amount_base / 1000, 3), "kg"
+        return round(amount_base, 3), "g"
+    if base == "ml":
+        if prefer_unit == "l":
+            return round(amount_base / 1000, 3), "l"
+        if amount_base >= 1000:
+            return round(amount_base / 1000, 3), "l"
+        return round(amount_base, 3), "ml"
+    return None, None
+
+
+def _fmt_num(x):
+    """Ganze Zahlen als int (kein „2.0“), sonst auf 2 Stellen runden."""
+    if x is None:
+        return None
+    try:
+        fx = float(x)
+    except (TypeError, ValueError):
+        return x
+    if abs(fx - round(fx)) < 1e-9:
+        return int(round(fx))
+    return round(fx, 2)
+
+
 def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
     """Baut die Einkaufsliste aus den geplanten Rezepten neu auf.
 
-    Zutaten werden nach Name+Einheit zusammengefasst und – wenn der Plan eine
-    andere Portionszahl als das Rezept vorgibt – entsprechend skaliert. Bereits
-    abgehakte Einträge bleiben bei gleichem Namen erhalten.
+    - Einheiten werden normalisiert (EL/Essl., g/kg, ml/l) und metrisch
+      UMGRECHNET: „0,5 kg Mehl“ + „200 g Mehl“ = 700 g
+    - gleiche Zutat in kg/g oder l/ml wird zu EINER Zeile (bevorzugt die
+      Einheit des ersten Treffers, ab 1000 automatisch kg/l)
+    - Zutaten ohne Menge („etwas Salz“) werden je Name zusammengefasst
+    - Mengen werden auf die geplanten Portionen skaliert
+    - abgehakte Einträge bleiben bei gleichem Namen erhalten
     """
     own = conn is None
     conn = conn or _connect()
@@ -885,7 +979,11 @@ def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
         }
         plan_entries = list_plan(date_from, date_to, conn=conn)
 
+        # key = (name klein, normalisierte Einheit)
+        # Wert: {"name","canon","base", "base_amount" (metrisch), "amount","unit",
+        #        "note","terms":set}
         merged: dict[tuple, dict] = {}
+
         for e in plan_entries:
             recipe = get_recipe(e["recipe_id"], conn=conn)
             if not recipe:
@@ -893,50 +991,130 @@ def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
             planned = e.get("servings") or recipe.get("servings") or 1
             base_servings = recipe.get("servings") or planned
             factor = (planned / base_servings) if base_servings else 1.0
+
             for i in recipe.get("ingredients") or []:
-                key = (str(i.get("name") or "").strip().lower(), str(i.get("unit") or "").strip().lower())
-                if not key[0]:
+                name = str(i.get("name") or "").strip()
+                if not name:
                     continue
+                raw_unit = str(i.get("unit") or "")
+                canon = _canon_unit(raw_unit)
                 amount = i.get("amount")
                 if amount is not None:
-                    amount = round(amount * factor, 2)
+                    amount = float(amount) * factor
+
+                # metrisch? → in Basiseinheit (g/ml) rechnen
+                base_amt, base = (None, None)
+                if amount is not None:
+                    base_amt, base = _to_base(amount, raw_unit)
+
+                # Metrische Einheiten unter ihrer BASIS zusammenfassen
+                # (kg + g → gleiche Zeile), sonst unter der kanonischen Einheit
+                if base:
+                    key = (name.lower(), base)
+                else:
+                    key = (name.lower(), canon.lower() if canon else "")
                 cur = merged.get(key)
                 if cur is None:
                     merged[key] = {
-                        "name": str(i.get("name") or "").strip(),
-                        "unit": str(i.get("unit") or ""),
-                        "amount": amount,
+                        "name": name,
+                        "canon": canon,
+                        "base": base,
+                        "base_amount": base_amt,
+                        "amount": amount if base_amt is None else None,
+                        "unit": canon,
                         "note": str(i.get("note") or ""),
-                        "recipes": {e["recipe_id"]},
+                        "terms": {e["recipe_id"]},
                     }
+                    continue
+
+                cur["terms"].add(e["recipe_id"])
+                if not cur["note"] and i.get("note"):
+                    cur["note"] = str(i["note"])
+
+                # Mengen zusammenrechnen
+                if base_amt is not None:
+                    # metrisch → Basiseinheit
+                    if cur["base_amount"] is None:
+                        cur["base"] = base
+                        cur["base_amount"] = base_amt
+                        continue
+                    if cur["base"] == base:
+                        cur["base_amount"] += base_amt
+                    continue
+                # Zähleinheit (Stück, Zehe(n), EL, TL …) → Betrag addieren
+                if amount is not None:
+                    cur["amount"] = (cur["amount"] or 0) + amount
+
+        rows = []
+        seen_unitless: set[str] = set()
+        for key, item in merged.items():
+            note = item["note"]
+            if len(item["terms"]) > 1:
+                # gleiche Zutat in mehreren geplanten Rezepten
+                note = (note + " · " if note else "") + f"in {len(item['terms'])} Rezepten"
+
+            if item["base_amount"] is not None and item["base"]:
+                # Anzeige-Einheit bestimmen: bevorzugt kg/l, sonst g/ml
+                pref = item["canon"] if item["canon"] in ("kg", "g", "l", "ml") else ""
+                if item["base_amount"] >= 1000:
+                    disp_amt, disp_unit = _from_base(item["base_amount"], item["base"], pref)
+                    # immer die große Einheit (kg/l) bei >= 1000
+                    disp_unit = "kg" if item["base"] == "g" else "l"
+                    disp_amt = round(item["base_amount"] / 1000, 2)
                 else:
-                    if amount is not None and cur["amount"] is not None:
-                        cur["amount"] = round(cur["amount"] + amount, 2)
-                    elif amount is not None and cur["amount"] is None:
-                        cur["amount"] = amount
-                    if not cur["note"] and i.get("note"):
-                        cur["note"] = str(i["note"])
-                    cur["recipes"].add(e["recipe_id"])
+                    disp_amt = item["base_amount"]
+                    disp_unit = item["base"]
+                rows.append({
+                    "name": item["name"],
+                    "unit": disp_unit,
+                    "amount": _fmt_num(disp_amt),
+                    "note": note,
+                    "checked": checked_state.get(key, False),
+                    "sort": 0,
+                })
+            elif item["amount"] is not None:
+                # Zähleinheit mit Menge (Stück, Zehe(n), EL, TL, Prise(n) …)
+                amt = _fmt_num(item["amount"])
+                rows.append({
+                    "name": item["name"],
+                    "unit": item["canon"],
+                    "amount": amt,
+                    "note": note,
+                    "checked": checked_state.get(key, False),
+                    "sort": 1 if item["canon"] in _INT_UNITS else 2,
+                })
+            else:
+                # Ohne Menge: je Name nur einmal
+                lname = item["name"].strip().lower()
+                if lname in seen_unitless:
+                    continue
+                seen_unitless.add(lname)
+                rows.append({
+                    "name": item["name"],
+                    "unit": "",
+                    "amount": None,
+                    "note": note,
+                    "checked": checked_state.get(key, False),
+                    "sort": 3,
+                })
+
+        rows.sort(key=lambda r: (r["sort"], (r["unit"] or "").lower(), r["name"].lower()))
 
         conn.execute("DELETE FROM shopping")
         now = time.time()
-        for (name_l, unit_l), item in merged.items():
+        for r in rows:
             conn.execute(
                 "INSERT INTO shopping (name, unit, amount, note, checked, added_at) "
                 "VALUES (?, ?, ?, ?, ?, ?)",
-                (
-                    item["name"], item["unit"], item["amount"], item["note"],
-                    1 if checked_state.get((name_l, unit_l)) else 0,
-                    now,
-                ),
+                (r["name"], r["unit"], r["amount"], r["note"], 1 if r["checked"] else 0, now),
             )
         if own:
             conn.commit()
         return {
-            "items": len(merged),
+            "items": len(rows),
             "from": date_from,
             "to": date_to,
-            "recipes": len({rid for e in plan_entries for rid in [e["recipe_id"]]}),
+            "recipes": len({e["recipe_id"] for e in plan_entries}),
         }
     finally:
         if own:
