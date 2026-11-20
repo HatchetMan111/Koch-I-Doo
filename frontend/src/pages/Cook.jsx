@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { getRecipe } from "../api.js";
+import { getProfile, getRecipe } from "../api.js";
 import TimerRing, { beep } from "../components/TimerRing.jsx";
 import TmBadges from "../components/TmBadges.jsx";
 import { scaleChipText } from "../format.js";
@@ -37,13 +37,17 @@ export default function Cook() {
   const touchStartX = useRef(null);
   const flashRef = useRef(null);
 
+  // Merken erst, wenn die Profil-Auflösung durch war (sonst überschreibt der
+  // Default den Geräte-Check, bevor das Profil geladen ist)
+  const [themeReady, setThemeReady] = useState(false);
   useEffect(() => {
+    if (!themeReady) return;
     try {
       localStorage.setItem("kochido-theme", theme);
     } catch {
       /* localStorage nicht verfügbar */
     }
-  }, [theme]);
+  }, [theme, themeReady]);
 
   const cycleTheme = () => {
     const i = COOK_THEMES.findIndex((t) => t.id === theme);
@@ -54,6 +58,14 @@ export default function Cook() {
     getRecipe(id)
       .then(setRecipe)
       .catch((err) => setError(String(err.message || err)));
+    // Profil-Standardfarbschema übernehmen — aber nur, wenn auf DIESEM Gerät
+    // noch keine eigene Wahl getroffen wurde (localStorage-Override)
+    getProfile()
+      .then((p) => {
+        if (p?.theme && !localStorage.getItem("kochido-theme")) setTheme(p.theme);
+      })
+      .catch(() => {})
+      .finally(() => setThemeReady(true));
   }, [id]);
 
   const steps = recipe?.steps || [];

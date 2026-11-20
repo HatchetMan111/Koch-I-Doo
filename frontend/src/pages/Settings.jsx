@@ -11,6 +11,7 @@ export default function Settings() {
   const [loadingModels, setLoadingModels] = useState(false);
   const [error, setError] = useState("");
   const [savedProfile, setSavedProfile] = useState(false);
+  const [savedCookidoo, setSavedCookidoo] = useState(false);
   const [savedChat, setSavedChat] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [seedStatus, setSeedStatus] = useState(null);
@@ -34,7 +35,20 @@ export default function Settings() {
   const saveProf = async () => {
     try {
       await saveProfile(profile);
+      // Geräte-Override entfernen, damit das neue Standard-Theme sofort greift
+      try { localStorage.removeItem("kochido-theme"); } catch {}
       setSavedProfile(true);
+      setSavedCookidoo(false);
+      setError("");
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
+  const saveCookidoo = async () => {
+    try {
+      await saveProfile(profile);
+      setSavedCookidoo(true);
       setError("");
     } catch (err) {
       setError(String(err.message || err));
@@ -95,7 +109,7 @@ export default function Settings() {
           </label>
         </div>
         <button className="btn btn-primary" onClick={saveProf}>💾 Profil speichern</button>
-        {savedProfile && <div className="alert alert-success">✅ Profil gespeichert</div>}
+        {savedProfile && <div className="alert alert-success">✅ Profil gespeichert — das neue Farbschema gilt beim nächsten Kochen (Geräte-Override zurückgesetzt).</div>}
       </section>
 
       <section className="card">
@@ -123,9 +137,8 @@ export default function Settings() {
               onChange={(e) => setP({ language: e.target.value })} placeholder="de-DE" />
           </label>
         </div>
-        <small className="muted">
-          „Profil speichern“ oben übernimmt auch diese Felder.
-        </small>
+        <button className="btn btn-primary" onClick={saveCookidoo}>🥘 Cookidoo-Einstellungen speichern</button>
+        {savedCookidoo && <div className="alert alert-success">✅ Cookidoo-Einstellungen gespeichert</div>}
       </section>
 
       <section className="card">
@@ -167,6 +180,9 @@ export default function Settings() {
           deine importierten Rezepte, Listen und Pläne bleiben unberührt.
           Gelöschte Pakete kommen erst mit einer neueren Version zurück.
         </p>
+        <Link to="/import" className="btn btn-outline" style={{ marginBottom: 12 }}>
+          ⤓ Rezeptlisten importieren (Chefkoch, Cookidoo, Kochbücher …)
+        </Link>
         {seedStatus && [
           ["kochbuch", "📚 Open-Source-Kochbücher (Davidis, Wikibooks …)"],
           ["grundrezepte", "🥄 Grundrezept-Bibliothek (162 TM-Grundrezepte)"],
