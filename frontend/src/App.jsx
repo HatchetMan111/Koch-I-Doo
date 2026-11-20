@@ -5,6 +5,7 @@ import Import from "./pages/Import.jsx";
 import RecipeDetail from "./pages/RecipeDetail.jsx";
 import Editor from "./pages/Editor.jsx";
 import Cook from "./pages/Cook.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
 import Plan from "./pages/Plan.jsx";
 import Lists from "./pages/Lists.jsx";
 import Discover, { DiscoverCategory } from "./pages/Discover.jsx";
@@ -96,8 +97,9 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.7.3 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.8.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
+      <ChatWidget />
     </div>
   );
 }

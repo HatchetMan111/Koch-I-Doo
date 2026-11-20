@@ -65,6 +65,17 @@ export const importBatch = (recipes, listName = "", listSource = "") =>
     body: JSON.stringify({ recipes, list_name: listName, list_source: listSource }),
   });
 
+// Einstellungen & Chat-Assistent
+export const getSettings = () => api("/api/settings");
+export const saveSettings = (openrouterKey, chatModel) =>
+  api("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({ openrouter_key: openrouterKey, chat_model: chatModel }),
+  });
+export const getChatModels = () => api("/api/chat/models");
+export const sendChat = (message, history) =>
+  api("/api/chat", { method: "POST", body: JSON.stringify({ message, history }) });
+
 // Listen
 export const getLists = () => api("/api/lists");
 export const createList = (name, recipeIds = [], source = "") =>

@@ -365,3 +365,33 @@ class TestSeedRemove:
 
     def test_validierung(self, client):
         assert client.post("/api/seed/remove", json={"package": "quatsch"}).status_code == 400
+
+
+class TestSettingsChat:
+    def test_settings_roundtrip(self, client):
+        assert client.post("/api/settings", json={
+            "openrouter_key": "k1", "chat_model": "m/free"}).status_code == 200
+        st = client.get("/api/settings").json()
+        assert st["openrouter_key_set"] is True
+        assert st["chat_model"] == "m/free"
+        assert st["chat_configured"] is True
+        assert "openrouter_key" not in st
+
+    def test_chat_ohne_config(self, client, monkeypatch):
+        import db
+        db.set_setting("openrouter_key", "")
+        r = client.post("/api/chat", json={"message": "Hallo"})
+        assert r.status_code == 400
+        assert "nicht eingerichtet" in r.json()["detail"]
+
+    def test_chat_mit_bogus_key_kette(self, client, monkeypatch):
+        import db
+        db.set_setting("openrouter_key", "bogus")
+        db.set_setting("chat_model", "m/free")
+
+        def fake_post(self, *a, **k):
+            raise RuntimeError("OpenRouter-Fehler: URLError: DNS")
+        monkeypatch.setattr("chatbot.urllib.request.urlopen", fake_post)
+        r = client.post("/api/chat", json={"message": "Hallo", "history": []})
+        assert r.status_code == 502
+        assert "OpenRouter-Fehler" in r.json()["detail"]

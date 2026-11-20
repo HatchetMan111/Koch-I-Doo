@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, addPlan, createList, deleteList, deletePlan, getLists, getRecipes } from "../api.js";
+import { api, addPlan, createList, deleteList, deletePlan, getChatModels, getLists, getRecipes, getSettings, saveSettings } from "../api.js";
 import { fmtDuration } from "../format.js";
 import { isoDate } from "./Plan.jsx";
 
@@ -13,6 +13,7 @@ export default function Lists() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [pickerFor, setPickerFor] = useState(null); // Listen-ID, die befüllt wird
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const load = async () => {
     try {
@@ -139,6 +140,9 @@ export default function Lists() {
   return (
     <div className="lists-page">
       <h1>📋 Listen</h1>
+      {settingsOpen && (
+        <SettingsModal onClose={() => setSettingsOpen(false)} />
+      )}
       <p className="muted">
         Eigene Sammlungen („Grillen im Sommer“, „Schnelle Feierabend-Küche“ …)
         und importierte Listen aus Cookidoo-Sammlungen oder Chefkoch-Sammelseiten.
@@ -150,6 +154,9 @@ export default function Lists() {
         <Link to="/import" className="btn btn-outline">
           ⤓ Aus Sammlung importieren
         </Link>
+        <button className="btn btn-outline" onClick={() => setSettingsOpen(true)}>
+          ⚙ Einstellungen
+        </button>
       </div>
 
       {error && <div className="alert alert-error">⚠ {error}</div>}
@@ -274,6 +281,104 @@ function ListRecipePicker({ listId, onClose }) {
             </button>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ── ⚙ Einstellungen (OpenRouter-Chat) ──────────────────────────────────────
+function SettingsModal({ onClose }) {
+  const [key, setKey] = useState("");
+  const [model, setModel] = useState("");
+  const [models, setModels] = useState([]);
+  const [configured, setConfigured] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  useEffect(() => {
+    getSettings()
+      .then((s) => {
+        setConfigured(s.chat_configured);
+        if (s.chat_model) setModel(s.chat_model);
+      })
+      .catch(() => {});
+    setLoadingModels(true);
+    getChatModels()
+      .then((r) => setModels(r.models))
+      .catch(() => setModels([]))
+      .finally(() => setLoadingModels(false));
+  }, []);
+
+  const save = async () => {
+    try {
+      await saveSettings(key.trim(), model);
+      setSaved(true);
+      setError("");
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
+  return (
+    <div className="picker-overlay" onClick={onClose}>
+      <div className="picker-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="picker-head">
+          <b>⚙ Einstellungen</b>
+          <button className="picker-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="card hint-card" style={{ marginBottom: 14 }}>
+          <b>🤖 Chat-Assistent (OpenRouter)</b>
+          <p className="muted">
+            Ein kleiner Koch-Assistent, der per Tastendruck Fragen beantwortet
+            (z. B. „Wie viel Stufe bei Zwiebelsuppe?“). Läuft über
+            OpenRouter mit <b>kostenlosen Modellen</b> — du brauchst nur einen
+            kostenlosen OpenRouter-API-Key (openrouter.ai → Keys).
+          </p>
+          <p className="muted">
+            Der Key wird ausschließlich auf deinem eigenen Server gespeichert
+            und nur an OpenRouter gesendet — nicht an Cookidoo oder andere.
+            Die Modell-Liste wird live von OpenRouter geholt (:free-Modelle).
+          </p>
+        </div>
+
+        <label className="field">
+          <span>OpenRouter-API-Key {configured && <small className="muted">(gesetzt – leer lassen = behalten)</small>}</span>
+          <input
+            className="input"
+            type="password"
+            autoComplete="off"
+            placeholder="sk-or-… (kostenlos bei openrouter.ai)"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span>Chat-Modell (nur kostenlose :free-Modelle)</span>
+          <select
+            className="input"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+          >
+            <option value="">— Modell wählen —</option>
+            {models.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+          <small className="muted">
+            {loadingModels ? "Lade verfügbare kostenlose Modelle …" : `${models.length} kostenlose Modelle verfügbar`}
+          </small>
+        </label>
+
+        {error && <div className="alert alert-error">⚠ {error}</div>}
+        {saved && <div className="alert alert-success">✅ Gespeichert</div>}
+
+        <button className="btn btn-primary" onClick={save} disabled={!model}>
+          💾 Einstellungen speichern
+        </button>
       </div>
     </div>
   );

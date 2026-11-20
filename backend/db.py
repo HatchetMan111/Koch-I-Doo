@@ -34,6 +34,10 @@ CREATE TABLE IF NOT EXISTS meta (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS settings (
+    key         TEXT PRIMARY KEY,
+    value       TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS lists (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
@@ -722,6 +726,35 @@ def delete_seed_package(package: str, conn=None) -> int:
         if own:
             conn.commit()
         return deleted
+    finally:
+        if own:
+            conn.close()
+
+
+# ── Einstellungen (Schlüssel/Wert, global im Container) ─────────────────────
+
+def get_setting(key: str, default: str = "", conn=None) -> str:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        row = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+        return row["value"] if row else default
+    finally:
+        if own:
+            conn.close()
+
+
+def set_setting(key: str, value: str, conn=None) -> None:
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value),
+        )
+        if own:
+            conn.commit()
     finally:
         if own:
             conn.close()

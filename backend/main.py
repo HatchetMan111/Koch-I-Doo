@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import chatbot
 import db
 import dump_job
 from imaging import localize_image
@@ -21,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.7.3"
+APP_VERSION = "1.8.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -338,6 +339,61 @@ def api_seed_remove(body: SeedRemoveBody):
         )
     deleted = db.delete_seed_package(body.package)
     return {"ok": True, "deleted": deleted, "package": body.package}
+
+
+# ── Einstellungen & Chat-Assistent ──────────────────────────────────────────
+
+class SettingsBody(BaseModel):
+    openrouter_key: str = ""
+    chat_model: str = ""
+
+
+class ChatBody(BaseModel):
+    message: str
+    history: list[dict] = []
+
+
+@app.get("/api/settings")
+def api_get_settings():
+    key = db.get_setting("openrouter_key")
+    return {
+        "openrouter_key_set": bool(key),
+        "chat_model": db.get_setting("chat_model"),
+        "chat_configured": bool(key and db.get_setting("chat_model")),
+    }
+
+
+@app.post("/api/settings")
+def api_set_settings(body: SettingsBody):
+    if body.openrouter_key.strip():
+        db.set_setting("openrouter_key", body.openrouter_key.strip())
+    if body.chat_model.strip():
+        db.set_setting("chat_model", body.chat_model.strip())
+    return {"ok": True}
+
+
+@app.get("/api/chat/models")
+def api_chat_models():
+    """Kostenlose OpenRouter-Modelle (:free)."""
+    key = db.get_setting("openrouter_key")
+    return {"models": chatbot.list_free_models(key)}
+
+
+@app.post("/api/chat")
+def api_chat(body: ChatBody):
+    if not body.message.strip():
+        raise HTTPException(status_code=400, detail="Leere Nachricht")
+    if not db.get_setting("openrouter_key"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chat ist nicht eingerichtet – bitte in den Einstellungen "
+                   "einen OpenRouter-API-Key hinterlegen und ein Modell wählen.",
+        )
+    try:
+        reply = chatbot.ask(body.message.strip(), body.history)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from None
+    return {"reply": reply}
 
 
 @app.post("/api/import/convert-tm")
