@@ -14,9 +14,18 @@ from importers.common import match_ingredients_to_steps, parse_ingredient, parse
 FREE_MODELS_FALLBACK = [
     {"id": "deepseek/deepseek-chat-v3-0324:free", "name": "DeepSeek V3 0324 (free)"},
     {"id": "meta-llama/llama-3.3-70b-instruct:free", "name": "Llama 3.3 70B (free)"},
-    {"id": "mistralai/mistral-small-3.2-24b-instruct:free", "name": "Mistral Small 3.2 (free)"},
     {"id": "google/gemma-3-27b-it:free", "name": "Gemma 3 27B (free)"},
     {"id": "qwen/qwen-2.5-72b-instruct:free", "name": "Qwen 2.5 72B (free)"},
+]
+
+# Günstige Bezahl-Modelle (Auswahl, falls ein :free-Modell ausfällt/limitert).
+# Preise stand 2026-11-18: cheap = unter ~1 $/ Mio Input bzw. unter ~3 $/ Mio Output.
+PAID_CHEAP_FALLBACK = [
+    {"id": "deepseek/deepseek-chat", "name": "DeepSeek V3 — günstig (~0,27 $/1M In)"},
+    {"id": "google/gemini-2.0-flash-001", "name": "Gemini 2.0 Flash — günstig (~0,10 $/1M In)"},
+    {"id": "meta-llama/llama-3.3-70b-instruct", "name": "Llama 3.3 70B — günstig (~0,10 $/1M In)"},
+    {"id": "qwen/qwen-2.5-72b-instruct", "name": "Qwen 2.5 72B — günstig (~0,10 $/1M In)"},
+    {"id": "mistralai/mistral-small-3.2-24b-instruct", "name": "Mistral Small 3.2 — günstig (~0,10 $/1M In)"},
 ]
 
 
@@ -77,31 +86,106 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
     raise last or RuntimeError("OpenRouter: unbekannter Fehler")
 
 
+def normalize_model(model: str) -> str:
+    """„mistral/…:free“ → „mistral/…“ (Slugs ohne :free)."""
+    model = (model or "").strip()
+    if model.endswith(":free"):
+        return model[: -len(":free")]
+    return model
+
+
+def _resolve_model_or_die(model: str) -> str:
+    """Klärt, ob das Modell noch :free ist. Falls nicht: auf den Bezahl-Slug
+    umstellen, damit der Chat nicht mit 404 aussteigt (User-Hinweis)."""
+    model = normalize_model(model)
+    try:
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/models",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+        ids = {m.get("id", "") for m in data.get("data", [])}
+    except Exception:
+        return model  # Liste nicht ladbar → altes Modell versuchen
+    if model.endswith(":free"):
+        return model
+    base = model
+    if f"{base}:free" in ids:
+        return f"{base}:free"
+    return model
+
+
 def is_configured() -> bool:
     return bool(db.get_setting("openrouter_key")) and bool(db.get_setting("chat_model"))
 
 
 def list_free_models(api_key: str = "") -> list[dict]:
-    """Lieber live von OpenRouter holen (nur :free-Modelle), sonst Fallback-Liste."""
-    if not api_key:
-        try:
-            req = urllib.request.Request(
-                "https://openrouter.ai/api/v1/models",
-                headers={"Accept": "application/json"},
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8", "replace"))
-            free = []
-            for m in data.get("data", []):
-                mid = m.get("id", "")
-                if mid.endswith(":free"):
-                    free.append({"id": mid, "name": m.get("name") or mid})
-            if free:
-                free.sort(key=lambda x: x["name"].lower())
-                return free
-        except Exception:
-            pass
-    return FREE_MODELS_FALLBACK
+    """Live von OpenRouter holen: kostenlose (:free) + die 5 günstigsten
+    Bezahl-Modelle (nach Textpreis). Fallback: statische Listen."""
+    try:
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/models",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+        free, paid = [], []
+        for m in data.get("data", []):
+            mid = m.get("id", "")
+            pricing = m.get("pricing") or {}
+            pin = _price(pricing.get("prompt"))
+            pout = _price(pricing.get("completion"))
+            if mid.endswith(":free"):
+                free.append({"id": mid, "name": m.get("name") or mid, "kind": "free"})
+            elif mid and not mid.startswith(("openrouter/", "typesafe/", "narration/", "suno/", "elevenlabs/")) \
+                    and not _NON_CHAT.search(mid):
+                # Meta-Router (openrouter/auto …) und Nicht-Chat-Modelle
+                # (Audio/Embeddings/Bild) haben keinen Chat-Preis
+                paid.append({
+                    "id": mid,
+                    "name": m.get("name") or mid,
+                    "kind": "paid",
+                    "in": pin,
+                    "out": pout,
+                })
+        free.sort(key=lambda x: x["name"].lower())
+        # 5 günstigste nach Eingabepreis (Fallback Ausgabepreis), nur chat-fähige
+        # Preise: OpenRouter liefert pro Token → lesbar pro 1 Mio Token
+        paid = [m for m in paid if (m["in"] or 0) > 0 and (m["out"] or 0) > 0]
+        for m in paid:
+            m["in_per_m"] = round(m["in"] * 1_000_000, 3)
+            m["out_per_m"] = round(m["out"] * 1_000_000, 3)
+        paid.sort(key=lambda m: (m["in"], m["out"]))
+        return free + paid[:5]
+    except Exception:
+        # Offline/Netzfehler → statische Listen (paid klar markiert)
+        return (
+            [dict(m, kind="free") for m in FREE_MODELS_FALLBACK]
+            + [dict(m, kind="paid") for m in PAID_CHEAP_FALLBACK]
+        )
+
+
+# Modelle, die keine Chat-Modelle sind (Audio/Bild/Embeddings)
+_NON_CHAT = re.compile(
+    r"(lyria|embed|tts|whisper|clip|image|vision-audio|guard|safety|moderation)",
+    re.IGNORECASE,
+)
+
+
+def _price(raw) -> float | None:
+    """OpenRouter-Preisstring → float (pro 1 Mio Token) oder None.
+
+    Negative Werte (-1) = unbekannt/dynamisch (Meta-Router wie
+    openrouter/auto) — die zählen NICHT als gültiger Preis.
+    """
+    if raw is None:
+        return None
+    try:
+        val = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return val if val >= 0 else None
 
 
 # ── Werkzeuge, die die KI in Koch-I-Doo ausführen darf ──────────────────────
@@ -331,7 +415,7 @@ def ask(user_message: str, history: list[dict]) -> str:
     """Eine Chat-Nachricht an das konfigurierte kostenlose Modell schicken —
     inkl. Werkzeug-Schleife (create_recipe / plan_recipe / search_recipes)."""
     key = db.get_setting("openrouter_key")
-    model = db.get_setting("chat_model")
+    model = normalize_model(db.get_setting("chat_model"))
     if not key:
         raise RuntimeError("Kein OpenRouter-API-Key hinterlegt (Einstellungen).")
     if not model:

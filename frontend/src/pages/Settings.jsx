@@ -15,6 +15,8 @@ export default function Settings() {
   const [savedChat, setSavedChat] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [seedStatus, setSeedStatus] = useState(null);
+  const freeModels = models.filter((m) => m.kind !== "paid");
+  const paidModels = models.filter((m) => m.kind === "paid");
 
   useEffect(() => {
     getProfile().then(setProfile).catch((err) => setError(String(err.message || err)));
@@ -179,25 +181,41 @@ export default function Settings() {
             placeholder="sk-or-…" value={keyInput}
             onChange={(e) => setKeyInput(e.target.value)} />
         </label>
-        <label className="field">
-          <span>Chat-Modell (nur kostenlose Modelle)</span>
-          <select className="input" value={settings.chat_model}
-            onChange={(e) => setSettings({ ...settings, chat_model: e.target.value })}>
-            <option value="">— Modell wählen —</option>
-            {models.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-          </select>
-          <small className="muted">
-            {loadingModels ? "Lade kostenlose Modelle …" : `${models.length} kostenlose Modelle verfügbar`}
-          </small>
-          <small className="muted">
-            ⏱️ Die kostenlosen :free-Modelle sind stark ratenbegrenzt (OpenRouter
-            Limit ~1 Anfrage alle paar Sekunden / Tageslimit). Koch-I-Doo wartet
-            bei 429 automatisch bis zu 30 s und versucht es erneut. Wenn „Rezept
-            erstellen“ + „einplanen“ zusammen zu viel wird: einfach in ~1 Minute
-            den zweiten Teil einzeln nachfragen — das Rezept wird nicht doppelt
-            angelegt oder doppelt eingeplant.
-          </small>
-        </label>
+        <div className="model-columns">
+          <div className="model-col">
+            <h3>🆓 Kostenlos <span className="muted">(:free)</span></h3>
+            <p className="muted">
+              Kein Guthaben nötig, aber stark ratenbegrenzt (ca. 1 Anfrage
+              alle paar Sekunden, Tageslimit).
+            </p>
+            <select className="input" value={models.some((m) => m.id === settings.chat_model) ? settings.chat_model : ""}
+              onChange={(e) => setSettings({ ...settings, chat_model: e.target.value })}>
+              <option value="">— kostenloses Modell wählen —</option>
+              {freeModels.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            {freeModels.length === 0 && <small className="muted">{loadingModels ? "Lade …" : "keine geladen"}</small>}
+          </div>
+          <div className="model-col">
+            <h3>💳 Günstig bezahlt <span className="muted">(5 günstigste)</span></h3>
+            <p className="muted">
+              Nur ~0,01–0,10 $ pro 1 Mio Token — ein Kochabend kostet
+              praktisch nichts, dafür ohne Rate-Limit-Frust.
+            </p>
+            <select className="input" value={models.some((m) => m.id === settings.chat_model) ? settings.chat_model : ""}
+              onChange={(e) => setSettings({ ...settings, chat_model: e.target.value })}>
+              <option value="">— Bezahl-Modell wählen —</option>
+              {paidModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}{m.in_per_m ? ` — ${m.in_per_m}/${m.out_per_m} $ pro 1 Mio` : ""}
+                </option>
+              ))}
+            </select>
+            {paidModels.length === 0 && <small className="muted">{loadingModels ? "Lade …" : "keine geladen"}</small>}
+          </div>
+        </div>
+        <small className="muted">
+          {loadingModels ? "Lade Modelle von OpenRouter …" : `frei: ${freeModels.length} · bezahlt: ${paidModels.length}`}
+        </small>
         <button className="btn btn-primary" onClick={saveChat} disabled={!settings.chat_model}>
           💾 Chat-Einstellungen speichern
         </button>

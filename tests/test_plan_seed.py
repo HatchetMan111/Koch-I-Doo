@@ -600,3 +600,29 @@ class TestChatRateLimit:
         assert second["ok"] and second.get("already_planned") is True
         entries = client.get("/api/plan").json()
         assert len([e for e in entries if e["recipe_id"] == made["recipe_id"]]) == 1
+
+
+class TestModellNormalisierung:
+    def test_free_suffix_entfernt(self):
+        from chatbot import normalize_model
+
+        assert normalize_model("mistralai/mistral-small-3.2-24b-instruct:free") == "mistralai/mistral-small-3.2-24b-instruct"
+        assert normalize_model("openai/gpt-oss-20b") == "openai/gpt-oss-20b"
+        assert normalize_model("") == ""
+
+    def test_preisliste_ohne_negativ_und_ohne_meta(self):
+        """-1-Preise (Router) und Nicht-Chat-Modelle fliegen raus."""
+        from chatbot import list_free_models
+
+        models = list_free_models("")
+        kinds = {}
+        for m in models:
+            kinds[m.get("kind", "free")] = kinds.get(m.get("kind", "free"), 0) + 1
+        assert kinds.get("paid", 0) >= 1
+        assert kinds.get("free", 0) >= 1
+        for m in models:
+            if m.get("kind") == "paid":
+                assert not m["id"].startswith("openrouter/")
+                assert "lyria" not in m["id"]
+                if m.get("in_per_m") is not None:
+                    assert m["in_per_m"] > 0

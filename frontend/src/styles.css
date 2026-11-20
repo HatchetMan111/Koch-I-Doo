@@ -872,3 +872,20 @@ input, textarea, select { max-width: 100%; }
   width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem;
 }
 .chat-close:hover { background: rgba(255, 255, 255, 0.35); }
+
+/* ── Einstellungen mobil: sauberes Stapeln statt Quetschen ─────────────── */
+.settings-page .card { min-width: 0; overflow-wrap: break-word; }
+.model-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 10px; }
+.model-col { min-width: 0; }
+.model-col h3 { font-size: 1rem; margin: 0 0 4px; }
+.model-col p { margin: 0 0 8px; font-size: 0.82rem; line-height: 1.4; }
+.model-col .input { width: 100%; }
+@media (max-width: 700px) {
+  .model-columns { grid-template-columns: 1fr; gap: 16px; }
+  .settings-page .field-row { flex-direction: column; }
+  .settings-page .field { min-width: 0; }
+  .settings-page .seed-row { gap: 6px; }
+  .settings-page .seed-row span:first-child { flex: 1 1 100%; }
+  .settings-page .seed-row .chip-mini { flex-shrink: 0; }
+  .settings-page h1 { font-size: 1.4rem; }
+}
