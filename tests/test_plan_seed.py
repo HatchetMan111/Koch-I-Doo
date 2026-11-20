@@ -416,7 +416,7 @@ class TestProfil:
         pr = client.get("/api/profile").json()
         assert pr["name"] == ""
         assert pr["servings"] == 4
-        assert pr["theme"] == "dark"
+        assert pr["theme"] == "cream"   # nativer Koch-Hintergrund
 
     def test_profil_validierung(self, client):
         r = client.put("/api/profile", json={"name": "X", "servings": 2, "theme": "bunt"})

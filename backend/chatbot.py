@@ -11,6 +11,7 @@ from datetime import date, timedelta
 import db
 from importers.common import match_ingredients_to_steps, parse_ingredient, parse_step_params, clean_step_text
 
+# Fallback (offline): nur Modelle mit bestätigtem Tool-Call-Support
 FREE_MODELS_FALLBACK = [
     {"id": "deepseek/deepseek-chat-v3-0324:free", "name": "DeepSeek V3 0324 (free)"},
     {"id": "meta-llama/llama-3.3-70b-instruct:free", "name": "Llama 3.3 70B (free)"},
@@ -183,6 +184,13 @@ def list_free_models(api_key: str = "") -> list[dict]:
             pricing = m.get("pricing") or {}
             pin = _price(pricing.get("prompt"))
             pout = _price(pricing.get("completion"))
+            # Nur Modelle, die WERKZEUG-AUFRUFE (tool calls) unterstützen –
+            # sonst kann der KI-Assistent keine Rezepte anlegen/einplanen.
+            # OpenRouter liefert die Fähigkeiten als supported_parameters.
+            params = m.get("supported_parameters") or []
+            tool_ok = "tools" in params or "tool_choice" in params
+            if not tool_ok:
+                continue
             if mid.endswith(":free"):
                 free.append({"id": mid, "name": m.get("name") or mid, "kind": "free"})
             elif mid and not mid.startswith(("openrouter/", "typesafe/", "narration/", "suno/", "elevenlabs/")) \
@@ -200,19 +208,18 @@ def list_free_models(api_key: str = "") -> list[dict]:
         # 5 günstigste nach Eingabepreis (Fallback Ausgabepreis), nur chat-fähige
         # Preise: OpenRouter liefert pro Token → lesbar pro 1 Mio Token
         paid = [m for m in paid if (m["in"] or 0) > 0 and (m["out"] or 0) > 0]
+        for m in free + paid:
+            m["tool_capable"] = True
         for m in paid:
             m["in_per_m"] = round(m["in"] * 1_000_000, 3)
             m["out_per_m"] = round(m["out"] * 1_000_000, 3)
         paid.sort(key=lambda m: (m["in"], m["out"]))
         return free + paid[:5]
     except Exception:
-        # Offline/Netzfehler → statische Listen (paid klar markiert, keine
-        # Batch-Modelle — die laufen nicht am chat/completions-Endpunkt)
+        # Offline/Netzfehler → statische Listen (bekannt tool-fähig)
         return (
-            [dict(m, kind="free") for m in FREE_MODELS_FALLBACK
-             if not _NON_CHAT.search(m["id"])]
-            + [dict(m, kind="paid") for m in PAID_CHEAP_FALLBACK
-               if not _NON_CHAT.search(m["id"])]
+            [dict(m, kind="free", tool_capable=True) for m in FREE_MODELS_FALLBACK]
+            + [dict(m, kind="paid", tool_capable=True) for m in PAID_CHEAP_FALLBACK]
         )
 
 

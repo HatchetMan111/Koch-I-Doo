@@ -115,9 +115,9 @@ export default function Settings() {
             <span>Standard-Farbschema (Koch-Modus)</span>
             <select className="input" value={profile.theme}
               onChange={(e) => setP({ theme: e.target.value })}>
-              <option value="dark">🌙 Dunkel</option>
+              <option value="cream">🌾 Creme (Standard)</option>
               <option value="light">☀️ Hell</option>
-              <option value="cream">🌾 Creme</option>
+              <option value="dark">🌙 Dunkel</option>
             </select>
           </label>
         </div>

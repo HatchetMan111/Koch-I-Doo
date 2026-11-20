@@ -991,3 +991,17 @@ input, textarea, select { max-width: 100%; }
   .discover-search .search { font-size: 16px; padding: 11px 13px; }
   .discover-search { gap: 6px; }
 }
+
+/* ── Entdecken aufgewertet: Stats + Schnellfilter ──────────────────────── */
+.discover-subbar { gap: 8px; }
+.discover-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+.stat-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--teal-soft); color: var(--teal);
+  border-radius: 999px; padding: 4px 11px; font-size: 0.78rem; font-weight: 700;
+}
+.discover-count { font-size: 0.82rem; }
+.chip-sm { padding: 4px 10px; font-size: 0.8rem; font-weight: 700; }
+.chip-row .chip-sm { padding: 6px 12px; }
+.discover-item { transition: transform 0.12s ease, box-shadow 0.15s ease; }
+.discover-item:hover { transform: translateY(-2px); box-shadow: var(--shadow); }

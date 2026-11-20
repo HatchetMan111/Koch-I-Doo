@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.16.1"
+APP_VERSION = "1.17.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -412,7 +412,7 @@ def api_get_profile():
             return _json.loads(raw)
         except ValueError:
             pass
-    return {"name": "", "servings": 4, "theme": "dark",
+    return {"name": "", "servings": 4, "theme": "cream",
             "cookidoo_email": "", "country": "de", "language": "de-DE",
             "household": "", "diet": ""}
 

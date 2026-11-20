@@ -29,9 +29,9 @@ export default function Cook() {
   const [showSteps, setShowSteps] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
-      return localStorage.getItem("kochido-theme") || "dark";
+      return localStorage.getItem("kochido-theme") || "cream";
     } catch {
-      return "dark";
+      return "cream";
     }
   });
   const touchStartX = useRef(null);

@@ -91,6 +91,7 @@ export default function Discover() {
   const [q, setQ] = useState("");
   const [remote, setRemote] = useState(null);   // Server-Suchtreffer
   const [searching, setSearching] = useState(false);
+  const [quick, setQuick] = useState("");   // "", "schnell", "favoriten"
   const [showSeedPanel, setShowSeedPanel] = useState(false);
   const [seedStatus, setSeedStatus] = useState(null);
   const navigate = useNavigate();
@@ -142,10 +143,25 @@ export default function Discover() {
 
   const filtered = useMemo(() => {
     if (!recipes) return [];
-    if (searchMode) return remote || [];         // Server-Treffer (Titel+Zutaten)
-    if (active) return recipes.filter((r) => (r.tags || []).includes(active));
-    return recipes.slice(0, 60);                 // „Alle" begrenzt (300+ träge)
-  }, [recipes, active, searchMode, remote]);
+    let list;
+    if (searchMode) list = remote || [];
+    else if (active) list = recipes.filter((r) => (r.tags || []).includes(active));
+    else list = recipes.slice(0, 60);
+
+    if (quick === "schnell") list = list.filter((r) => r.time_total && r.time_total <= 1800);
+    if (quick === "favoriten") list = list.filter((r) => r.favorite);
+    return list;
+  }, [recipes, active, searchMode, remote, quick]);
+
+  const stats = useMemo(() => {
+    const all = recipes || [];
+    return {
+      total: all.length,
+      favs: all.filter((r) => r.favorite).length,
+      fast: all.filter((r) => r.time_total && r.time_total <= 1800).length,
+      cats: categories.length,
+    };
+  }, [recipes, categories]);
 
   const surprise = () => {
     if (!recipes?.length) return;
@@ -173,12 +189,28 @@ export default function Discover() {
         </button>
       </div>
       <div className="discover-subbar">
-        <span className="muted">
+        <div className="discover-stats">
+          <span className="stat-pill">📖 {stats.total} Rezepte</span>
+          <span className="stat-pill">🗂 {stats.cats} Kategorien</span>
+          <span className="stat-pill">⚡ {stats.fast} in ≤30 Min.</span>
+          {stats.favs > 0 && <span className="stat-pill">★ {stats.favs}</span>}
+        </div>
+        <span className="muted discover-count">
           {searchMode
             ? (searching ? "Suche …" : `${filtered.length} Treffer für „${q.trim()}“`)
             : `${filtered.length} Rezepte`}
         </span>
-        <Link to="/listen" className="btn btn-outline btn-sm">📋 Meine Listen</Link>
+        <button
+          className={`chip chip-sm ${quick === "schnell" ? "chip-active" : ""}`}
+          onClick={() => setQuick(quick === "schnell" ? "" : "schnell")}
+          title="Rezepte bis 30 Minuten Gesamtzeit"
+        >⚡ ≤30 Min.</button>
+        <button
+          className={`chip chip-sm ${quick === "favoriten" ? "chip-active" : ""}`}
+          onClick={() => setQuick(quick === "favoriten" ? "" : "favoriten")}
+          title="Nur Favoriten"
+        >★ Favoriten</button>
+        <Link to="/listen" className="btn btn-outline btn-sm">📋 Listen</Link>
         <button
           className="btn btn-outline btn-sm"
           onClick={() => {
