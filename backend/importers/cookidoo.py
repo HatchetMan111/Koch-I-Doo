@@ -179,6 +179,14 @@ def recipe_from_created(item: dict) -> dict:
 
 # ── 3) cookidump-HTML (gespeicherte Rezeptseite) ────────────────────────────
 
+def _strip_tags(text: str) -> str:
+    """HTML robust entfernen: DOTALL für mehrzeilige Tags (z. B. <NOBR …\n…>)
+    und Tags wie <br>/<p> durch Leerzeichen trennen, damit kein Kleben entsteht."""
+    text = re.sub(r"<(br|/p|/div|/li|/h[1-6])\s*/?>", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]*>", "", text, flags=re.DOTALL)
+    return _clean_ws(html_mod.unescape(text))
+
+
 def _html_list(html: str, marker_id: str):
     m = re.search(
         r'id=["\']' + re.escape(marker_id) + r'["\'][^>]*>(.*?)</(?:ol|ul|div)>',
@@ -190,7 +198,7 @@ def _html_list(html: str, marker_id: str):
     items = re.findall(r"<li[^>]*>(.*?)</li>", m.group(1), re.DOTALL | re.IGNORECASE)
     out = []
     for it in items:
-        text = _clean_ws(html_mod.unescape(re.sub(r"<[^>]+>", " ", it)))
+        text = _strip_tags(it)
         if text:
             out.append(text)
     return out
@@ -245,7 +253,19 @@ def recipe_from_cookidoo_html(page_html: str) -> dict:
         if parsed:
             recipe["ingredients"].append(parsed)
 
-    recipe["steps"] = _build_steps(_html_list(page_html, "preparation-steps"))
+    steps = _build_steps(_html_list(page_html, "preparation-steps"))
+    # Hinweis-/Tipp-Texte (Cookidoo-Blöcke nach den Zutaten, oft mit <NOBR>)
+    m_notes = re.search(
+        r'id=["\']recipe-notes["\'][^>]*>(.*?)</(?:div|section)>',
+        page_html, re.DOTALL | re.IGNORECASE,
+    )
+    if m_notes:
+        notes_text = _strip_tags(m_notes.group(1))
+        if notes_text:
+            recipe["description"] = notes_text[:500]
+            if steps:
+                steps[-1]["tip"] = (steps[-1]["tip"] + " · " + notes_text[:300]).strip(" ·")
+    recipe["steps"] = steps
     return match_ingredients_to_steps(recipe)
 
 

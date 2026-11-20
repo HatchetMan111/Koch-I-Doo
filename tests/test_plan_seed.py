@@ -420,3 +420,32 @@ class TestProfil:
         r = client.put("/api/profile", json={"name": "X", "servings": 2, "theme": "bunt"})
         assert r.status_code == 200
         assert client.get("/api/profile").json()["theme"] == "dark"  # ungültig → Default
+
+
+class TestCookidooHtmlNobr:
+    def test_nobr_wird_entfernt(self, monkeypatch):
+        """HTML wie von cookidump: <NOBR> mit Attributen + mehrzeilig."""
+        from importers.cookidoo import import_cookidoo
+
+        page = (
+            "<html><body>"
+            '<h1 class="recipe-card__title">Vegane Gewürzpaste für Gemüsebrühe</h1>'
+            '<div class="core-feature-icons"><label><span>Portionen</span> 10 Portionen</label></div>'
+            '<ul id="ingredients"><li>200 g Gemüse</li><li>100 g Salz</li></ul>'
+            '<ol id="preparation-steps">'
+            "<li>Gemüse <NOBR class=\"x\">3 Min.</NOBR>/Stufe <NOBR>8</NOBR> zerkleinern</li>"
+            "<li><NOBR\n  data-x=\"1\">10 Min.</NOBR>/100°C/Stufe 1 garen</li>"
+            "</ol>"
+            '<div id="recipe-notes">Hinweis mit <NOBR>1 geh. TL</NOBR> Paste.</div>'
+            "</body></html>"
+        )
+        recipes = import_cookidoo(page)
+        r = recipes[0]
+        joined = " ".join(s["text"] for s in r["steps"])
+        assert "<NOBR" not in joined and "NOBR" not in joined
+        assert "3 Min." in joined and "Stufe" in joined
+        # mehrzeiliges NOBR: Zeit erkannt?
+        assert r["steps"][1]["time"] == 600
+        # Hinweis als description + Tipp
+        assert "geh. TL" in r["description"]
+        assert "<NOBR" not in r["description"]
