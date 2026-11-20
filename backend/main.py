@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.9.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -342,6 +342,44 @@ def api_seed_remove(body: SeedRemoveBody):
 
 
 # ── Einstellungen & Chat-Assistent ──────────────────────────────────────────
+
+class ProfileBody(BaseModel):
+    name: str = ""
+    servings: int = 4
+    theme: str = "dark"       # dark | light | cream
+    cookidoo_email: str = ""
+    country: str = "de"
+    language: str = "de-DE"
+
+
+@app.get("/api/profile")
+def api_get_profile():
+    import json as _json
+
+    raw = db.get_setting("kochido_profile")
+    if raw:
+        try:
+            return _json.loads(raw)
+        except ValueError:
+            pass
+    return {"name": "", "servings": 4, "theme": "dark",
+            "cookidoo_email": "", "country": "de", "language": "de-DE"}
+
+
+@app.put("/api/profile")
+def api_put_profile(body: ProfileBody):
+    import json as _json
+
+    db.set_setting("kochido_profile", _json.dumps({
+        "name": body.name.strip(),
+        "servings": max(1, int(body.servings or 4)),
+        "theme": body.theme if body.theme in ("dark", "light", "cream") else "dark",
+        "cookidoo_email": body.cookidoo_email.strip(),
+        "country": body.country.strip() or "de",
+        "language": body.language.strip() or "de-DE",
+    }, ensure_ascii=False))
+    return {"ok": True}
+
 
 class SettingsBody(BaseModel):
     openrouter_key: str = ""

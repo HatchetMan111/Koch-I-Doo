@@ -395,3 +395,28 @@ class TestSettingsChat:
         r = client.post("/api/chat", json={"message": "Hallo", "history": []})
         assert r.status_code == 502
         assert "OpenRouter-Fehler" in r.json()["detail"]
+
+
+class TestProfil:
+    def test_profil_roundtrip(self, client):
+        assert client.put("/api/profile", json={
+            "name": "Phil", "servings": 6, "theme": "cream",
+            "cookidoo_email": "p@x.de", "country": "de", "language": "de-DE",
+        }).status_code == 200
+        pr = client.get("/api/profile").json()
+        assert pr["name"] == "Phil"
+        assert pr["servings"] == 6
+        assert pr["theme"] == "cream"
+
+    def test_profil_defaults(self, client):
+        import db
+        db.set_setting("kochido_profile", "")
+        pr = client.get("/api/profile").json()
+        assert pr["name"] == ""
+        assert pr["servings"] == 4
+        assert pr["theme"] == "dark"
+
+    def test_profil_validierung(self, client):
+        r = client.put("/api/profile", json={"name": "X", "servings": 2, "theme": "bunt"})
+        assert r.status_code == 200
+        assert client.get("/api/profile").json()["theme"] == "dark"  # ungültig → Default

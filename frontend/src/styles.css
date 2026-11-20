@@ -784,3 +784,60 @@ input, textarea, select { max-width: 100%; }
   .detail-tags { display: none; }
   .serve-card { padding: 12px 14px; }
 }
+
+/* ── Startseite: Hero & Tagesvorschlag ─────────────────────────────────── */
+.hero { margin-bottom: 18px; }
+.hero-greeting { font-size: 1.45rem; font-weight: 800; }
+.hero-suggestion {
+  display: flex; gap: 16px; align-items: stretch;
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow: hidden; margin-top: 12px;
+}
+.hero-suggest-img {
+  width: 220px; flex-shrink: 0; background: linear-gradient(135deg, var(--accent-soft), #f5e8d9);
+  display: flex; align-items: center; justify-content: center; font-size: 3.4rem;
+}
+.hero-suggest-img img { width: 100%; height: 100%; object-fit: cover; }
+.hero-suggest-body { padding: 16px 18px; flex: 1; min-width: 0; }
+.hero-label { color: var(--accent); font-weight: 800; font-size: 0.82rem; }
+.hero-suggest-body h2 { margin: 4px 0 8px; font-size: 1.3rem; }
+.hero-suggest-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+.quicklinks { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.quicklink {
+  background: var(--card); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 14px 10px; text-decoration: none; color: var(--text);
+  display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center;
+}
+.quicklink:hover { transform: translateY(-2px); }
+.quick-icon { font-size: 1.6rem; }
+.quicklink b { font-size: 0.95rem; }
+.quicklink small { color: var(--muted); font-size: 0.75rem; }
+
+.today-plan { margin-bottom: 18px; }
+.today-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.today-entry { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
+.today-entry:last-child { border-bottom: none; }
+.today-title { flex: 1; font-weight: 700; text-decoration: none; color: var(--text); }
+
+/* ── Einstellungsseite ─────────────────────────────────────────────────── */
+.settings-page h2 { margin-top: 4px; }
+.settings-nav { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.code-block {
+  background: #f3f0ea; border-radius: 10px; padding: 10px 12px;
+  font-size: 0.8rem; overflow-x: auto; white-space: pre;
+}
+.nav-gear { font-size: 1.05rem; padding: 7px 11px; }
+
+@media (max-width: 640px) {
+  .hero-greeting { font-size: 1.2rem; }
+  .hero-suggestion { flex-direction: column; gap: 0; }
+  .hero-suggest-img { width: 100%; height: 130px; font-size: 2.4rem; }
+  .hero-suggest-body h2 { font-size: 1.12rem; }
+  .hero-suggest-actions .btn { flex: 1; }
+  .quicklinks { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .quicklink { padding: 10px 6px; }
+  .quicklink b { font-size: 0.8rem; }
+  .quicklink small { display: none; }
+  .quick-icon { font-size: 1.35rem; }
+}

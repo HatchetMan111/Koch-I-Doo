@@ -65,6 +65,11 @@ export const importBatch = (recipes, listName = "", listSource = "") =>
     body: JSON.stringify({ recipes, list_name: listName, list_source: listSource }),
   });
 
+// Profil
+export const getProfile = () => api("/api/profile");
+export const saveProfile = (profile) =>
+  api("/api/profile", { method: "PUT", body: JSON.stringify(profile) });
+
 // Einstellungen & Chat-Assistent
 export const getSettings = () => api("/api/settings");
 export const saveSettings = (openrouterKey, chatModel) =>
