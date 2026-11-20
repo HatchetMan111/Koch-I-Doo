@@ -45,7 +45,15 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
     limitieren aggressiv (oft ~1 Anfrage alle paar Sekunden bzw. ein Tageslimit).
     Deshalb: bis zu 4 Versuche mit wachsendem Backoff, Retry-After wird beachtet.
     """
-    body = json.dumps({"model": model, "messages": messages, "tools": TOOLS}).encode("utf-8")
+    # WICHTIG: stream:false explizit setzen — sonst streamen manche Provider
+    # (Amazon Bedrock) standardmäßig und SIE SAGEN: „This model doesn't
+    # support tool use in streaming mode." (User-Fehler 2026-11-18)
+    body = json.dumps({
+        "model": model,
+        "messages": messages,
+        "tools": TOOLS,
+        "stream": False,
+    }).encode("utf-8")
     last: Exception | None = None
     for attempt in range(4):
         req = urllib.request.Request(
@@ -91,10 +99,19 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
                     time.sleep(min(wait, 30))
                     continue
                 raise last
+            # 400 mit Provider-/Streaming-/Tool-Hinweis (Amazon Bedrock:
+            # „doesn't support tool use in streaming mode") → ebenfalls
+            # als ChatEndpointError behandeln → ask() wechselt das Modell.
+            if exc.code == 400 and (
+                "stream" in text or "tool" in text or "provider" in text
+                or "support" in text or "endpoint" in text or "adapter" in text
+            ):
+                raise ChatEndpointError(
+                    f"OpenRouter HTTP 400 (Provider/Tool-Problem): {raw or 'Modell inkompatibel'}"
+                ) from exc
             # 404 = Modell/Endpunkt nicht (mehr) verfügbar (Batch-Adapter,
             # unfree-modell, gelöscht) → spezialisierter Fehler, damit ask()
-            # automatisch ein funktionierendes Modell wählt. 400 mit Chat-
-            # Endpunkt-Hinweis wird genauso behandelt.
+            # automatisch ein funktionierendes Modell wählt.
             text = (raw or "").lower()
             if exc.code == 404 or (
                 exc.code == 400 and (

@@ -869,3 +869,48 @@ class TestRateLimitFallback:
         # Free-Modell warf das Tageslimit → Wechsel auf Ersatzmodell, das
         # die Anfrage beantwortet (kein Abbruch, keine Dublette)
         assert out and "Aktionen" in out or "ausgeführt" in out
+
+
+class TestStreamFalse:
+    def test_tools_ohne_streaming(self, client, monkeypatch, tmp_path):
+        """Der Request muss stream:false enthalten (sonst 400 bei Bedrock)."""
+        import io
+        import json
+        import urllib.error
+
+        import db
+
+        (tmp_path / "s1").mkdir(parents=True, exist_ok=True)
+        os.environ["KOCHIDO_DATA"] = str(tmp_path / "s1")
+        db.DB_PATH = tmp_path / "s1" / "kochido.db"
+        db.init_db()
+
+        import chatbot
+
+        db.set_setting("openrouter_key", "k")
+        db.set_setting("chat_model", "m")
+        captured = {}
+
+        class Ctx:
+            def __init__(self, d): self._d = d
+            def read(self): return self._d
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+
+        def fake(req, timeout=None):
+            captured["body"] = json.loads(req.data.decode())
+            if "stream" not in captured["body"] or captured["body"]["stream"] is not False:
+                raise urllib.error.HTTPError(
+                    req.full_url, 400,
+                    "This model doesn't support tool use in streaming mode.",
+                    {}, io.BytesIO(b'{"error":"streaming tool use"}'),
+                )
+            return Ctx(json.dumps({
+                "choices": [{"message": {"role": "assistant", "content": "OK"}}],
+            }).encode())
+
+        monkeypatch.setattr(chatbot.urllib.request, "urlopen", fake)
+        out = chatbot.ask("Hallo", [])
+        assert out == "OK"
+        assert captured["body"]["stream"] is False
+        assert "tools" in captured["body"]
