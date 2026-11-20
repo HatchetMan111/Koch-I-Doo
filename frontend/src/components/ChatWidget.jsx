@@ -57,7 +57,7 @@ export default function ChatWidget() {
         <div className="chat-panel">
           <div className="chat-head">
             <b>🤖 Koch-Assistent</b>
-            <span className="muted">OpenRouter · kostenlos</span>
+            <button className="chat-close" onClick={() => setOpen(false)} title="Assistent schließen">✕</button>
           </div>
           <div className="chat-log" ref={listRef}>
             {history.length === 0 && (

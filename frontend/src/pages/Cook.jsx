@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { getProfile, getRecipe } from "../api.js";
+import { api, getProfile, getRecipe } from "../api.js";
 import TimerRing, { beep } from "../components/TimerRing.jsx";
 import TmBadges from "../components/TmBadges.jsx";
 import { scaleChipText } from "../format.js";
@@ -142,6 +142,12 @@ export default function Cook() {
     }
     setIdx(Math.max(0, idx - 1));
   };
+
+  // Rezept beim Erreichen des Fertig-Bildschirms als „gekocht" vormerken
+  useEffect(() => {
+    if (!finished || !recipe?.id) return;
+    api(`/api/recipes/${recipe.id}/cooked`, { method: "POST" }).catch(() => {});
+  }, [finished, recipe?.id]);
 
   // Tastatur
   useEffect(() => {

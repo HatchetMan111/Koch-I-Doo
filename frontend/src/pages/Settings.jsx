@@ -113,6 +113,27 @@ export default function Settings() {
       </section>
 
       <section className="card">
+        <h2>👨‍👩‍👧 Für wen & wie kochen wir?</h2>
+        <p className="muted">
+          Diese Angaben bekommt der KI-Assistent in seinen Kontext — damit
+          Vorschläge, Portionen und Rezepte zu deinem Haushalt passen. Jederzeit
+          änderbar.
+        </p>
+        <label className="field">
+          <span>Für wen wird gekocht (z. B. „2 Erwachsene, 1 Kind (7), 1× vegetarisch“)</span>
+          <input className="input" value={profile.household || ""}
+            onChange={(e) => setP({ household: e.target.value })}
+            placeholder="2 Erwachsene, 2 Kinder (5 & 8)" />
+        </label>
+        <label className="field">
+          <span>Essgewohnheiten, Allergien & Abneigungen (z. B. „keine Nüsse, kein Fisch, gern scharf“)</span>
+          <textarea className="textarea" rows={3} value={profile.diet || ""}
+            onChange={(e) => setP({ diet: e.target.value })}
+            placeholder="Vegetarisch am Montag, keine Erdnüsse, mögen keine Pilze …" />
+        </label>
+      </section>
+
+      <section className="card">
         <h2>🥘 Cookidoo</h2>
         <p className="muted">
           Für den direkten Import (Konto-Tab und nativer Cookidoo-Export).

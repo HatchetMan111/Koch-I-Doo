@@ -502,3 +502,42 @@ class TestChatTools:
         res = _json.loads(_exec_tool("search_recipes", {"query": "Suppe"}))
         assert res["ok"] is True
         assert any("Suppe" in r["title"] for r in res["results"] or []) or True
+
+
+class TestCookLog:
+    def test_mark_cooked_und_log(self, client):
+        rid = client.post("/api/recipes", json={"title": "Log-Testsuppe"}).json()["id"]
+        assert client.post(f"/api/recipes/{rid}/cooked").status_code == 200
+        assert client.post(f"/api/recipes/{rid}/cooked").status_code == 200
+        log = client.get("/api/cook-log").json()
+        assert len(log) == 2
+        assert log[0]["title"] == "Log-Testsuppe"
+        assert "date" in log[0]
+
+    def test_unbekanntes_rezept(self, client):
+        assert client.post("/api/recipes/99999/cooked").status_code == 404
+
+    def test_haushalt_im_profil(self, client):
+        r = client.put("/api/profile", json={
+            "name": "Phil", "servings": 4, "theme": "dark",
+            "household": "2 Erwachsene, 1 Kind", "diet": "keine Nüsse"})
+        assert r.status_code == 200
+        pr = client.get("/api/profile").json()
+        assert pr["household"] == "2 Erwachsene, 1 Kind"
+        assert pr["diet"] == "keine Nüsse"
+
+    def test_ki_kontext_enthaelt_haushalt(self, client):
+        """Der System-Prompt-Kontext muss Haushalt + Historie enthalten."""
+        import db
+        from chatbot import build_context_note
+
+        conn = db._connect()
+        conn.execute("DELETE FROM cook_log"); conn.commit(); conn.close()
+        rid = client.post("/api/recipes", json={"title": "Kontext-Eintopf"}).json()["id"]
+        client.post(f"/api/recipes/{rid}/cooked")
+        client.put("/api/profile", json={"name": "P", "servings": 4, "theme": "dark",
+                                        "household": "2 Erwachsene", "diet": "vegan"})
+        note = build_context_note()
+        assert "2 Erwachsene" in note
+        assert "vegan" in note
+        assert "Kontext-Eintopf" in note

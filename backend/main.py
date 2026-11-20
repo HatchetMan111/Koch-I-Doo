@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.10.1"
+APP_VERSION = "1.11.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -350,6 +350,8 @@ class ProfileBody(BaseModel):
     cookidoo_email: str = ""
     country: str = "de"
     language: str = "de-DE"
+    household: str = ""       # für wen gekocht wird ( geht in den KI-Prompt )
+    diet: str = ""            # Essgewohnheiten / Allergien / Abneigungen
 
 
 @app.get("/api/profile")
@@ -363,7 +365,8 @@ def api_get_profile():
         except ValueError:
             pass
     return {"name": "", "servings": 4, "theme": "dark",
-            "cookidoo_email": "", "country": "de", "language": "de-DE"}
+            "cookidoo_email": "", "country": "de", "language": "de-DE",
+            "household": "", "diet": ""}
 
 
 @app.put("/api/profile")
@@ -377,6 +380,8 @@ def api_put_profile(body: ProfileBody):
         "cookidoo_email": body.cookidoo_email.strip(),
         "country": body.country.strip() or "de",
         "language": body.language.strip() or "de-DE",
+        "household": body.household.strip()[:500],
+        "diet": body.diet.strip()[:500],
     }, ensure_ascii=False))
     return {"ok": True}
 
@@ -432,6 +437,21 @@ def api_chat(body: ChatBody):
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from None
     return {"reply": reply}
+
+
+# ── Koch-Historie ───────────────────────────────────────────────────────────
+
+@app.post("/api/recipes/{recipe_id}/cooked")
+def api_mark_cooked(recipe_id: int):
+    """Merkt an, dass dieses Rezept gerade gekocht wurde (vom Koch-Modus)."""
+    if db.get_recipe(recipe_id) is None:
+        raise HTTPException(status_code=404, detail=f"Rezept {recipe_id} nicht gefunden")
+    return {"ok": True, "log_id": db.log_cooked(recipe_id)}
+
+
+@app.get("/api/cook-log")
+def api_cook_log(days: int = 14):
+    return db.get_cook_log(days=max(1, min(365, days)))
 
 
 @app.post("/api/import/convert-tm")

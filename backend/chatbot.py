@@ -227,6 +227,49 @@ def _exec_tool(name: str, args: dict) -> str:
     return _json.dumps({"ok": False, "error": f"Unbekanntes Werkzeug: {name}"})
 
 
+def build_context_note() -> str:
+    """Kontext für den System-Prompt: Haushalt, Essgewohnheiten, zuletzt gekocht."""
+    import json as _json
+
+    parts = []
+    raw = db.get_setting("kochido_profile")
+    prof = {}
+    if raw:
+        try:
+            prof = _json.loads(raw)
+        except ValueError:
+            prof = {}
+
+    household = str(prof.get("household") or "").strip()
+    diet = str(prof.get("diet") or "").strip()
+    if household:
+        parts.append(f"Für wen gekocht wird: {household}")
+    if diet:
+        parts.append(f"Essgewohnheiten/Allergien: {diet}")
+    if prof.get("servings"):
+        parts.append(f"Standard-Portionen: {prof.get('servings')}")
+
+    try:
+        log = db.get_cook_log(30)
+    except Exception:
+        log = []
+    if log:
+        # nach Rezept zusammenfassen: letztes Datum + Anzahl
+        by_recipe = {}
+        for e in log:
+            cur = by_recipe.get(e["title"])
+            if cur is None:
+                by_recipe[e["title"]] = {"last": e["date"], "count": 1}
+            else:
+                cur["count"] += 1
+        lines = [f"· {t}: zuletzt {v['last']} ({v['count']}×)" for t, v in list(by_recipe.items())[:15]]
+        parts.append("Zuletzt gekocht (letzte 30 Tage):\n" + "\n".join(lines))
+    else:
+        parts.append("Zuletzt gekocht: noch nichts erfasst.")
+
+    return "\n\n".join(parts)
+
+
 def ask(user_message: str, history: list[dict]) -> str:
     """Eine Chat-Nachricht an das konfigurierte kostenlose Modell schicken —
     inkl. Werkzeug-Schleife (create_recipe / plan_recipe / search_recipes)."""
@@ -237,10 +280,17 @@ def ask(user_message: str, history: list[dict]) -> str:
     if not model:
         raise RuntimeError("Kein Chat-Modell ausgewählt (Einstellungen).")
 
+    context = build_context_note()
+
     messages = [
         {"role": "system", "content":
             "Du bist ein hilfreicher Koch-Assistent für Thermomix TM5/TM6 und "
             "kannst Koch-I-Doo BEDIENEN. Antworte kurz und praktisch auf Deutsch. "
+            f"\n\n--- Kontext zum Haushalt ---\n{context}\n--- Ende Kontext ---\n"
+            "NUTZE diesen Kontext aktiv: Wenn passende Rezepte zuletzt gekocht "
+            "wurden, schlage sie zur Wiederholung vor (z. B. „Zuletzt am 12.11. "
+            "gekocht – passt wieder?“). Beachte Haushalt (Personen/Kinder) und "
+            "Essgewohnheiten/Allergien bei Vorschlägen und Rezepten. "
             "Bei Rezept-Fragen nenne Zutaten, Mengen und TM-Schritte "
             "(Zeit/Temperatur/Stufe). "
             "Wenn der Nutzer ein Rezept ERSTELLEN will, rufe create_recipe mit "

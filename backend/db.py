@@ -34,6 +34,11 @@ CREATE TABLE IF NOT EXISTS meta (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS cook_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id   INTEGER NOT NULL,
+    cooked_at   REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS settings (
     key         TEXT PRIMARY KEY,
     value       TEXT NOT NULL
@@ -785,3 +790,48 @@ def search_recipes_simple(query: str = "", limit: int = 8) -> list[dict]:
         return out
     finally:
         conn.close()
+
+
+# ── Koch-Historie (wann wurde was gekocht) ─────────────────────────────────
+
+def log_cooked(recipe_id: int, conn=None) -> int:
+    """Merkt an, dass ein Rezept gekocht wurde (jetzt)."""
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO cook_log (recipe_id, cooked_at) VALUES (?, ?)",
+            (recipe_id, time.time()),
+        )
+        if own:
+            conn.commit()
+        return int(cur.lastrowid)
+    finally:
+        if own:
+            conn.close()
+
+
+def get_cook_log(days: int = 14, conn=None) -> list[dict]:
+    """Letzte Koch-Vorkommnisse (Rezept-Titel + Datum), neueste zuerst."""
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        since = time.time() - days * 86400
+        rows = conn.execute(
+            "SELECT cl.recipe_id, cl.cooked_at, r.title FROM cook_log cl "
+            "JOIN recipes r ON r.id = cl.recipe_id "
+            "WHERE cl.cooked_at >= ? ORDER BY cl.cooked_at DESC LIMIT 50",
+            (since,),
+        ).fetchall()
+        out = []
+        for r in rows:
+            out.append({
+                "recipe_id": r["recipe_id"],
+                "title": r["title"],
+                "cooked_at": r["cooked_at"],
+                "date": time.strftime("%Y-%m-%d", time.localtime(r["cooked_at"])),
+            })
+        return out
+    finally:
+        if own:
+            conn.close()
