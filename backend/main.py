@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.19.0"
+APP_VERSION = "1.20.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -637,6 +637,44 @@ def api_delete_list(list_id: int):
 # ── Bilder & SPA ────────────────────────────────────────────────────────────
 
 app.mount("/images", StaticFiles(directory=str(db.IMG_DIR)), name="images")
+
+
+# ── Monsieur-Cuisine-Export (isoliert, optional) ────────────────────────────
+# mc-export/ liegt neben backend/ und ist eigenständig; fehlt es, gibt es
+# einen klaren Fehler – die App läuft dadurch NICHT anders.
+MC_EXPORT_DIR = Path(__file__).parent.parent / "mc-export"
+
+
+class McExportBody(BaseModel):
+    complexity: str = "easy"
+
+
+@app.post("/api/recipes/{recipe_id}/export/mc")
+def api_export_mc(recipe_id: int, body: McExportBody | None = None):
+    """Erzeugt eine smart-recipe-kompatible recipe-input.json als Download."""
+    recipe = db.get_recipe(recipe_id)
+    if recipe is None:
+        raise HTTPException(status_code=404, detail=f"Rezept {recipe_id} nicht gefunden")
+    if not (MC_EXPORT_DIR / "mc_export.py").exists():
+        raise HTTPException(
+            status_code=501,
+            detail="Der Monsieur-Cuisine-Export ist in dieser Installation nicht "
+                   "enthalten (mc-export/ fehlt). Bitte Koch-I-Doo aktualisieren.",
+        )
+    import importlib
+    import sys
+
+    sys.path.insert(0, str(MC_EXPORT_DIR))
+    mc = importlib.import_module("mc_export")
+    importlib.reload(mc)
+    data = mc.recipe_to_mc_input(recipe, (body.complexity if body else "easy"))
+    from fastapi.responses import JSONResponse
+
+    fname = re.sub(r"[^a-z0-9]+", "-", (recipe.get("title") or "rezept").lower()).strip("-")[:50]
+    return JSONResponse(
+        content=data,
+        headers={"Content-Disposition": f'attachment; filename="{fname}-mc.json"'},
+    )
 
 
 @app.get("/{full_path:path}", include_in_schema=False)

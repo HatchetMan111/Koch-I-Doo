@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { addPlan, addToList, deleteRecipe, getLists, getRecipe, setFavorite } from "../api.js";
+import { addPlan, addToList, deleteRecipe, exportMc, getLists, getRecipe, setFavorite } from "../api.js";
 
 // kleine Datums-Helfer (bewusst inline statt Cross-Page-Import)
 function isoDate(d) {

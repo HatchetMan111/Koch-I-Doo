@@ -972,3 +972,60 @@ class TestAutofill:
         assert len(today_entries) == 1
         assert today_entries[0]["title"] == "Schon geplant"
         assert res["count"] == 6
+
+
+class TestMcExport:
+    """MC-Export ist isoliert (mc-export/) und darf die App nie brechen."""
+
+    def test_export_erzeugt_gueltiges_json(self, client):
+        import json
+        import sys
+        from pathlib import Path
+
+        mc_dir = Path(__file__).resolve().parent.parent / "mc-export"
+        sys.path.insert(0, str(mc_dir))
+        import mc_export
+
+        recipe = {
+            "title": "Kartoffelsuppe",
+            "description": "Cremige Suppe",
+            "servings": 4,
+            "serving_unit": "Portionen",
+            "time_prep": 600,
+            "time_total": 1800,
+            "ingredients": [
+                {"amount": 1000, "unit": "g", "name": "Kartoffeln", "note": "gewürfelt"},
+                {"amount": 2, "unit": "", "name": "Zwiebeln", "note": ""},
+            ],
+            "steps": [
+                {"text": "Zwiebeln zerkleinern", "time": 4, "speed": "6"},
+                {"text": "Kochen", "time": 1500, "temperature": "100", "speed": "1"},
+            ],
+        }
+        out = mc_export.recipe_to_mc_input(recipe)
+        # Schema-Kernfelder
+        assert out["title"] == "Kartoffelsuppe"
+        assert out["settings"]["locale"] == "de-DE"
+        ss = out["servingSize"]
+        assert ss["amount"] == 4
+        assert ss["preparationTime"] >= 1
+        assert ss["readyInTime"] >= ss["preparationTime"]
+        assert ss["ingredientGroups"][0]["ingredients"][0]["name"].startswith("Kartoffeln")
+        assert len(ss["steps"]) == 2
+        # Schritt mit Zeit/Heat → manual-cooking-Modus
+        assert ss["steps"][1]["mode"]["type"].startswith("manual-cooking")
+        # JSON ist serialisierbar
+        json.dumps(out)
+
+    def test_endpoint_404_ohne_rezept(self, client):
+        r = client.post("/api/recipes/9999/export/mc", json={})
+        assert r.status_code == 404
+
+    def test_endpoint_200_mit_rezept(self, client):
+        rid = client.post("/api/recipes", json={"title": "MC-Test", "servings": 4}).json()["id"]
+        r = client.post(f"/api/recipes/{rid}/export/mc", json={})
+        assert r.status_code == 200
+        body = r.json()
+        assert body["title"] == "MC-Test"
+        assert body["settings"]["locale"] == "de-DE"
+        assert "servingSize" in body

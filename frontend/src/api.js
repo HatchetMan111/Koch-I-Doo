@@ -73,6 +73,13 @@ export const toggleShopping = (id, checked) =>
   api(`/api/shopping/${id}/toggle`, { method: "POST", body: JSON.stringify({ checked }) });
 export const clearShopping = () => api("/api/shopping", { method: "DELETE" });
 
+// Monsieur-Cuisine-Export
+export const exportMc = (id, complexity = "easy") =>
+  api(`/api/recipes/${id}/export/mc`, {
+    method: "POST",
+    body: JSON.stringify({ complexity }),
+  });
+
 // Profil
 export const getProfile = () => api("/api/profile");
 export const saveProfile = (profile) =>
