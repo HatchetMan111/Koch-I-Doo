@@ -62,7 +62,7 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
             data=body, headers=_headers(key), method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
+            with urllib.request.urlopen(req, timeout=90) as resp:
                 return json.loads(resp.read().decode("utf-8", "replace"))
         except urllib.error.HTTPError as exc:
             raw = ""
@@ -322,6 +322,24 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "plan_week",
+            "description":
+                "Füllt die nächsten Tage AUTOMATISCH mit vielfältigen "
+                "Mittagessen aus vorhandenen Rezepten – ein einziger Aufruf "
+                "statt vieler plan_recipe-Aufrufe. Immer bevorzugen, wenn ein "
+                "ganzer Wochenplan gewünscht ist.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "days": {"type": "integer", "description": "Anzahl Tage (1-14, Default 7)"},
+                    "start_date": {"type": "string", "description": "YYYY-MM-DD, Default heute"},
+                },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "search_recipes",
             "description": "Sucht Rezepte in Koch-I-Doo nach Titel-Stichwort.",
             "parameters": {
@@ -436,6 +454,18 @@ def _exec_tool(name: str, args: dict) -> str:
         entry_id = db.add_plan_entry(day, rid)
         return _json.dumps({"ok": True, "plan_entry": entry_id, "date": day,
                             "recipe_id": rid}, ensure_ascii=False)
+
+    if name == "plan_week":
+        days = min(14, max(1, int(args.get("days") or 7)))
+        start = str(args.get("start_date") or "").strip() or date.today().isoformat()
+        res = db.autofill_plan(start, days)
+        return _json.dumps({
+            "ok": True,
+            "count": res["count"],
+            "planned": [f"{p['plan_date']}: {p['title']}" for p in res["planned"]],
+            "hint": "Fertig – der Plan ist eingetragen. Keine weiteren "
+                    "plan_recipe-Aufrufe nötig.",
+        }, ensure_ascii=False)
 
     if name == "search_recipes":
         return _json.dumps({"ok": True,

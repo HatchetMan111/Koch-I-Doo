@@ -914,3 +914,61 @@ class TestStreamFalse:
         assert out == "OK"
         assert captured["body"]["stream"] is False
         assert "tools" in captured["body"]
+
+
+class TestAutofill:
+    def test_woche_automatisch_gefuellt(self, client):
+        """7 Tage, vielfältig, keine Dubletten."""
+        import db
+
+        for e in client.get("/api/plan", params={"from": "2020-01-01", "to": "2030-12-31"}).json():
+            client.delete(f"/api/plan/{e['id']}")
+        # Rezepte in verschiedenen Mittags-Kategorien anlegen
+        cats = [
+            ("Hauptgerichte", "Rinderbraten A"), ("Hauptgerichte", "Hähnchen B"),
+            ("Pasta & Nudeln", "Spaghetti C"), ("Pasta & Nudeln", "Penne D"),
+            ("Fisch & Meeresfrüchte", "Lachs E"), ("Suppen", "Kürbiscreme F"),
+            ("Vegetarisch & Vegan", "Gemüsecurry G"), ("Suppen", "Linsensuppe H"),
+        ]
+        for cat, name in cats:
+            client.post("/api/recipes", json={
+                "title": name, "servings": 4, "serving_unit": "Portionen",
+                "tags": [cat], "time_total": 1800,
+                "steps": [{"text": "Kochen", "time": 900}],
+            })
+
+        res = client.post("/api/plan/autofill", json={"days": 7}).json()
+        assert res["ok"] is True
+        assert res["count"] == 7
+        titles = [p["title"] for p in res["planned"]]
+        assert len(set(titles)) == 7, titles
+
+    def test_bereits_geplante_tage_bleiben(self, client):
+        import db
+
+        for e in client.get("/api/plan", params={"from": "2020-01-01", "to": "2030-12-31"}).json():
+            client.delete(f"/api/plan/{e['id']}")
+        from datetime import date
+
+        # 8 Mittags-Rezepte anlegen, damit genug Auswahl da ist
+        for i, cat in enumerate(["Hauptgerichte", "Pasta & Nudeln", "Fisch & Meeresfrüchte",
+                                 "Suppen", "Vegetarisch & Vegan", "Fleisch & Geflügel",
+                                 "Hauptgerichte", "Pasta & Nudeln"]):
+            client.post("/api/recipes", json={
+                "title": f"Mittagessen {i+1}", "servings": 4, "serving_unit": "Portionen",
+                "tags": [cat], "time_total": 1800,
+                "steps": [{"text": "Kochen", "time": 900}],
+            })
+
+        today = date.today().isoformat()
+        rid = next(r["id"] for r in client.get("/api/recipes").json() if r["title"] == "Schon geplant") \
+            if any(r["title"] == "Schon geplant" for r in client.get("/api/recipes").json()) \
+            else client.post("/api/recipes", json={"title": "Schon geplant"}).json()["id"]
+        client.post("/api/plan", json={"plan_date": today, "recipe_id": rid})
+
+        res = client.post("/api/plan/autofill", json={"days": 7}).json()
+        entries = client.get("/api/plan").json()
+        today_entries = [e for e in entries if e["plan_date"] == today]
+        assert len(today_entries) == 1
+        assert today_entries[0]["title"] == "Schon geplant"
+        assert res["count"] == 6

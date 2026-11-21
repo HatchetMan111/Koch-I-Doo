@@ -1151,3 +1151,111 @@ def shopping_clear(conn=None) -> int:
     finally:
         if own:
             conn.close()
+
+
+# ── Wochenplan automatisch füllen (ohne KI, in einem Schritt) ───────────────
+
+# Kategorien, die als HAUPTGERICHT fürs Mittagessen taugen (Reihenfolge = Score)
+_LUNCH_CATEGORIES = [
+    "Hauptgerichte", "Pasta & Nudeln", "Fleisch & Geflügel",
+    "Fisch & Meeresfrüchte", "Vegetarisch & Vegan", "Suppen",
+]
+# Kategorien, die KEIN Mittagessen sind
+_NOT_LUNCH = {
+    "Desserts", "Getränke & Smoothies", "Baby & Familie", "Frühstück & Aufstriche",
+    "Saucen & Dips", "Beilagen", "Grundrezepte-Basis", "Grundrezept",
+}
+
+
+def _recipe_tags(data: dict) -> list[str]:
+    return [t for t in (data.get("tags") or []) if t]
+
+
+def autofill_plan(start_date: str, days: int = 7, conn=None) -> dict:
+    """Füllt die nächsten `days` Tage mit VIELFÄLTIGEN Mittagessen aus
+    vorhandenen Rezepten – deterministisch, ohne Modell, ohne Duplikate.
+
+    Auswahl: Hauptgericht-taugliche Kategorien zuerst; pro Tag wird die
+    Kategorie gewechselt, wenn möglich (kein 2× Suppe in Folge); Favoriten
+    bekommen leichten Vorzug; bereits an dem Tag geplante Rezepte bleiben.
+    """
+    import random
+
+    own = conn is None
+    conn = conn or _connect()
+    try:
+        rows = conn.execute("SELECT id, title, favorite, data FROM recipes").fetchall()
+        pool = []
+        for row in rows:
+            try:
+                data = json.loads(row["data"])
+            except ValueError:
+                continue
+            tags = _recipe_tags(data)
+            if _NOT_LUNCH & set(tags) and not (_LUNCH_CATEGORIES and set(tags) & set(_LUNCH_CATEGORIES)):
+                continue
+            primary = next((t for t in _LUNCH_CATEGORIES if t in tags), "")
+            score = 0
+            if primary:
+                score += 30 if _LUNCH_CATEGORIES.index(primary) == 0 else 20
+            if row["favorite"]:
+                score += 5
+            if data.get("time_total"):
+                score += 1
+            pool.append({
+                "id": row["id"], "title": row["title"],
+                "primary": primary, "score": score,
+                "servings": data.get("servings") or 4,
+            })
+
+        # deterministisch mischen (gleicher Tag + gleiche Tage → gleicher Plan)
+        seed = int(time.time() // 86400)
+        rng = random.Random(seed)
+        rng.shuffle(pool)
+        pool.sort(key=lambda x: -x["score"])
+
+        try:
+            from datetime import date as _date, timedelta as _td
+            start = _date.fromisoformat(start_date)
+        except ValueError:
+            start = _date.today()
+
+        used: set[int] = set()
+        last_cat = ""
+        planned = []
+        for i in range(max(1, days)):
+            day = (start + _td(days=i)).isoformat()
+            # schon geplant? dann nicht überschreiben
+            existing = conn.execute(
+                "SELECT COUNT(*) FROM plan WHERE plan_date=?", (day,)
+            ).fetchone()[0]
+            if existing:
+                continue
+            pick = None
+            for cand in pool:
+                if cand["id"] in used:
+                    continue
+                # Kategorien-Wechsel bevorzugen (kein 2× Suppe in Folge)
+                if cand["primary"] and cand["primary"] == last_cat:
+                    continue
+                pick = cand
+                break
+            if pick is None:  # Fallback: irgendwas noch nicht benutzt
+                pick = next((c for c in pool if c["id"] not in used), None)
+            if pick is None:
+                break
+            used.add(pick["id"])
+            last_cat = pick["primary"] or last_cat
+            conn.execute(
+                "INSERT INTO plan (plan_date, slot, recipe_id, servings, created_at) "
+                "VALUES (?, '', ?, ?, ?)",
+                (day, pick["id"], pick["servings"], time.time()),
+            )
+            planned.append({"plan_date": day, "recipe_id": pick["id"],
+                            "title": pick["title"], "category": pick["primary"]})
+        if own:
+            conn.commit()
+        return {"ok": True, "planned": planned, "count": len(planned)}
+    finally:
+        if own:
+            conn.close()

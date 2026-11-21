@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { addPlan, deletePlan, getPlan, getRecipes } from "../api.js";
+import { addPlan, autofillPlan, deletePlan, getPlan, getRecipes } from "../api.js";
 import { fmtDuration } from "../format.js";
 
 const DAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
@@ -29,6 +29,8 @@ export default function Plan() {
   const [entries, setEntries] = useState(null);
   const [error, setError] = useState("");
   const [pickerFor, setPickerFor] = useState(null); // ISO-Datum
+  const [filling, setFilling] = useState(false);
+  const [fillMsg, setFillMsg] = useState("");
 
   const weekDays = useMemo(() => {
     const days = [];
@@ -113,10 +115,35 @@ export default function Plan() {
     <div className="plan-page">
       <h1>📅 Meine Woche</h1>
       <div className="plan-actions">
+        <button
+          className="btn btn-cook"
+          onClick={async () => {
+            setFilling(true);
+            setFillMsg("");
+            try {
+              const res = await autofillPlan(7);
+              const lines = (res.planned || []).map((p) => `${p.plan_date}: ${p.title}`);
+              setFillMsg(
+                res.count > 0
+                  ? `✅ ${res.count} Mittagessen für diese Woche geplant:\n` + lines.join("\n")
+                  : "ℹ️ Diese Woche ist schon vollständig geplant (Tage mit Einträgen werden nicht überschrieben)."
+              );
+              await load();
+            } catch (err) {
+              setFillMsg(`⚠ ${String(err.message || err)}`);
+            } finally {
+              setFilling(false);
+            }
+          }}
+          disabled={filling}
+        >
+          {filling ? "Plane …" : "🪄 Woche automatisch füllen"}
+        </button>
         <Link to="/einkauf" className="btn btn-primary">
-          🛒 Einkaufsliste (aus dem Plan)
+          🛒 Einkaufsliste
         </Link>
       </div>
+      {fillMsg && <div className="alert alert-success" style={{ whiteSpace: "pre-line" }}>{fillMsg}</div>}
       <div className="plan-view-toggle">
         <button className={`tab ${view === "woche" ? "tab-active" : ""}`} onClick={() => setView("woche")}>
           Woche

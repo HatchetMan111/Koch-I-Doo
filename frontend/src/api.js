@@ -120,3 +120,8 @@ export const addPlan = (plan_date, recipe_id, servings, slot = "") =>
     body: JSON.stringify({ plan_date, recipe_id, servings, slot }),
   });
 export const deletePlan = (id) => api(`/api/plan/${id}`, { method: "DELETE" });
+export const autofillPlan = (days = 7, startDate) =>
+  api("/api/plan/autofill", {
+    method: "POST",
+    body: JSON.stringify({ days, start_date: startDate || null }),
+  });

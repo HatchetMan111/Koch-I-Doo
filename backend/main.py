@@ -22,7 +22,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.17.1"
+APP_VERSION = "1.18.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -179,6 +179,32 @@ def api_favorite(recipe_id: int, body: FavoriteBody):
 class ShoppingRefreshRequest(BaseModel):
     from_date: str | None = None
     to_date: str | None = None
+
+
+class AutofillBody(BaseModel):
+    start_date: str | None = None
+    days: int = 7
+
+
+@app.post("/api/plan/autofill")
+def api_plan_autofill(body: AutofillBody | None = None):
+    """Füllt die nächsten Tage automatisch mit vielfältigen Mittagessen."""
+    from datetime import date as _date
+
+    start = (body.start_date if body else None) or _date.today().isoformat()
+    days = min(14, max(1, int(body.days if body else 7)))
+    result = db.autofill_plan(start, days)
+    result["items"] = db.list_plan(start, _add_days(start, days - 1))
+    return result
+
+
+def _add_days(iso: str, n: int) -> str:
+    from datetime import date as _d, timedelta as _t
+
+    try:
+        return (_d.fromisoformat(iso) + _t(days=n)).isoformat()
+    except ValueError:
+        return iso
 
 
 class ShoppingToggleBody(BaseModel):
