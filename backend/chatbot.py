@@ -358,6 +358,15 @@ def _exec_tool(name: str, args: dict) -> str:
     import json as _json
 
     if name == "create_recipe":
+        # Platzhalter-Titel („Mittagessen 1") verhindern – die KI soll
+        # einen echten, aussagekräftigen Namen vergeben
+        raw_title = str(args.get("title") or "").strip()
+        if not raw_title or re.fullmatch(r"(?i)(mittagessen|essen|rezept|gericht)\s*\d*", raw_title):
+            return _json.dumps({
+                "ok": False,
+                "error": f"Titel '{raw_title}' ist ein Platzhalter – bitte einen "
+                         "aussagekräftigen Namen vergeben (z. B. 'Brokkoli-Curry').",
+            }, ensure_ascii=False)
         steps = []
         for st in args.get("steps") or []:
             steps.append({
@@ -379,7 +388,7 @@ def _exec_tool(name: str, args: dict) -> str:
                 "note": str(i.get("note") or ""),
             })
         recipe = match_ingredients_to_steps({
-            "title": str(args.get("title") or "").strip() or "KI-Rezept",
+            "title": raw_title,
             "description": str(args.get("description") or "")[:500],
             "servings": int(args.get("servings") or 4),
             "serving_unit": str(args.get("serving_unit") or "Portionen"),
@@ -399,20 +408,30 @@ def _exec_tool(name: str, args: dict) -> str:
                            ensure_ascii=False)
 
     if name == "plan_recipe":
-        rid = _resolve_recipe_id(str(args.get("recipe_title") or ""))
+        title = str(args.get("recipe_title") or "").strip()
+        rid = _resolve_recipe_id(title)
         if not rid:
-            return _json.dumps({"ok": False, "error": "Rezept nicht gefunden"})
+            # KEIN Abbruch: Liste vorhandener Rezepte zurückgeben, damit das
+            # Modell (das oft „Mittagessen 1" erfindet) ein ECHTES Rezept
+            # wählen kann, statt mit 500 abzubrechen.
+            have = db.search_recipes_simple("", 12)
+            titles = [h["title"] for h in have]
+            return _json.dumps({
+                "ok": False,
+                "error": f"Rezept '{title}' nicht in Koch-I-Doo gefunden",
+                "available_recipes": titles,
+                "hint": "Wähle einen Titel aus available_recipes (exakt) und rufe "
+                        "plan_recipe erneut – oder lege das Rezept erst mit "
+                        "create_recipe an und plane es dann.",
+            }, ensure_ascii=False)
         day = str(args.get("date") or "").strip()
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", day):
             day = date.today().isoformat()
-        # Doppel-Schutz: steht das Rezept an dem Tag schon im Plan, NICHT
-        # nochmal eintragen (User wiederholt nach Rate-Limit-Fehlern gern)
         for e in db.list_plan(day, day):
             if e.get("recipe_id") == rid:
                 return _json.dumps({
                     "ok": True, "already_planned": True, "date": day, "recipe_id": rid,
-                    "note": "Dieses Rezept steht an dem Tag bereits im Plan — "
-                            "kein zweiter Eintrag.",
+                    "note": "Dieses Rezept steht an dem Tag bereits im Plan.",
                 }, ensure_ascii=False)
         entry_id = db.add_plan_entry(day, rid)
         return _json.dumps({"ok": True, "plan_entry": entry_id, "date": day,
@@ -618,9 +637,20 @@ def ask(user_message: str, history: list[dict]) -> str:
         try:
             msg = data["choices"][0]["message"]
         except (KeyError, IndexError, TypeError) as exc:
-            raise RuntimeError(f"Unerwartete Antwort: {json.dumps(data)[:300]}") from exc
+            # Manche Provider liefern bei Tool-Requests „choices": [] mit
+            # error-Objekt → als klaren Fehler ausgeben statt 500
+            err = ""
+            if isinstance(data, dict) and data.get("error"):
+                err = json.dumps(data["error"], ensure_ascii=False)[:300]
+            raise RuntimeError(
+                f"Unerwartete Antwort: {json.dumps(data)[:300]}{(' | ' + err) if err else ''}"
+            ) from exc
 
         tool_calls = msg.get("tool_calls") or []
+        # Wenn das Modell Text UND Tool-Calls mischt (häufig bei 8B-Modellen):
+        # Tool-Calls priorisieren, aber den Text nie verlieren
+        if not tool_calls and msg.get("content"):
+            return str(msg.get("content")).strip()
         if not tool_calls:
             return str(msg.get("content") or "").strip()
 
@@ -632,13 +662,26 @@ def ask(user_message: str, history: list[dict]) -> str:
             raw_args = fn.get("arguments") or "{}"
             try:
                 args = json.loads(raw_args)
+                if not isinstance(args, dict):
+                    args = {}
             except ValueError:
                 args = {}
-            result = _exec_tool(name, args)
+                # Modell hat kaputtes JSON geliefert → Tool bekommt leere args
+                # und antwortet mit hilfreichem Fehler statt zu sterben
+            try:
+                result = _exec_tool(name, args)
+            except Exception as exc:  # noqa: BLE001 – ein Tool-Fehler killt nie die Antwort
+                result = json.dumps({
+                    "ok": False,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "hint": "Bitte den Aufruf korrigieren (Titel prüfen, "
+                            "Zutaten/Schritte als Listen) und erneut versuchen.",
+                }, ensure_ascii=False)
             try:
                 info = json.loads(result)
             except ValueError:
                 info = {}
+                result = json.dumps({"ok": False, "error": "Tool-Antwort unlesbar"})
             if info.get("ok"):
                 if name == "create_recipe":
                     done.append(f"Rezept „{info.get('title')}“ erstellt (#{info.get('recipe_id')})")
