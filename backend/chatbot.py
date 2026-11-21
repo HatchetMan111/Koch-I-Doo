@@ -62,7 +62,7 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
             data=body, headers=_headers(key), method="POST",
         )
         try:
-            with urllib.request.urlopen(req, timeout=90) as resp:
+            with urllib.request.urlopen(req, timeout=150) as resp:
                 return json.loads(resp.read().decode("utf-8", "replace"))
         except urllib.error.HTTPError as exc:
             raw = ""
@@ -126,6 +126,16 @@ def _post_chat(messages: list[dict], key: str, model: str) -> dict:
             # andere Fehler (401 …) nicht wiederholen
             raise RuntimeError(f"OpenRouter HTTP {exc.code}: {raw}") from exc
         except Exception as exc:  # noqa: BLE001 – Netzfehler ggf. wiederholen
+            # Socket-Timeout = Modell antwortet nicht (typisch für sehr kleine
+            # Modelle bei Tool-Calls) → klarer Hinweis statt kryptischem Fehler
+            if isinstance(exc, TimeoutError) or "timed out" in str(exc).lower():
+                raise RuntimeError(
+                    "Das gewählte Modell antwortet zu langsam (Timeout nach 150 s). "
+                    "Das ist ein Modell-Problem, kein Koch-I-Doo-Fehler: In "
+                    "⚙ Einstellungen ein anderes (stärkeres) Modell wählen – z. B. "
+                    "gpt-oss-20b oder ling-3.0-flash. Der Wochenplan geht übrigens "
+                    "ganz ohne KI: 📅 → „🪄 Woche automatisch füllen“."
+                ) from exc
             last = RuntimeError(f"OpenRouter-Fehler: {type(exc).__name__}: {exc}")
             if attempt < 3:
                 time.sleep(2 * (attempt + 1))
