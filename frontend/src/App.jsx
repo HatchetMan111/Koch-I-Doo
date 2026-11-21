@@ -107,7 +107,7 @@ export default function App() {
         </ErrorBoundary>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.18.1 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.19.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
       <ChatWidget />
     </div>

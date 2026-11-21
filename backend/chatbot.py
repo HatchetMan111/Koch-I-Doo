@@ -199,7 +199,7 @@ def list_free_models(api_key: str = "") -> list[dict]:
             # OpenRouter liefert die Fähigkeiten als supported_parameters.
             params = m.get("supported_parameters") or []
             tool_ok = "tools" in params or "tool_choice" in params
-            if not tool_ok:
+            if not tool_ok or not _model_allowed(mid):
                 continue
             if mid.endswith(":free"):
                 free.append({"id": mid, "name": m.get("name") or mid, "kind": "free"})
@@ -239,6 +239,24 @@ _NON_CHAT = re.compile(
     r"|batch|-batch|:batch|fine-tun|adapter)",
     re.IGNORECASE,
 )
+
+
+_BLACKLIST_PREFIXES = (
+    "inclusionai/ling-3.0-tiny",          # Timeout bei Tool-Calls (>45 s)
+    "inclusionai/ling-3.0-flash",         # unzuverlässig bei Tools
+    "mistralai/mistral-nemo",             # Tool-Calls fehlerhaft
+    "meta-llama/llama-3.1-8b-instruct",   # erfindet Titel
+    "meta-llama/llama-3.3-70b-instruct",  # Tool-Calls schwach (User getestet)
+)
+
+
+def _model_allowed(mid: str) -> bool:
+    """Modell ist erlaubt? (Blacklist + Meta-Router + Nicht-Chat-Modelle)"""
+    if any(mid.startswith(b) for b in _BLACKLIST_PREFIXES):
+        return False
+    if mid.startswith(("openrouter/", "typesafe/", "narration/", "suno/", "elevenlabs/")):
+        return False
+    return not _NON_CHAT.search(mid)
 
 
 def _price(raw) -> float | None:

@@ -200,6 +200,37 @@ export default function Settings() {
             placeholder="sk-or-…" value={keyInput}
             onChange={(e) => setKeyInput(e.target.value)} />
         </label>
+        <div className="openrouter-hint">
+          <b>🔑 OpenRouter-API-Key erstellen &amp; Guthaben aufladen:</b>
+          <ol>
+            <li>
+              Kostenlosen Account erstellen:{" "}
+              <a href="https://openrouter.ai" target="_blank" rel="noreferrer">
+                openrouter.ai
+              </a>
+            </li>
+            <li>
+              API-Key anlegen:{" "}
+              <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer">
+                openrouter.ai/keys
+              </a>{" "}
+              → „Create Key“
+            </li>
+            <li>
+              <b>Guthaben aufladen (5–10 €):</b>{" "}
+              <a href="https://openrouter.ai/credits" target="_blank" rel="noreferrer">
+                openrouter.ai/credits
+              </a>{" "}
+              – damit funktionieren die Premium-Modelle ohne Rate-Limit.
+            </li>
+          </ol>
+          <p className="muted">
+            Die :free-Modelle haben ein Tageslimit; mit 5–10 € Guthaben laufen
+            die günstigen Bezahl-Modelle (ab ~0,02 $/1 Mio Token) zuverlässig
+            und ohne Timeout. Ein Wochenplan kostet damit ~0,001 €.
+          </p>
+        </div>
+
         <div className="model-columns">
           <div className="model-col">
             <h3>🆓 Kostenlos <span className="muted">(:free)</span></h3>

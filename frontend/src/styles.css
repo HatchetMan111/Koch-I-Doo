@@ -1005,3 +1005,12 @@ input, textarea, select { max-width: 100%; }
 .chip-row .chip-sm { padding: 6px 12px; }
 .discover-item { transition: transform 0.12s ease, box-shadow 0.15s ease; }
 .discover-item:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+
+/* ── OpenRouter-Key-Hilfe ──────────────────────────────────────────────── */
+.openrouter-hint {
+  background: var(--teal-soft); border: 1.5px solid #b2dfdb; border-radius: 12px;
+  padding: 12px 16px; margin-bottom: 14px; font-size: 0.9rem; line-height: 1.5;
+}
+.openrouter-hint b { color: var(--teal); }
+.openrouter-hint ol { margin: 6px 0 4px 18px; }
+.openrouter-hint a { font-weight: 600; }
