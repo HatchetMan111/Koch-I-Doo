@@ -4,11 +4,42 @@ import json
 import os
 import sqlite3
 import time
+from datetime import date as _date_cls, datetime as _dt
 from pathlib import Path
 
 DATA_DIR = Path(os.environ.get("KOCHIDO_DATA", str(Path(__file__).parent / "data")))
 IMG_DIR = DATA_DIR / "images"
 DB_PATH = DATA_DIR / "kochido.db"
+
+# Zeitzone für „heute“-Berechnungen (Wochenplan, Einkaufsliste, Autofill).
+# Default: System-Zeitzone des Containers; der Installer setzt KOCHIDO_TZ
+# explizit (Europe/Berlin), damit Server-UTC nicht vom Browser abweicht.
+try:
+    from zoneinfo import ZoneInfo as _ZoneInfo
+    _TZ_NAME = os.environ.get("KOCHIDO_TZ", "").strip()
+    TZ = _ZoneInfo(_TZ_NAME) if _TZ_NAME else None
+except Exception:  # ZoneInfo/DB ohne tzdata → System-Local
+    TZ = None
+
+
+def local_today() -> _date_cls:
+    """„Heute“ in der konfigurierten Zeitzone (nie Server-UTC raten)."""
+    if TZ is not None:
+        return _dt.now(TZ).date()
+    return _date_cls.today()
+
+
+def local_date_str(ts: float) -> str:
+    """Unix-Timestamp → YYYY-MM-DD in der konfigurierten Zeitzone."""
+    if TZ is not None:
+        return _dt.fromtimestamp(ts, TZ).strftime("%Y-%m-%d")
+    return time.strftime("%Y-%m-%d", time.localtime(ts))
+
+
+def _esc_like(s: str) -> str:
+    """LIKE-Wildcards in User-Input escapen (verhindert %-/_-Injection)."""
+    return (s or "").replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS recipes (
@@ -18,7 +49,8 @@ CREATE TABLE IF NOT EXISTS recipes (
     favorite    INTEGER NOT NULL DEFAULT 0,
     data        TEXT NOT NULL,
     created_at  REAL NOT NULL,
-    updated_at  REAL NOT NULL
+    updated_at  REAL NOT NULL,
+    seed_package TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title);
 CREATE TABLE IF NOT EXISTS plan (
@@ -77,35 +109,73 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Schema-Migrationen per PRAGMA user_version (forward-only, idempotent)."""
+    version = int(conn.execute("PRAGMA user_version").fetchone()[0])
+    if version < 1:
+        # v1: Spalte seed_package – exakter Paket-Marker statt LIKE auf JSON/Tags
+        # (damit „Paket entfernen“ nie eigene Rezepte mit gleichem Text/Tag löscht).
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(recipes)")]
+        if "seed_package" not in cols:
+            conn.execute("ALTER TABLE recipes ADD COLUMN seed_package TEXT NOT NULL DEFAULT ''")
+        # Backfill für Bestands-DBs (einmalig, anhand der Seed-Source/Tags)
+        conn.execute(
+            "UPDATE recipes SET seed_package='demo' "
+            "WHERE seed_package='' AND json_extract(data,'$.source')='Kochido Demo'"
+        )
+        conn.execute(
+            "UPDATE recipes SET seed_package='grundrezepte' "
+            "WHERE seed_package='' AND json_extract(data,'$.source')='Koch-I-Doo Grundrezepte'"
+        )
+        conn.execute(
+            "UPDATE recipes SET seed_package='kochbuch' "
+            "WHERE seed_package='' AND (',' || tags || ',') LIKE '%,Open Source,%'"
+        )
+        conn.execute("PRAGMA user_version=1")
+
+
 def init_db(seed_file: Path | None = None) -> None:
     IMG_DIR.mkdir(parents=True, exist_ok=True)
     conn = _connect()
     try:
         conn.executescript(_SCHEMA)
+        _migrate(conn)
+        conn.commit()  # evtl. offene Transaktion von DDL/DML schließen
+        # BEGIN IMMEDIATE + Re-Count verhindert doppelte Seeds bei parallelem Start
+        conn.execute("BEGIN IMMEDIATE")
         count = count_recipes(conn)
 
-        demo = None
+        demo_ver, demo = None, None
         if seed_file and Path(seed_file).exists():
-            _, demo = _load_seed_file(seed_file)
+            demo_ver, demo = _load_seed_file(seed_file)
 
         grund_ver, grund = None, None
         grund_file = Path(__file__).parent / "seed" / "grundrezepte.json"
         if grund_file.exists():
             grund_ver, grund = _load_seed_file(grund_file)
 
-        if count == 0:
-            recipes = (demo or []) + (grund or [])
-            _insert_seed_recipes(conn, recipes)
-            if grund_ver:
-                set_meta("seed_grundrezepte", grund_ver, conn=conn)
+        demo_stored = get_meta("seed_demo", conn=conn) or ""
         grund_stored = get_meta("seed_grundrezepte", conn=conn) or ""
+
+        if count == 0:
+            # "removed:…" = Nutzer hat das Paket explizit gelöscht → auch bei
+            # leerer DB NICHT wieder einfügen (sonst käme es zurück).
+            if demo and not demo_stored.startswith("removed:"):
+                _insert_seed_recipes(conn, demo, package="demo")
+                set_meta("seed_demo", demo_ver or "1", conn=conn)
+            if grund and not grund_stored.startswith("removed:"):
+                _insert_seed_recipes(conn, grund, package="grundrezepte")
+                if grund_ver:
+                    set_meta("seed_grundrezepte", grund_ver, conn=conn)
+
         # "removed:X" = Nutzer hat das Paket gelöscht → nicht automatisch
         # wieder einfügen (erst eine NEUE Seed-Version bringt es zurück)
         if grund_ver and grund_ver != grund_stored and not grund_stored.startswith("removed:"):
             # Grundrezept-Paket versioniert nachziehen: Original-Seeds werden
             # ersetzt (bessere Schrittqualität/Bilder), User-Importe mit
             # gleichem Titel bleiben unangetastet, Neues wird eingefügt.
-            _sync_seed_recipes(conn, grund or [])
+            _sync_seed_recipes(conn, grund or [], package="grundrezepte",
+                               meta_key="seed_grundrezepte")
             set_meta("seed_grundrezepte", grund_ver, conn=conn)
 
         # Open-Source-Kochbücher (Grokhnarsh/Kochbuch → Thermomix-Heuristik):
@@ -116,9 +186,13 @@ def init_db(seed_file: Path | None = None) -> None:
             kb_ver, kochbuecher = _load_seed_file(kb_file)
         kb_stored = get_meta("seed_kochbuch", conn=conn) or ""
         if kochbuecher and kb_ver != kb_stored and not kb_stored.startswith("removed:"):
-            _sync_seed_recipes(conn, kochbuecher or [])
+            _sync_seed_recipes(conn, kochbuecher or [], package="kochbuch",
+                               meta_key="seed_kochbuch")
             set_meta("seed_kochbuch", kb_ver, conn=conn)
         conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -227,30 +301,46 @@ def _load_seed_file(path):
     return None, data
 
 
-def _insert_seed_recipes(conn, recipes) -> None:
+def _insert_seed_recipes(conn, recipes, package: str = "") -> None:
     from importers.common import match_ingredients_to_steps
 
     for recipe in recipes or []:
         _seed_image(recipe)
-        insert_recipe(match_ingredients_to_steps(recipe), conn=conn)
+        mapped = match_ingredients_to_steps(recipe)
+        mapped["seed_package"] = package
+        insert_recipe(mapped, conn=conn)
 
 
-def _sync_seed_recipes(conn, recipes) -> None:
+def _sync_seed_recipes(conn, recipes, package: str = "", meta_key: str = "") -> None:
     """Bestehende Original-Seeds ersetzen, fehlende einfügen — Rezepte, die
-    der Nutzer selbst importiert/bearbeitet hat (anderer Source), bleiben."""
+    der Nutzer selbst importiert hat (anderer Source), bleiben. EBENSO bleiben
+    Seeds, die der Nutzer seit dem letzten Sync selbst BEARBEITET hat
+    (updated_at > letzter Sync-Zeitpunkt) — sonst gingen Edits verloren."""
     from importers.common import match_ingredients_to_steps
+
+    synced_ts = 0.0
+    if meta_key:
+        raw = get_meta(meta_key + "_synced_at", conn=conn)
+        try:
+            synced_ts = float(raw or 0)
+        except (TypeError, ValueError):
+            synced_ts = 0.0
 
     rows = {
         row["title"]: {"id": row["id"], "source": (json.loads(row["data"])).get("source", ""),
-                       "favorite": bool(json.loads(row["data"]).get("favorite"))}
-        for row in conn.execute("SELECT id, title, data FROM recipes")
+                       "favorite": bool(json.loads(row["data"]).get("favorite")),
+                       "updated_at": row["updated_at"]}
+        for row in conn.execute("SELECT id, title, data, updated_at FROM recipes")
     }
     for recipe in recipes or []:
         _seed_image(recipe)
         mapped = match_ingredients_to_steps(recipe)
+        mapped["seed_package"] = package
         row = rows.get(mapped.get("title"))
         if row and row["source"] == (mapped.get("source") or SEED_SOURCE):
-            payload = {k: v for k, v in mapped.items() if k not in ("id", "favorite", "created_at", "updated_at")}
+            if row["updated_at"] > synced_ts:
+                continue  # vom Nutzer bearbeitet → nicht überschreiben
+            payload = {k: v for k, v in mapped.items() if k not in ("id", "favorite", "created_at", "updated_at", "seed_package")}
             payload["favorite"] = 1 if row["favorite"] else 0
             conn.execute(
                 "UPDATE recipes SET title=?, tags=?, data=?, updated_at=? WHERE id=?",
@@ -259,6 +349,8 @@ def _sync_seed_recipes(conn, recipes) -> None:
             )
         elif not row:
             insert_recipe(mapped, conn=conn)
+    if meta_key:
+        set_meta(meta_key + "_synced_at", str(time.time()), conn=conn)
 
 
 def get_meta(key: str, conn=None) -> str | None:
@@ -273,15 +365,16 @@ def get_meta(key: str, conn=None) -> str | None:
 
 
 def get_id_by_source(source: str, conn=None) -> int | None:
-    """Rezept-ID zur Source-URL (Duplikat-Schutz beim Cookidoo-Dump)."""
+    """Rezept-ID zur Source-URL (Duplikat-Schutz beim Cookidoo-Dump).
+    Exakter Vergleich per json_extract — LIKE matchte auch Präfixe/%-Wildcards."""
     if not source:
         return None
     own = conn is None
     conn = conn or _connect()
     try:
         row = conn.execute(
-            "SELECT id FROM recipes WHERE data LIKE ? LIMIT 1",
-            (f'%{source}%',),
+            "SELECT id FROM recipes WHERE json_extract(data, '$.source') = ? LIMIT 1",
+            (source,),
         ).fetchone()
         return int(row["id"]) if row else None
     finally:
@@ -332,12 +425,12 @@ def list_recipes(q: str = "", tag: str = "", fav: bool = False, conn=None) -> li
         sql = "SELECT * FROM recipes WHERE 1=1"
         args: list = []
         if q:
-            sql += " AND (title LIKE ? OR data LIKE ?)"
-            like = f"%{q}%"
+            sql += " AND (title LIKE ? ESCAPE '\\' OR data LIKE ? ESCAPE '\\')"
+            like = f"%{_esc_like(q)}%"
             args += [like, like]
         if tag:
-            sql += " AND (',' || tags || ',') LIKE ?"
-            args.append(f"%,{tag},%")
+            sql += " AND (',' || tags || ',') LIKE ? ESCAPE '\\'"
+            args.append(f"%,{_esc_like(tag)},%")
         if fav:
             sql += " AND favorite=1"
         sql += " ORDER BY updated_at DESC, id DESC"
@@ -371,6 +464,22 @@ def get_recipe(recipe_id: int, conn=None) -> dict | None:
         data["favorite"] = bool(row["favorite"])
         data["updated_at"] = row["updated_at"]
         data["created_at"] = row["created_at"]
+        # Einheitliches Shape: alte Seeds/Importe ohne Standard-Keys bekämen
+        # im Frontend unkontrollierte Inputs (undefined) → Defaults auffüllen
+        for ing in data.get("ingredients") or []:
+            ing.setdefault("amount", None)
+            ing.setdefault("unit", "")
+            ing.setdefault("name", "")
+            ing.setdefault("note", "")
+        for st in data.get("steps") or []:
+            st.setdefault("text", "")
+            st.setdefault("time", 0)
+            st.setdefault("temperature", "")
+            st.setdefault("speed", "")
+            st.setdefault("reverse", False)
+            st.setdefault("mode", "")
+            st.setdefault("ingredients", [])
+            st.setdefault("tip", "")
         return data
     finally:
         if own:
@@ -383,9 +492,10 @@ def insert_recipe(recipe: dict, conn=None) -> int:
     try:
         now = time.time()
         payload = {k: v for k, v in recipe.items() if k not in ("id", "updated_at", "created_at")}
+        seed_package = str(payload.pop("seed_package", "") or "")
         cur = conn.execute(
-            "INSERT INTO recipes (title, tags, favorite, data, created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO recipes (title, tags, favorite, data, created_at, updated_at, seed_package) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 payload.get("title") or "Ohne Titel",
                 ",".join(payload.get("tags") or []),
@@ -393,6 +503,7 @@ def insert_recipe(recipe: dict, conn=None) -> int:
                 json.dumps(payload, ensure_ascii=False),
                 now,
                 now,
+                seed_package,
             ),
         )
         if own:
@@ -428,10 +539,16 @@ def update_recipe(recipe_id: int, recipe: dict, conn=None) -> bool:
 
 
 def delete_recipe(recipe_id: int, conn=None) -> bool:
+    """Löscht das Rezept UND alle Referenzen (plan/list_items/cook_log) in
+    derselben Transaktion — sonst bleiben Waisen (z. B. Autofill zählt sie)."""
     own = conn is None
     conn = conn or _connect()
     try:
         cur = conn.execute("DELETE FROM recipes WHERE id=?", (recipe_id,))
+        if cur.rowcount > 0:
+            conn.execute("DELETE FROM plan WHERE recipe_id=?", (recipe_id,))
+            conn.execute("DELETE FROM list_items WHERE recipe_id=?", (recipe_id,))
+            conn.execute("DELETE FROM cook_log WHERE recipe_id=?", (recipe_id,))
         if own:
             conn.commit()
         return cur.rowcount > 0
@@ -681,11 +798,13 @@ def rename_list(list_id: int, name: str, conn=None) -> bool:
 
 # ── Standard-Seed-Pakete entfernen (Ein-Klick) ──────────────────────────────
 
-# Paket → (meta_key, tag/Source-Kriterium)
+# Paket → meta_key (Versions-Marker). Das Paket selbst steht exakt in der
+# Spalte recipes.seed_package — nie per LIKE auf JSON/Tags, damit eigene
+# Rezepte mit zufälligem Text/Tag niemals mitgelöscht werden.
 SEED_PACKAGES = {
-    "kochbuch": ("seed_kochbuch", "Open Source"),        # Tag
-    "grundrezepte": ("seed_grundrezepte", "Grundrezept"),  # Tag
-    "demo": (None, None),                                 # Quelle "Kochido Demo"
+    "kochbuch": "seed_kochbuch",
+    "grundrezepte": "seed_grundrezepte",
+    "demo": "seed_demo",
 }
 
 
@@ -693,17 +812,10 @@ def count_seed_package(package: str, conn=None) -> int:
     own = conn is None
     conn = conn or _connect()
     try:
-        if package == "demo":
-            row = conn.execute(
-                "SELECT COUNT(*) FROM recipes WHERE data LIKE ?",
-                ('%"Kochido Demo"%',),
-            ).fetchone()
-        else:
-            _, tag = SEED_PACKAGES[package]
-            row = conn.execute(
-                "SELECT COUNT(*) FROM recipes WHERE (',' || tags || ',') LIKE ?",
-                (f"%,{tag},%",),
-            ).fetchone()
+        row = conn.execute(
+            "SELECT COUNT(*) FROM recipes WHERE seed_package=?",
+            (package,),
+        ).fetchone()
         return int(row[0])
     finally:
         if own:
@@ -711,32 +823,33 @@ def count_seed_package(package: str, conn=None) -> int:
 
 
 def delete_seed_package(package: str, conn=None) -> int:
-    """Entfernt ein Standard-Paket (Kochbücher / Grundrezepte / Demo).
-    Die meta-Version bleibt stehen → das gleiche Paket kommt bei Updates
-    NICHT automatisch zurück (erst mit einer neuen Seed-Version)."""
+    """Entfernt ein Standard-Paket (Kochbücher / Grundrezepte / Demo) inkl.
+    aller Plan-/Listen-/Log-Referenzen. Die meta-Version bleibt als
+    „removed:X“ stehen → das Paket kommt bei Updates NICHT automatisch
+    zurück (erst mit einer neuen Seed-Version)."""
     own = conn is None
     conn = conn or _connect()
     try:
-        if package == "demo":
-            cur = conn.execute(
-                "DELETE FROM recipes WHERE data LIKE ?",
-                ('%"Kochido Demo"%',),
-            )
-        else:
-            _, tag = SEED_PACKAGES[package]
-            cur = conn.execute(
-                "DELETE FROM recipes WHERE (',' || tags || ',') LIKE ?",
-                (f"%,{tag},%",),
-            )
+        rows = conn.execute(
+            "SELECT id FROM recipes WHERE seed_package=?", (package,)
+        ).fetchall()
+        cur = conn.execute(
+            "DELETE FROM recipes WHERE seed_package=?", (package,)
+        )
+        for row in rows:
+            conn.execute("DELETE FROM plan WHERE recipe_id=?", (row["id"],))
+            conn.execute("DELETE FROM list_items WHERE recipe_id=?", (row["id"],))
+            conn.execute("DELETE FROM cook_log WHERE recipe_id=?", (row["id"],))
         deleted = cur.rowcount
-        meta_key = SEED_PACKAGES[package][0]
-        if meta_key:
-            ver = get_meta(meta_key, conn=conn)
-            if ver:
-                conn.execute(
-                    "UPDATE meta SET value=? WHERE key=?",
-                    (f"removed:{ver}", meta_key),
-                )
+        meta_key = SEED_PACKAGES[package]
+        ver = get_meta(meta_key, conn=conn)
+        if ver and not ver.startswith("removed:"):
+            conn.execute(
+                "UPDATE meta SET value=? WHERE key=?",
+                (f"removed:{ver}", meta_key),
+            )
+        elif not ver:
+            set_meta(meta_key, "removed", conn=conn)
         if own:
             conn.commit()
         return deleted
@@ -779,9 +892,9 @@ def search_recipes_simple(query: str = "", limit: int = 8) -> list[dict]:
     conn = _connect()
     try:
         rows = conn.execute(
-            "SELECT id, title, data FROM recipes WHERE title LIKE ? "
+            "SELECT id, title, data FROM recipes WHERE title LIKE ? ESCAPE '\\' "
             "ORDER BY updated_at DESC LIMIT ?",
-            (f"%{query}%" if query else "%", limit),
+            (f"%{_esc_like(query)}%" if query else "%", limit),
         ).fetchall()
         out = []
         for r in rows:
@@ -838,7 +951,7 @@ def get_cook_log(days: int = 14, conn=None) -> list[dict]:
                 "recipe_id": r["recipe_id"],
                 "title": r["title"],
                 "cooked_at": r["cooked_at"],
-                "date": time.strftime("%Y-%m-%d", time.localtime(r["cooked_at"])),
+                "date": local_date_str(r["cooked_at"]),
             })
         return out
     finally:
@@ -973,9 +1086,11 @@ def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
     own = conn is None
     conn = conn or _connect()
     try:
+        # Key = nur der Name: die Anzeige-Einheit wechselt bei >=1000 g→kg,
+        # dadurch darf das Häkchen NICHT verloren gehen
         checked_state = {
-            (r["name"].strip().lower(), (r["unit"] or "").strip().lower()): bool(r["checked"])
-            for r in conn.execute("SELECT name, unit, checked FROM shopping")
+            r["name"].strip().lower(): bool(r["checked"])
+            for r in conn.execute("SELECT name, checked FROM shopping")
         }
         plan_entries = list_plan(date_from, date_to, conn=conn)
 
@@ -1069,7 +1184,7 @@ def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
                     "unit": disp_unit,
                     "amount": _fmt_num(disp_amt),
                     "note": note,
-                    "checked": checked_state.get(key, False),
+                    "checked": checked_state.get(item["name"].strip().lower(), False),
                     "sort": 0,
                 })
             elif item["amount"] is not None:
@@ -1080,7 +1195,7 @@ def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
                     "unit": item["canon"],
                     "amount": amt,
                     "note": note,
-                    "checked": checked_state.get(key, False),
+                    "checked": checked_state.get(item["name"].strip().lower(), False),
                     "sort": 1 if item["canon"] in _INT_UNITS else 2,
                 })
             else:
@@ -1094,7 +1209,7 @@ def shopping_refresh(date_from: str, date_to: str, conn=None) -> dict:
                     "unit": "",
                     "amount": None,
                     "note": note,
-                    "checked": checked_state.get(key, False),
+                    "checked": checked_state.get(lname, False),
                     "sort": 3,
                 })
 
@@ -1215,19 +1330,21 @@ def autofill_plan(start_date: str, days: int = 7, conn=None) -> dict:
         pool.sort(key=lambda x: -x["score"])
 
         try:
-            from datetime import date as _date, timedelta as _td
-            start = _date.fromisoformat(start_date)
+            from datetime import timedelta as _td
+            start = _date_cls.fromisoformat(start_date)
         except ValueError:
-            start = _date.today()
+            start = local_today()
 
         used: set[int] = set()
         last_cat = ""
         planned = []
         for i in range(max(1, days)):
             day = (start + _td(days=i)).isoformat()
-            # schon geplant? dann nicht überschreiben
+            # schon geplant? dann nicht überschreiben — dabei nur Einträge mit
+            # EXISTIERENDEM Rezept zählen (Waisen nach Rezept-Löschung ignorieren)
             existing = conn.execute(
-                "SELECT COUNT(*) FROM plan WHERE plan_date=?", (day,)
+                "SELECT COUNT(*) FROM plan p JOIN recipes r ON r.id=p.recipe_id "
+                "WHERE p.plan_date=?", (day,)
             ).fetchone()[0]
             if existing:
                 continue

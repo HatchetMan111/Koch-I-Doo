@@ -23,17 +23,22 @@ fail_case() { FAIL=$((FAIL + 1)); FAILED_CASES+=("$1"); echo "  ✘ $1"; echo " 
 # eine grep-Funktion → env -i, Grube 15).
 run_installer() {
     local state="$1"; shift
-    if [[ "${HARNESS_AS_ROOT:-1}" == "1" ]]; then
+    # unshare -rm simuliert root; wenn das im Sandbox/CI nicht erlaubt ist,
+    # fällt HARNESS_AS_ROOT=0 auf plain env zurück (mit Harness-Escape KOCHIDO_HARNESS_NONROOT)
+    if [[ "${HARNESS_AS_ROOT:-1}" == "1" ]] && unshare -rm true 2>/dev/null; then
         unshare -rm env -i \
             PATH="$FAKEBIN:/usr/bin:/bin" \
             HOME=/root TERM=dumb \
             HARNESS_STATE="$state" \
+            KOCHIDO_PASSWORD=harness-password \
             bash "$INSTALLER" "$@" 2>&1
     else
         env -i \
             PATH="$FAKEBIN:/usr/bin:/bin" \
             HOME=/root TERM=dumb \
             HARNESS_STATE="$state" \
+            KOCHIDO_PASSWORD=harness-password \
+            KOCHIDO_HARNESS_NONROOT=1 \
             bash "$INSTALLER" "$@" 2>&1
     fi
 }
@@ -42,8 +47,9 @@ new_state() {
     local name="$1"
     local st="$WORK/$name"
     mkdir -p "$st"
-    # pveam available liefert (nach Download-Pfad) ein Debian-12-Template
-    printf 'vztmpl/debian-13-standard_13.0-1_amd64.tar.zst\n' > "$st/pveam_avail"
+    # pveam available liefert (nach Download-Pfad) ein Debian-13-Template
+    # (mit Storage-Präfix, wie pveam es ausgibt)
+    printf 'local-lvm:vztmpl/debian-13-standard_13.0-1_amd64.tar.zst\n' > "$st/pveam_avail"
     echo "$st"
 }
 
@@ -104,16 +110,19 @@ else
 fi
 INNER_OK=1
 for pat in "python3-venv" "python3 -m venv /opt/kochido/venv" "/opt/kochido/app.new" \
-           "mv /opt/kochido/app /opt/kochido/app.old" "rm -rf /opt/kochido/app.old" \
+           "mv -T /opt/kochido/app.link /opt/kochido/app" "ln -sfn" \
            "frontend/dist/index.html" "Restart=always" "After=network-online.target" \
            "KOCHIDO_DATA=/opt/kochido/data" "api/health" "dhclient-enter-hooks" \
-           "systemctl enable kochido" "systemctl restart kochido" "--upgrade -r"; do
+           "systemctl enable kochido" "systemctl restart kochido" "--upgrade -r" \
+           ".kochido-installed" "User=kochido" "NoNewPrivileges=true" \
+           "ProtectSystem=strict" "ReadWritePaths=/opt/kochido/data" \
+           "Environment=KOCHIDO_TZ" "sha256sum -c" "useradd -r"; do
     if ! grep -qF -- "$pat" "$TMP_INNER/setup-inner.sh"; then
         fail_case "Inner-Script enthält '$pat'" "Strukturprüfung fehlgeschlagen"
         INNER_OK=0
     fi
 done
-[[ $INNER_OK == 1 ]] && ok_case "Inner-Script-Struktur (venv, systemd, Health-Check, DNS-Hook)"
+[[ $INNER_OK == 1 ]] && ok_case "Inner-Script-Struktur (venv, systemd gehärtet, Marker, Symlink-Swap, Health-Check, DNS-Hook)"
 
 # Inner-Script darf keine Host-Expansion enthalten (quoted heredoc)
 if grep -n '$(HOST_DNS' "$INSTALLER" | grep -q INNEREOF; then
@@ -157,8 +166,10 @@ OUT=$(run_installer "$ST" --gibtsnicht)
 assert_out "$OUT" "Unbekannte Option: --gibtsnicht" "Fehler: unbekannte Option abgelehnt"
 
 ST=$(new_state root)
-OUT=$(HARNESS_AS_ROOT=0 run_installer "$ST")
-assert_out "$OUT" "Bitte als root ausführen" "Fehler: Root-Check (ohne unshare)"
+# Root-Check-Test: OHNE Harness-Escape (env ohne KOCHIDO_HARNESS_NONROOT)
+OUT=$(env -i PATH="$FAKEBIN:/usr/bin:/bin" HOME=/root TERM=dumb \
+      HARNESS_STATE="$ST" bash "$INSTALLER" 2>&1)
+assert_out "$OUT" "Bitte als root ausführen" "Fehler: Root-Check (ohne Harness-Escape)"
 
 # ── 5) Existierender Container ─────────────────────────────────────────────
 ST=$(new_state existing)
@@ -202,8 +213,9 @@ assert_out "$OUT" "pct start 200" "Status (gestoppt): Start-Hinweis"
 
 # bash -c "$(...)" --status → $0-Fallback (Grube 8)
 ST=$(new_state status_z0)
-OUT=$(cd /tmp && unshare -rm env -i PATH="$FAKEBIN:/usr/bin:/bin" HOME=/root TERM=dumb \
-        HARNESS_STATE="$ST" bash -c "$(cat "$INSTALLER")" --status)
+OUT=$(cd /tmp && env -i PATH="$FAKEBIN:/usr/bin:/bin" HOME=/root TERM=dumb \
+        HARNESS_STATE="$ST" KOCHIDO_HARNESS_NONROOT=1 KOCHIDO_PASSWORD=harness-password \
+        bash -c "$(cat "$INSTALLER")" --status 2>&1)
 assert_out "$OUT" "Status Kochido" "\$0-Fallback: bash -c SCRIPT --status erkennt Option"
 
 # ── 8) Uninstall ───────────────────────────────────────────────────────────
@@ -279,6 +291,62 @@ if grep -qF 'UPSTREAM_REPO="Koch-I-Doo"' "$INSTALLER" \
 else
     fail_case "Repo-Name konsistent" "UPSTREAM_REPO / Tarball-URL / ONE_LINER zeigen auf unterschiedliche Repos"
 fi
+
+# ── 13) Neue Sicherheits-/Validierungs-Fälle ─────────────────────────────
+echo "— Sicherheit & Validierung (Bugfix-Runde)"
+
+# Port mit führender Null: 10#-Arithmetik → "08" ist sauber Port 8, kein Fehler
+ST=$(new_state port08)
+OUT=$(run_installer "$ST" --port 08)
+assert_out "$OUT" "http://10.0.0.77:8 " "Port 08 wird dezimal als 8 interpretiert (kein oktal-Fehler)"
+
+ST=$(new_state port0)
+OUT=$(run_installer "$ST" --port 0)
+assert_out "$OUT" "Ungültiger Port" "Port 0 abgelehnt"
+
+ST=$(new_state badid)
+OUT=$(run_installer "$ST" --id abc)
+assert_out "$OUT" "Ungültige Container-ID" "--id abc abgelehnt"
+
+ST=$(new_state badip)
+OUT=$(run_installer "$ST" --ip '192.168.1.5/24,firewall=1')
+assert_out "$OUT" "Ungültige --ip" "net0-Injection per --ip abgelehnt"
+
+ST=$(new_state sshhttp)
+OUT=$(run_installer "$ST" --sshkey http://evil.example/key.pub)
+assert_out "$OUT" "nur über https" "--sshkey http:// abgelehnt (MITM)"
+
+# Fremder Container (kein Marker) darf nicht gelöscht werden
+ST=$(new_state foreign)
+cat > "$ST/ct_list" <<'LST'
+200 running kochido
+LST
+touch "$ST/nomarker"
+OUT=$(run_installer "$ST" --uninstall --yes </dev/null)
+assert_out "$OUT" "KEIN Koch-I-Doo-Container" "Uninstall fremder CT: Marker-Check greift"
+assert_not_log "$ST" "destroy 200 --purge" "Uninstall fremder CT: kein destroy"
+
+# Update ohne --port übernimmt den Port aus der Unit
+ST=$(new_state update_port)
+cat > "$ST/ct_list" <<'LST'
+200 running kochido
+LST
+echo "8099" > "$ST/ct_port"
+OUT=$(run_installer "$ST" --update)
+assert_out "$OUT" "Port aus bestehender Unit übernommen: 8099" "Update: Port bleibt erhalten (kein Reset auf 8090)"
+assert_out "$OUT" "http://10.0.0.77:8099" "Update: Summary mit altem Port"
+
+# Log-Datei wird mit 0600 angelegt (mktemp) – prüfbar am Non-Root-Lauf,
+# der nach dem Log-Anlegen am Root-Check stirbt
+ST=$(new_state logperms)
+OUT=$(HARNESS_AS_ROOT=0 run_installer "$ST")
+LOGFILE=$(ls -t /tmp/kochido-installer-*.log 2>/dev/null | head -1 || true)
+if [[ -n "$LOGFILE" && "$(stat -c %a "$LOGFILE")" == "600" ]]; then
+    ok_case "Log-Datei hat 0600 (mktemp, kein world-readable Log)"
+else
+    fail_case "Log-Datei 0600" "Log: ${LOGFILE:-keine gefunden}, Rechte: $([[ -n "$LOGFILE" ]] && stat -c %a "$LOGFILE")"
+fi
+rm -f /tmp/kochido-installer-*.log 2>/dev/null || true
 
 echo ""
 echo "━━━ Ergebnis: $PASS bestanden, $FAIL fehlgeschlagen ━━━"

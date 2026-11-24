@@ -14,7 +14,12 @@ case "$cmd" in
     available)
         if [[ -f "$STATE/pveam_avail" ]]; then cat "$STATE/pveam_avail"; fi
         ;;
-    update|download)
+    update)
+        exit 0
+        ;;
+    download)
+        # nach dem Download taucht das Template in `pveam list` auf
+        echo "$1:vztmpl/$2" >> "$STATE/pveam_list"
         exit 0
         ;;
     *)

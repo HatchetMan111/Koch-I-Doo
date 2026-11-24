@@ -1,9 +1,36 @@
 // Kochido – Formatierung & Skalierung (deutsche Koch-Notation).
 
 const FRACTIONS = [
-  [1 / 8, "⅛"], [1 / 4, "¼"], [1 / 3, "⅓"], [1 / 2, "½"],
-  [2 / 3, "⅔"], [3 / 4, "¾"], [7 / 8, "⅞"],
+  [1 / 8, "⅛"], [1 / 4, "¼"], [1 / 3, "⅓"], [3 / 8, "⅜"], [1 / 2, "½"],
+  [5 / 8, "⅝"], [2 / 3, "⅔"], [3 / 4, "¾"], [7 / 8, "⅞"],
 ];
+
+const UNICODE_FRAC = Object.fromEntries(FRACTIONS.map(([v, ch]) => [ch, v]));
+
+function fracValue(token) {
+  if (UNICODE_FRAC[token] !== undefined) return UNICODE_FRAC[token];
+  const m = token.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (m) return Number(m[1]) / Number(m[2]);
+  return null;
+}
+
+// Parst Mengeneingaben: "1/2", "1 1/2", "1½", "½", "1,5", "2" → Zahl (sonst null)
+export function parseAmount(raw) {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim().replace(",", ".");
+  if (!s) return null;
+  // gemischte Zahl: "1 1/2" / "1 ½" / "1½"
+  let m = s.match(/^(\d+(?:\.\d+)?)\s*([⅛¼⅓⅜½⅝⅞¾]|\d+\/\d+)$/);
+  if (m) {
+    const f = fracValue(m[2]);
+    return f === null ? null : Number(m[1]) + f;
+  }
+  // einzelner Bruch: "1/2" / "½"
+  if (/^[⅛¼⅓⅜½⅝⅞¾]$/.test(s) || /^\d+\/\d+$/.test(s)) return fracValue(s);
+  // reine Zahl
+  if (/^\d+(\.\d+)?$/.test(s)) return Number(s);
+  return null;
+}
 
 export function fmtAmount(x) {
   if (x === null || x === undefined || Number.isNaN(x)) return "";
@@ -15,7 +42,8 @@ export function fmtAmount(x) {
   let out = "";
   if (whole > 0) out += String(whole);
   if (frac) out += frac[1];
-  return out || String(x);
+  // Fallback: Dezimalzahl lokalisiert (Komma) statt "0.375"
+  return out || Number(x).toLocaleString("de-DE");
 }
 
 export function scaleAmount(amount, factor) {
@@ -23,13 +51,19 @@ export function scaleAmount(amount, factor) {
   return Math.round(amount * factor * 8) / 8;
 }
 
-// Skaliert die erste Zahl in einem Zutaten-Text ("200 g Mehl" → "300 g Mehl")
+// Skaliert die führende Menge in einem Zutaten-Chip ("200 g Mehl" → "300 g Mehl",
+// "1/2 Zwiebel" ×2 → "1 Zwiebel", "½ Zwiebel" ×2 → "1 Zwiebel").
+// Eine Zahl in Klammern („Zwiebel (ca. 150 g)“) wird NICHT skaliert.
 export function scaleChipText(text, factor) {
   if (!factor || Math.abs(factor - 1) < 1e-9) return text;
-  return text.replace(/(\d+(?:[.,]\d+)?)/, (m) => {
-    const scaled = Math.round(parseFloat(m.replace(",", ".")) * factor * 8) / 8;
-    return fmtAmount(scaled);
-  });
+  return text.replace(
+    /^(\s*(?:\d+(?:[.,]\d+)?\s*\/\s*\d+|\d+\s*[⅛¼⅓⅜½⅝⅞¾]|[⅛¼⅓⅜½⅝⅞¾]\d*|[⅛¼⅓⅜½⅝⅞¾]|\d+(?:[.,]\d+)?))/,
+    (m) => {
+      const v = parseAmount(m);
+      if (v === null) return m;
+      return fmtAmount(Math.round(v * factor * 8) / 8);
+    }
+  );
 }
 
 export function fmtTimer(seconds) {
@@ -43,13 +77,15 @@ export function fmtTimer(seconds) {
 
 export function fmtDuration(seconds) {
   if (!seconds) return "";
-  const s = Math.round(seconds);
+  let s = Math.round(seconds);
   const h = Math.floor(s / 3600);
-  const m = Math.round((s % 3600) / 60);
+  s -= h * 3600;
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
   if (h && m) return `${h} Std. ${m} Min.`;
   if (h) return `${h} Std.`;
-  if (s < 60) return `${s} Sek.`;
-  return `${m} Min.`;
+  if (m) return `${m} Min.`;
+  return `${sec} Sek.`;
 }
 
 export function speedLabel(speed) {

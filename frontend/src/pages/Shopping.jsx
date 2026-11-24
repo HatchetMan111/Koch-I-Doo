@@ -9,7 +9,6 @@ function iso(d) {
 
 export default function Shopping() {
   const [items, setItems] = useState(null);
-  const [planCount, setPlanCount] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -18,7 +17,6 @@ export default function Shopping() {
     try {
       const data = await api("/api/shopping");
       setItems(data);
-      setPlanCount(data.length ? new Set(data.map((i) => i.name)).size : 0);
       setError("");
     } catch (err) {
       setError(String(err.message || err));
@@ -62,9 +60,13 @@ export default function Shopping() {
 
   const clearAll = async () => {
     if (!window.confirm("Einkaufsliste leeren? (Wochenplan bleibt)")) return;
-    await api("/api/shopping", { method: "DELETE" });
-    setItems([]);
-    setInfo("Liste geleert.");
+    try {
+      await api("/api/shopping", { method: "DELETE" });
+      setItems([]);
+      setInfo("Liste geleert.");
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const done = (items || []).filter((i) => i.checked).length;

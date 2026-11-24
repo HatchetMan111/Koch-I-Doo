@@ -101,13 +101,12 @@ export default function App() {
           <Route path="/neu" element={<Editor />} />
           <Route path="/rezept/:id" element={<RecipeDetail />} />
           <Route path="/rezept/:id/bearbeiten" element={<Editor />} />
-          <Route path="/kochen/:id" element={<Cook />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </ErrorBoundary>
       </main>
       <footer className="footer">
-        Koch-I-Doo v1.20.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
+        Koch-I-Doo v1.21.0 · lokal auf deinem eigenen Server · TM5 &amp; TM6
       </footer>
       <ChatWidget />
     </div>

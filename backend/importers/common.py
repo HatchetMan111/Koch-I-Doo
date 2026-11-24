@@ -286,7 +286,9 @@ def parse_step_params(text: str):
     machine_ctx = bool(speed or _RE_VAROMA.search(text) or reverse or mode)
     if temperature and temperature != "Varoma":
         v = int(temperature)
-        if not machine_ctx and not (37 <= v <= 120 and v % 5 == 0):
+        # ohne TM-Kontext nur plausible TM-Temperaturen (37–120 °C) übernehmen;
+        # 98 °C (gängig beim TM) ist erlaubt, Ofen-Temperaturen (180 °C) nicht
+        if not machine_ctx and not (37 <= v <= 120):
             temperature = ""
     return {
         "time": time_s,

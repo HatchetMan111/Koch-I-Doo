@@ -143,6 +143,13 @@ class TestFehlerpfade:
     def test_ohne_bibliothek_klare_meldung(self):
         # cookidoo-api ist auf Python < 3.12 nicht installierbar – die Meldung
         # muss den Ausweg (cookidump) nennen statt nur ImportError zu werfen.
+        # (Im CI/CT mit installierter Bibliothek greift der Login-Pfad stattdessen.)
+        import pytest
+        try:
+            import cookidoo_api  # noqa: F401
+            pytest.skip("cookidoo-api ist installiert – Test nur für Umgebungen ohne Bibliothek")
+        except ImportError:
+            pass
         import asyncio
         with pytest.raises(ImportFehler) as excinfo:
             asyncio.run(fetch_cookidoo_account("x@y", "pw"))

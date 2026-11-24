@@ -1,5 +1,6 @@
 # Referenz-Unit – der Installer schreibt diese Datei ins LXC
 # (/etc/systemd/system/kochido.service, PORT dort per Variable).
+# Härtung: unprivilegierter User, read-only System, Schreibzugriff nur auf data/.
 [Unit]
 Description=Koch-I-Doo – Guided Cooking Server (lokaler Cookidoo-Ersatz)
 Wants=network-online.target
@@ -7,13 +8,21 @@ After=network-online.target
 
 [Service]
 Type=simple
+User=kochido
+Group=kochido
 WorkingDirectory=/opt/kochido/app
 Environment=PORT=8090
 Environment=KOCHIDO_DATA=/opt/kochido/data
 Environment=KOCHIDO_DIST=/opt/kochido/app/dist
+Environment=KOCHIDO_TZ=Europe/Berlin
 ExecStart=/opt/kochido/venv/bin/python /opt/kochido/app/main.py
 Restart=always
 RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/kochido/data
 
 [Install]
 WantedBy=multi-user.target

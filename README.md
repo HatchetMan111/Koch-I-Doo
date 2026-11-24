@@ -132,6 +132,35 @@ Alle Rezepte liegen im Container unter `/opt/kochido/data`
 pct exec <CT-ID> -- tar -C /opt/kochido -cf - data | tar -xf - -C ~/kochido-backup
 ```
 
+## Sicherheit
+
+- **API-Token (optional):** In den Einstellungen (⚙ → „🔒 API-Schutz“) ein Token
+  setzen – danach braucht jede `/api/*`-Anfrage `Authorization: Bearer <token>`
+  (die App sendet ihn automatisch mit). Alternativ serverseitig
+  `Environment=KOCHIDO_API_TOKEN=…` in der systemd-Unit.
+- **Rate-Limits:** `/api/chat`, `/api/dump/*` und die Cookidoo-Importe sind
+  pro IP rate-limitiert (429 bei Überschreitung).
+- **SSRF-Schutz:** Rezept-Bilder und Import-URLs werden nur an öffentliche
+  Hosts geholt – private/lokale IPs (inkl. `169.254.169.254`, `localhost`,
+  LAN) werden vor dem Request UND bei jedem Redirect blockiert; Downloads sind
+  größenlimitiert.
+- **Installer:** Log-Datei via `mktemp` mit `0600` (Root-Passwort nie im Log),
+  `--uninstall`/`--force`/`--update` prüfen einen Marker im Container und
+  fassen fremde CTs nicht an, `--sshkey` nur per `https://`, systemd-Unit
+  läuft als eigener User `kochido` mit `NoNewPrivileges`/`ProtectSystem=strict`,
+  `--update`/`--status` übernehmen den konfigurierten Port.
+- **Zeitzone:** Der Container bekommt `KOCHIDO_TZ` (Default `Europe/Berlin`),
+  damit „heute“/Wochenplan/Einkaufsliste zur Browser-Zeitzone passen.
+- **Secrets:** Cookidoo-Token-Datei wird mit `0600` abgelegt; der
+  OpenRouter-Key liegt in der lokalen SQLite-DB (nie in API-Antworten).
+
+## Offline / PWA
+
+Die App registriert einen Service Worker: App-Shell und Bilder sind offline
+verfügbar, API-Aufrufe gehen network-first mit Cache-Fallback. Icons liegen
+als PNG (192/512 + maskable) vor – Installation „Zum Home-Bildschirm“
+funktioniert auf Android und iOS.
+
 ## Update / Deinstall
 
 ```bash
@@ -149,13 +178,13 @@ bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Do
 
 | Schicht | Technik |
 |---|---|
-| Backend | Python / FastAPI + SQLite (WAL), Port 8090, bindet `0.0.0.0` – Cookidoo-Konto-Import via `cookidoo-api` (Python ≥ 3.12 → Debian 13 LXC) |
-| Frontend | React 18 + Vite (SPA, `dist/` committed – kein Node im CT) |
-| Import | schema.org/Recipe (JSON-LD), Freitext-Heuristik, cookidump JSON/HTML, Cookidoo-Custom-Recipe-Schema |
-| Betrieb | systemd `kochido.service` (`Restart=always`), LXC unprivileged, `onboot: 1` |
+| Backend | Python / FastAPI + SQLite (WAL), Port 8090, bindet `0.0.0.0` (optional per API-Token geschützt) – Cookidoo-Konto-Import via `cookidoo-api` (Python ≥ 3.12 → Debian 13 LXC) |
+| Frontend | React 18 + Vite (SPA, `dist/` committed – kein Node im CT) + Service Worker (Offline-PWA) |
+| Import | schema.org/Recipe (JSON-LD), Freitext-Heuristik, cookidump JSON/HTML, Cookidoo-Custom-Recipe-Schema – alle URL-Fetches SSRF-geschützt |
+| Betrieb | systemd `kochido.service` (`Restart=always`, User `kochido` + Hardening), LXC unprivileged, `onboot: 1`, `KOCHIDO_TZ=Europe/Berlin` |
 
-Tests: `pytest` (100 Fälle für Parser, Import-Wege, TM-Umwandler, Konto-Import, Wochenplan, Seeding und API) –
-`python3 -m pytest tests/`
+Tests: `pytest` (177 Fälle: Parser, Import-Wege, TM-Umwandler, Konto-Import, Wochenplan, Seeding, API, Security/Regression) –
+`python3 -m pytest tests/`; Installer-Harness ohne Proxmox-Host: `bash harness/run.sh` (54 Fälle)
 
 ## Repo-Struktur
 

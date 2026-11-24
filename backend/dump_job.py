@@ -15,7 +15,9 @@ import time
 
 import db
 from imaging import localize_image
-from importers.cookidoo_account import recipe_from_details
+from importers.cookidoo_account import recipe_from_details, save_token_secure
+
+MAX_ERRORS = 200  # errors-Liste begrenzen (sonst bis zu 6000 Einträge im Status)
 
 JOB: dict = {"status": "idle"}
 _task: asyncio.Task | None = None
@@ -44,6 +46,9 @@ def _new_job(email: str, country: str, language: str, max_recipes: int) -> dict:
 def snapshot() -> dict:
     job = dict(JOB)
     job.pop("email", None)  # Zugangsdaten nie zurückgeben
+    # Listen kopieren, damit der Status keine Live-Referenzen des Jobs zurückgibt
+    job["errors"] = list(JOB.get("errors") or [])
+    job["recipe_ids"] = list(JOB.get("recipe_ids") or [])
     return job
 
 
@@ -70,8 +75,14 @@ def start(email: str, password: str, country: str, language: str, max_recipes: i
 
 def _fail(job: dict, message: str) -> None:
     job["status"] = "failed"
-    job["errors"].append(message)
+    if len(job["errors"]) < MAX_ERRORS:
+        job["errors"].append(message)
     job["finished_at"] = time.time()
+
+
+def _add_error(job: dict, message: str) -> None:
+    if len(job["errors"]) < MAX_ERRORS:
+        job["errors"].append(message)
 
 
 async def _run(job: dict, password: str) -> None:
@@ -86,7 +97,7 @@ async def _run(job: dict, password: str) -> None:
             return
 
         job["current"] = "Login bei Cookidoo …"
-        jar = aiohttp.CookieJar(unsafe=True)
+        jar = aiohttp.CookieJar()  # unsafe=False: keine Cookies an IP-Literal-Domains
         timeout = aiohttp.ClientTimeout(total=None, sock_connect=30, sock_read=180)
         async with aiohttp.ClientSession(cookie_jar=jar, timeout=timeout) as session:
             try:
@@ -107,7 +118,7 @@ async def _run(job: dict, password: str) -> None:
                 ),
             )
             token_path = db.DATA_DIR / "cookidoo_token.json"
-            cookidoo.on_auth_data_update = lambda _a: cookidoo.save_token(str(token_path))
+            cookidoo.on_auth_data_update = lambda _a: save_token_secure(cookidoo, token_path)
             try:
                 cookidoo.load_token(str(token_path))
             except Exception:
@@ -151,19 +162,19 @@ async def _run(job: dict, password: str) -> None:
                     return
                 if job["max_recipes"] and job["imported"] >= job["max_recipes"]:
                     break
-                name = getattr(hit, "name", "") or getattr(hit, "id", "?")
+                name = getattr(hit, "name", None) or getattr(hit, "id", "?")
                 job["current"] = f"Lade: {name}"
                 try:
                     details = await cookidoo.get_recipe_details(hit.id)
                 except Exception as exc:
-                    job["errors"].append(f"„{name}“ übersprungen: {type(exc).__name__}: {exc}")
+                    _add_error(job, f"„{name}“ übersprungen: {type(exc).__name__}: {exc}")
                     job["done"] += 1
                     job["skipped"] += 1
                     continue
                 try:
                     recipe = recipe_from_details(details)
                 except Exception as exc:
-                    job["errors"].append(f"„{name}“ ohne Schritte/Zutaten übersprungen: {exc}")
+                    _add_error(job, f"„{name}“ ohne Schritte/Zutaten übersprungen: {exc}")
                     job["done"] += 1
                     job["skipped"] += 1
                     continue

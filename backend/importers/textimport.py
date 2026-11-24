@@ -51,10 +51,12 @@ def import_from_text(text: str, title: str = "") -> dict:
 
     for raw in lines:
         low = raw.lower().rstrip(":").strip()
-        if any(low.startswith(w) or low == w for w in _ING_SECTION_WORDS) and len(low) < 40:
+        # Abschnittsüberschriften nur als EIGENE kurze Zeile — „Für die Sauce …“
+        # mitten im Fließtext darf NICHT in den Zutaten-Modus kippen
+        if len(low) < 40 and low in _ING_SECTION_WORDS:
             mode = "ing"
             continue
-        if any(low.startswith(w) for w in _STEP_SECTION_WORDS) and len(low) < 40:
+        if len(low) < 40 and low in _STEP_SECTION_WORDS:
             mode = "steps"
             continue
         if mode is None:

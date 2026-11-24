@@ -80,6 +80,17 @@ case "$cmd" in
                 printf '%s' "$code"
                 exit 0
                 ;;
+            *".kochido-installed"*)
+                # Marker-Check: State-Datei "nomarker" simuliert fremden CT
+                if [[ -f "$STATE/nomarker" ]]; then
+                    exit 1
+                fi
+                exit 0
+                ;;
+            *"Environment=PORT="*)
+                # read_ct_port: Port aus bestehender Unit
+                cat "$STATE/ct_port" 2>/dev/null || echo 8090
+                ;;
             *"test -f"*)
                 exit 0
                 ;;

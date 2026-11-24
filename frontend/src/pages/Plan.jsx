@@ -17,7 +17,13 @@ export function mondayOf(d) {
 }
 
 export default function Plan() {
-  const [view, setView] = useState(() => localStorage.getItem("kochido-planview") || "woche");
+  const [view, setView] = useState(() => {
+    try {
+      return localStorage.getItem("kochido-planview") || "woche";
+    } catch {
+      return "woche"; // Private Mode o. ä.
+    }
+  });
   const [monthAnchor, setMonthAnchor] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -73,8 +79,12 @@ export default function Plan() {
   }, [view, monthAnchor]);
 
   const remove = async (id) => {
-    await deletePlan(id);
-    load();
+    try {
+      await deletePlan(id);
+      await load();
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const moveWeek = (delta) => {
@@ -121,7 +131,8 @@ export default function Plan() {
             setFilling(true);
             setFillMsg("");
             try {
-              const res = await autofillPlan(7);
+              // ab der ANGEZEIGTEN Woche füllen (nicht ab Server-„heute“)
+              const res = await autofillPlan(7, isoDate(weekDays[0]));
               const lines = (res.planned || []).map((p) => `${p.plan_date}: ${p.title}`);
               setFillMsg(
                 res.count > 0
@@ -202,11 +213,16 @@ export default function Plan() {
             <RecipePicker
               onClose={() => setPickerFor(null)}
               onPick={async (recipe) => {
-                await addPlan(pickerFor, recipe.id, recipe.servings);
-                setPickerFor(null);
-                const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
-                const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
-                getPlan(isoDate(first), isoDate(last)).then(setMonthEntries).catch(() => {});
+                try {
+                  await addPlan(pickerFor, recipe.id, recipe.servings);
+                  setPickerFor(null);
+                  const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+                  const last = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth() + 1, 0);
+                  getPlan(isoDate(first), isoDate(last)).then(setMonthEntries).catch(() => {});
+                  load(); // Wochenansicht nicht stale lassen
+                } catch (err) {
+                  setError(String(err.message || err));
+                }
               }}
             />
           )}
@@ -286,9 +302,13 @@ export default function Plan() {
         <RecipePicker
           onClose={() => setPickerFor(null)}
           onPick={async (recipe) => {
-            await addPlan(pickerFor, recipe.id, recipe.servings);
-            setPickerFor(null);
-            load();
+            try {
+              await addPlan(pickerFor, recipe.id, recipe.servings);
+              setPickerFor(null);
+              await load();
+            } catch (err) {
+              setError(String(err.message || err)); // Picker bleibt offen
+            }
           }}
         />
       )}

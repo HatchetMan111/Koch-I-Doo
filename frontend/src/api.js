@@ -1,12 +1,23 @@
 // Kochido – schlanker API-Client. Fehler werden mit voller Detail-Kette
 // (Backend liefert Ursachen-Kette im `detail`) geworfen, damit Debugging leicht fällt.
+function apiToken() {
+  try {
+    return localStorage.getItem("kochido_api_token") || "";
+  } catch {
+    return "";
+  }
+}
+
 export async function api(path, opts = {}) {
+  const token = apiToken();
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(opts.headers || {}),
+  };
   let resp;
   try {
-    resp = await fetch(path, {
-      headers: { "Content-Type": "application/json" },
-      ...opts,
-    });
+    resp = await fetch(path, { ...opts, headers });
   } catch (err) {
     throw new Error(`Netzwerkfehler bei ${path}: ${err.message}`);
   }
@@ -14,13 +25,22 @@ export async function api(path, opts = {}) {
     let detail = `HTTP ${resp.status}`;
     try {
       const body = await resp.json();
-      detail = body.detail || detail;
+      if (body && Array.isArray(body.detail)) {
+        // FastAPI-422: Liste von Validierungsfehlern lesbar machen
+        detail = body.detail
+          .map((d) => `${d.msg || "Fehler"} (${(d.loc || []).join(".")})`)
+          .join("; ");
+      } else {
+        detail = (body && body.detail) || detail;
+      }
     } catch {
       /* Body war kein JSON – HTTP-Code reicht */
     }
-    throw new Error(detail);
+    throw new Error(typeof detail === "string" ? detail : `HTTP ${resp.status}: ${JSON.stringify(detail)}`);
   }
-  return resp.json();
+  // leere Antwort (z. B. 204) darf nicht als JSON-Parsing-Fehler durchschlagen
+  const text = await resp.text();
+  return text ? JSON.parse(text) : null;
 }
 
 export const getRecipes = (q = "", tag = "", fav = false) => {

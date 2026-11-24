@@ -24,8 +24,11 @@
 # shellcheck disable=SC1111  # deutsche Anführungszeichen („…“) sind Absicht
 set -Eeuo pipefail
 
+# Log/Sicherheit: strenger umask, Log via mktemp (0600, kein Symlink-Follow)
+umask 077
+
 # ── Defaults ────────────────────────────────────────────────────────────────
-INSTALLER_VERSION="1.1.1"
+INSTALLER_VERSION="1.2.0"
 APP_NAME="kochido"
 UPSTREAM_OWNER="HatchetMan111"
 UPSTREAM_REPO="Koch-I-Doo"
@@ -46,13 +49,14 @@ CT_PASSWORD=""              # leer = automatisch generieren
 CT_SSHKEY=""                # Pfad ODER URL zu einer Public-Key-Datei (optional)
 SSH_KEY_FILE=""             # aufgelöste Key-Datei für pct create
 PORT=8090                   # Web-UI-Port im Container (Kochido-API + SPA)
+PORT_EXPLICIT=false         # true, wenn --port übergeben wurde (Update/Status keep port)
 UNINSTALL=false
 UPDATE=false
 STATUS_CHECK=false
 FORCE_RECREATE=false
 ASSUME_YES=false
 TMP_DIR=""
-LOG_FILE="/tmp/${APP_NAME}-installer-$(date +%Y%m%d-%H%M%S).log"
+LOG_FILE=""                 # wird per mktemp sicher angelegt (0600)
 ONE_LINER='bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Doo/main/install/kochido.sh)"'
 
 # ── Farben & Logging ───────────────────────────────────────────────────────
@@ -66,8 +70,19 @@ err()   { echo -e "${RED}✘${NC}  $1" >&2; }
 die()   { err "$1"; exit 1; }
 header(){ echo -e "\n${CYAN}${BOLD}━━━ $1 ━━━${NC}"; }
 
-mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+# Log-Datei sicher anlegen (0600, atomar, kein Symlink-Race in /tmp)
+LOG_FILE=$(mktemp "/tmp/${APP_NAME}-installer-XXXXXXXX.log")
+chmod 600 "$LOG_FILE"
 exec > >(tee "$LOG_FILE") 2>&1
+
+# Ausgabe, die NICHT ins Log darf (z. B. Root-Passwort): ans Terminal, nicht ins Log
+out_secret() {
+    if [[ -e /dev/tty ]] && echo "" > /dev/tty 2>/dev/null; then
+        echo -e "$1" > /dev/tty
+    else
+        echo -e "$1"
+    fi
+}
 
 # ── Cleanup & Fehlerkette ──────────────────────────────────────────────────
 cleanup() {
@@ -108,14 +123,6 @@ if [[ "${1:-}" == "--debug" || "$0" == "--debug" ]]; then
 fi
 
 # ── Hilfsfunktionen ────────────────────────────────────────────────────────
-ct_exists() {
-    # Name ist in `pct list` IMMER die letzte Spalte (Lock kann leer sein).
-    if pct list 2>/dev/null | awk '{print $NF}' | grep -qx "${1:-}"; then
-        return 0
-    fi
-    return 1
-}
-
 find_free_id() {
     local id="$ID_SCAN_START"
     while pct list 2>/dev/null | awk '{print $1}' | grep -qx "$id"; do
@@ -126,6 +133,24 @@ find_free_id() {
 
 find_ct_id_by_hostname() {
     pct list 2>/dev/null | awk -v h="$CT_HOSTNAME" '$NF==h {print $1; exit}'
+}
+
+# Marker-Check: Nur ein Container, den DIESER Installer angelegt hat
+# (/opt/kochido/.kochido-installed), darf per --uninstall/--force/--update
+# angefasst werden — sonst löscht ein --hostname <fremd> einen fremden CT.
+assert_kochido_ct() {
+    local ct_id="$1"
+    if ! pct exec "$ct_id" -- test -f /opt/kochido/.kochido-installed 2>/dev/null; then
+        die "Container $ct_id ist KEIN Koch-I-Doo-Container (Marker /opt/kochido/.kochido-installed fehlt).\n  Abbruch aus Sicherheitsgründen — fremde Container werden nicht angefasst."
+    fi
+    ok "Marker geprüft: Container $ct_id ist ein Koch-I-Doo-Container"
+}
+
+# Port aus der bestehenden systemd-Unit lesen (Update/Status ohne --port
+# dürfen den konfigurierten Port NICHT auf 8090 zurücksetzen)
+read_ct_port() {
+    local ct_id="$1"
+    pct exec "$ct_id" -- sed -n 's/^Environment=PORT=//p' /etc/systemd/system/kochido.service 2>/dev/null | head -1 || true
 }
 
 get_ct_ip() {
@@ -186,7 +211,8 @@ verify_ct_dns() {
         ns_list="$host_ns $ns_list"
     fi
     warn "DNS im Container defekt – schreibe Fallback-Nameserver ($ns_list) nach /etc/resolv.conf"
-    pct exec "$id" -- sh -c "printf 'nameserver %s\n' $ns_list > /etc/resolv.conf"
+    # ns_list NICHT ungequotet in einen remote-sh-c-String einbetten (Injection-Muster)
+    pct exec "$id" -- env NS_LIST="$ns_list" sh -c 'printf "nameserver %s\n" $NS_LIST > /etc/resolv.conf'
     pct exec "$id" -- bash -c 'mkdir -p /etc/dhcp/dhclient-enter-hooks.d && printf "make_resolv_conf() { :; }\n" > /etc/dhcp/dhclient-enter-hooks.d/no-dns'
     if pct exec "$id" -- getent hosts codeload.github.com >/dev/null 2>&1; then
         ok "DNS-Fallback aktiv und gegen DHCP-Überschreiben geschützt – Auflösung funktioniert"
@@ -222,6 +248,22 @@ ensure_ct_running() {
 }
 
 # ── Argumente parsen ───────────────────────────────────────────────────────
+need_value() {
+    # Option braucht einen Wert, der nicht wie eine Option aussieht
+    local opt="$1" next="${2:-}"
+    if [[ -z "$next" || "$next" == --* ]]; then
+        die "Option ${opt} braucht einen Wert (z. B. ${opt} 8090)"
+    fi
+}
+
+is_uint() { [[ "$1" =~ ^[0-9]+$ ]]; }
+is_ipv4() {
+    [[ "$1" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+    local o
+    for o in "${BASH_REMATCH[@]:1}"; do (( 10#$o <= 255 )) || return 1; done
+    return 0
+}
+
 parse_args() {
     # bash-c-Grube: `bash -c "$(wget -qLO - URL)" --id 5` belegt das ERSTE
     # Argument nach dem Script-String mit $0 – Fallback über $0-Front-Warnung.
@@ -232,19 +274,19 @@ parse_args() {
     local i=0
     while [[ $i -lt ${#args[@]} ]]; do
         case "${args[$i]}" in
-            --id)            CT_ID="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --hostname)      CT_HOSTNAME="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --storage)       CT_STORAGE="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --rootfs)        CT_ROOTFS="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --cores)         CT_CORES="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --memory)        CT_MEMORY="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --swap)          CT_SWAP="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --bridge)        CT_BRIDGE="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --ip)            CT_IP="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --gateway)       CT_GATEWAY="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --password)      CT_PASSWORD="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --sshkey)        CT_SSHKEY="${args[$((i+1))]:-}"; i=$((i+2)) ;;
-            --port)          PORT="${args[$((i+1))]:-}"; i=$((i+2)) ;;
+            --id)            need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_ID="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --hostname)      need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_HOSTNAME="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --storage)       need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_STORAGE="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --rootfs)        need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_ROOTFS="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --cores)         need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_CORES="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --memory)        need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_MEMORY="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --swap)          need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_SWAP="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --bridge)        need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_BRIDGE="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --ip)            need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_IP="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --gateway)       need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_GATEWAY="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --password)      need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_PASSWORD="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --sshkey)        need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_SSHKEY="${args[$((i+1))]}"; i=$((i+2)) ;;
+            --port)          need_value "${args[$i]}" "${args[$((i+1))]:-}"; PORT="${args[$((i+1))]}"; PORT_EXPLICIT=true; i=$((i+2)) ;;
             --force)         FORCE_RECREATE=true; i=$((i+1)) ;;
             --yes|-y)        ASSUME_YES=true; i=$((i+1)) ;;
             --update)        UPDATE=true; i=$((i+1)) ;;
@@ -255,8 +297,28 @@ parse_args() {
             *) die "Unbekannte Option: ${args[$i]}  (–help zeigt alle Optionen)" ;;
         esac
     done
-    if ! [[ "$PORT" =~ ^[0-9]+$ ]] || [[ "$PORT" -lt 1 || "$PORT" -gt 65535 ]]; then
+    # 10# erzwingt Dezimal – führende Nullen wie "08" sind sonst oktal/Fehler
+    if ! is_uint "$PORT" || (( 10#$PORT < 1 || 10#$PORT > 65535 )); then
         die "Ungültiger Port: '$PORT' (1–65535 erwartet, z. B. --port 8090)"
+    fi
+    PORT=$((10#$PORT))
+    if [[ -n "$CT_ID" ]] && ! is_uint "$CT_ID"; then
+        die "Ungültige Container-ID: '$CT_ID' (nur Ziffern erlaubt)"
+    fi
+    for v in "$CT_ROOTFS" "$CT_CORES" "$CT_MEMORY" "$CT_SWAP"; do
+        is_uint "$v" || die "Ungültige Zahl: '$v' (nur Ziffern erlaubt)"
+    done
+    [[ "$CT_BRIDGE" =~ ^[A-Za-z0-9._-]+$ ]] || die "Ungültige Bridge: '$CT_BRIDGE'"
+    [[ "$CT_STORAGE" =~ ^[A-Za-z0-9._-]+$ ]] || die "Ungültiger Storage-Name: '$CT_STORAGE'"
+    if [[ "$CT_IP" != "dhcp" ]]; then
+        if [[ "$CT_IP" =~ ^([0-9.]+)/([0-9]{1,2})$ ]] && is_ipv4 "${BASH_REMATCH[1]}" && (( 10#${BASH_REMATCH[2]} <= 32 )); then
+            :
+        else
+            die "Ungültige --ip CIDR: '$CT_IP' (z. B. 192.168.1.50/24 oder dhcp)"
+        fi
+    fi
+    if [[ -n "$CT_GATEWAY" ]] && ! is_ipv4 "$CT_GATEWAY"; then
+        die "Ungültiges Gateway: '$CT_GATEWAY' (IPv4 erwartet)"
     fi
 }
 
@@ -279,15 +341,21 @@ Optionen (hinter dem schließenden Anführungszeichen anhängen, z. B. ... " --i
                    Empfehlenswert: feste IP / DHCP-Reservierung, damit die
                    Rezept-URL auf Handy/Tablett dauerhaft stimmt.
   --gateway GW     Gateway für statische IP
-  --password PW    Root-Passwort (Default: automatisch generiert)
-  --sshkey PFAD    Public-Key-Datei oder URL – ssh-key-Login als root im CT
-  --port PORT      Web-UI-Port im Container (Default: 8090)
-  --force          Vorhandenen Container mit gleichem Hostname löschen und neu anlegen
+  --password PW    Root-Passwort (besser: Env KOCHIDO_PASSWORD – nicht in der History)
+  --sshkey PFAD    Public-Key-Datei oder https://URL (nur https!) – ssh-key-Login als root im CT
+  --port PORT      Web-UI-Port im Container (Default: 8090; --update/--status
+                    übernehmen ohne --port den konfigurierten Port)
+  --force          Vorhandenen Koch-I-Doo-Container gleichen Hostnamens löschen und neu anlegen
   --yes / -y       Rückfragen überspringen
   --update         App im bestehenden Container aktualisieren (neue Version von GitHub main)
-  --uninstall      Container stoppen und löschen
+  --uninstall      Container stoppen und löschen (nur mit Koch-I-Doo-Marker)
   --status         Status anzeigen
   --debug          Vollständiges bash -x-Trace
+
+  Umgebungsvariablen (optional):
+    KOCHIDO_PASSWORD         Root-Passwort (statt --password)
+    KOCHIDO_TZ               Zeitzone im Container (Default: Europe/Berlin)
+    KOCHIDO_TARBALL_SHA256   sha256 des Upstream-Tarballs – bei Angabe wird geprüft
 
   Modus:  Install (Default) / --update / --uninstall / --status / --debug
 EOF
@@ -326,6 +394,12 @@ printf 'domain home.arpa\nsearch home.arpa\nnameserver %s\nnameserver 1.1.1.1\nn
 
 echo ">>> Kochido-Quellcode von GitHub laden ..."
 curl -fSL --retry 3 "${UPSTREAM_TARBALL_URL}" -o /tmp/kochido.tar.gz
+# Optional: Tarball-Pin prüfen (Host: KOCHIDO_TARBALL_SHA256=<sha256> setzen)
+if [[ -n "${EXPECTED_SHA256:-}" ]]; then
+    echo ">>> SHA256 des Tarballs prüfen ..."
+    echo "${EXPECTED_SHA256}  /tmp/kochido.tar.gz" | sha256sum -c - \
+        || die "SHA256-Prüfung fehlgeschlagen – Tarball stammt nicht vom gepinnten Stand!"
+fi
 rm -rf /tmp/kochido-src && mkdir -p /tmp/kochido-src
 tar -xzf /tmp/kochido.tar.gz -C /tmp/kochido-src --strip-components=1
 if [[ ! -f /tmp/kochido-src/backend/main.py ]]; then
@@ -349,21 +423,36 @@ fi
 /opt/kochido/venv/bin/pip install --quiet --upgrade pip
 /opt/kochido/venv/bin/pip install --quiet --upgrade -r /opt/kochido/app.new/requirements.txt
 
-echo ">>> App-Version aktivieren (atomarer Wechsel) ..."
-# GRUBE (Live-Fund 2026-11-18): GNU mv verschiebt bei existierendem Ziel-
-# verzeichnis INTO das Ziel (/opt/kochido/app/app.new → "Directory not
-# empty"). Deshalb explizit swappen: alt → app.old, neu → app.
-rm -rf /opt/kochido/app.old
-if [ -d /opt/kochido/app ]; then
+echo ">>> App-Version atomar aktivieren (Symlink-Wechsel, kein Crash-Fenster) ..."
+# Release-Verzeichnis + Symlink tauschen: `mv -T` auf den Symlink ist atomar.
+REL_DIR="/opt/kochido/releases"
+mkdir -p "$REL_DIR"
+REL="$REL_DIR/app-$(date +%s)"
+mv /opt/kochido/app.new "$REL"
+if [ -d /opt/kochido/app ] && [ ! -L /opt/kochido/app ]; then
+    # einm migration: alte Installation war ein echtes Verzeichnis
+    rm -rf /opt/kochido/app.old
     mv /opt/kochido/app /opt/kochido/app.old
+    rm -rf /opt/kochido/app.old
 fi
-mv /opt/kochido/app.new /opt/kochido/app
-rm -rf /opt/kochido/app.old
+ln -sfn "$REL" /opt/kochido/app.link
+mv -T /opt/kochido/app.link /opt/kochido/app
+# alte Releases aufräumen (neueste 2 behalten)
+ls -1dt "$REL_DIR"/app-* 2>/dev/null | tail -n +3 | xargs -r rm -rf
 
 echo ">>> Datenordner sicherstellen (Rezept-DB überlebt Updates) ..."
 mkdir -p /opt/kochido/data/images
+# Marker für den Installer: „dieser CT gehört zu Koch-I-Doo“
+# (--uninstall/--update/--force prüfen ihn, bevor sie etwas anfassen)
+touch /opt/kochido/.kochido-installed
 
-echo ">>> systemd-Unit kochido.service schreiben (Port ${PORT}) ..."
+echo ">>> Systembenutzer kochido anlegen (Service läuft NICHT als root) ..."
+if ! id kochido >/dev/null 2>&1; then
+    useradd -r -d /opt/kochido -s /usr/sbin/nologin kochido
+fi
+chown -R kochido:kochido /opt/kochido/data
+
+echo ">>> systemd-Unit kochido.service schreiben (Port ${PORT}, gehärtet) ..."
 cat > /etc/systemd/system/kochido.service <<UNITEOF
 [Unit]
 Description=Koch-I-Doo – Guided Cooking Server (lokaler Cookidoo-Ersatz)
@@ -372,13 +461,23 @@ After=network-online.target
 
 [Service]
 Type=simple
+User=kochido
+Group=kochido
 WorkingDirectory=/opt/kochido/app
 Environment=PORT=${PORT}
 Environment=KOCHIDO_DATA=/opt/kochido/data
 Environment=KOCHIDO_DIST=/opt/kochido/app/dist
+# Zeitzone für „heute“-Berechnungen (sonst weicht Server-UTC vom Browser ab)
+Environment=KOCHIDO_TZ=${KOCHIDO_TZ:-Europe/Berlin}
 ExecStart=/opt/kochido/venv/bin/python /opt/kochido/app/main.py
 Restart=always
 RestartSec=3
+# Hardening: App läuft unprivilegiert, Dateisystem sonst read-only
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/kochido/data
 
 [Install]
 WantedBy=multi-user.target
@@ -391,7 +490,9 @@ systemctl restart kochido
 echo ">>> Prüfe, dass Kochido auf Port ${PORT} antwortet ..."
 PORT_OK=""
 for _ in $(seq 1 30); do
-    if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:${PORT}/api/health"; then
+    # -f + HTTP-Code: auch 500/502 zählen NICHT als „läuft“
+    code=$(curl -s -o /dev/null --max-time 2 -w '%{http_code}' "http://127.0.0.1:${PORT}/api/health" || true)
+    if [[ "$code" == "200" ]]; then
         PORT_OK=1
         break
     fi
@@ -421,6 +522,8 @@ run_inner_setup() {
     # nicht durch `tee` maskiert wird.
     pct exec "$ct_id" -- env PORT="$PORT" HOST_DNS="${HOST_DNS:-1.1.1.1}" \
         UPSTREAM_TARBALL_URL="$UPSTREAM_TARBALL_URL" \
+        EXPECTED_SHA256="${KOCHIDO_TARBALL_SHA256:-}" \
+        KOCHIDO_TZ="${KOCHIDO_TZ:-Europe/Berlin}" \
         bash -c 'set -o pipefail; bash /root/setup-inner.sh 2>&1 | tee /var/log/kochido-setup.log'
 }
 
@@ -522,7 +625,8 @@ print_summary() {
     echo -e "  ${GREEN}  🌐 Koch-I-Doo: http://${ct_ip}:${PORT}${NC}"
     echo -e "  ${GREEN}  🐚 Terminal:  pct enter ${CT_ID}${NC}"
     if [[ -n "$CT_PASSWORD" ]]; then
-        echo -e "  ${GREEN}  🔑 Root-PW:   ${CT_PASSWORD}${NC}"
+        # Passwort NIE ins Log (tee) schreiben — nur ans Terminal
+        out_secret "  ${GREEN}  🔑 Root-PW:   ${CT_PASSWORD}${NC}"
     fi
     if [[ -n "$app_version" ]]; then
         echo -e "  ${GREEN}  📦 Version:   v${app_version} (upstream ${UPSTREAM_OWNER}/${UPSTREAM_REPO}@${UPSTREAM_BRANCH})${NC}"
@@ -555,9 +659,6 @@ do_install() {
     header "🍳 Installiere Koch-I-Doo (LXC)"
     info "Installer-Version: v${INSTALLER_VERSION}"
 
-    if [[ $EUID -ne 0 ]]; then
-        die "Bitte als root ausführen (auf dem Proxmox-Host)."
-    fi
     if ! command -v pct >/dev/null 2>&1; then
         die "pct nicht gefunden – das Script muss auf einem Proxmox-VE-Host laufen."
     fi
@@ -566,6 +667,9 @@ do_install() {
     existing=$(find_ct_id_by_hostname || true)
     if [[ -n "$existing" ]]; then
         if $FORCE_RECREATE; then
+            # Marker-Check: nur echte Koch-I-Doo-CTs dürfen zerstört werden
+            ensure_ct_running "$existing"
+            assert_kochido_ct "$existing"
             warn "Container $existing ($CT_HOSTNAME) existiert – --force: lösche und lege neu an."
             warn "ACHTUNG: Dabei gehen Rezepte in /opt/kochido/data verloren – vorher sichern!"
             if ! $ASSUME_YES; then
@@ -586,16 +690,27 @@ do_install() {
     fi
 
     header "🧱 Container-Template"
+    # storage-bewusst: Template im konfigurierten Storage suchen (nicht hart local)
     local template=""
-    template=$(pveam list local 2>/dev/null | awk '{print $1}' | grep -o 'debian-1[23]-standard[^ ]*' | sort -rV | head -1 || true)
+    template=$(pveam list "$CT_STORAGE" 2>/dev/null | awk '{print $1}' \
+        | grep -E "^${CT_STORAGE}:vztmpl/debian-1[23]-standard" | sort -rV | head -1 || true)
     if [[ -z "$template" ]]; then
-        info "Kein Debian-12/13-Template vorhanden – lade es herunter ..."
+        info "Kein Debian-12/13-Template auf '$CT_STORAGE' vorhanden – lade es herunter ..."
         pveam update
-        template=$(pveam available --section system 2>/dev/null | grep -o 'debian-1[23]-standard[^ ]*' | sort -rV | head -1 || true)
+        template=$(pveam available --section system 2>/dev/null | awk '{print $1}' \
+            | grep -E "^${CT_STORAGE}:vztmpl/debian-1[23]-standard" | sort -rV | head -1 || true)
+        if [[ -z "$template" ]]; then
+            # Fallback: erstes verfügbares Debian-12/13-Template (egal welcher Storage)
+            template=$(pveam available --section system 2>/dev/null | awk '{print $1}' \
+                | grep -E '^[^:]+:vztmpl/debian-1[23]-standard' | sort -rV | head -1 || true)
+        fi
         if [[ -z "$template" ]]; then
             die "Kein debian-12/13-standard-Template gefunden (pveam available leer?).\n  Koch-I-Doo braucht für den Cookidoo-Konto-Import Python ≥ 3.12 (Debian 13)."
         fi
-        pveam download local "$template"
+        pveam download "$CT_STORAGE" "${template##*:}" 2>/dev/null \
+            || pveam download "$CT_STORAGE" "$template"
+        template=$(pveam list "$CT_STORAGE" 2>/dev/null | awk '{print $1}' \
+            | grep -E "^${CT_STORAGE}:vztmpl/debian-1[23]-standard" | sort -rV | head -1 || true)
     fi
     ok "Template: $template"
 
@@ -604,10 +719,15 @@ do_install() {
         info "Nächste freie CT-ID: $CT_ID"
     fi
     if [[ -z "$CT_PASSWORD" ]]; then
-        CT_PASSWORD=$(openssl rand -base64 12 2>/dev/null || true)
+        # Env bevorzugen (kein Passwort in ps/Shell-History); Fallback: urandom
+        CT_PASSWORD="${KOCHIDO_PASSWORD:-}"
         if [[ -z "$CT_PASSWORD" ]]; then
-            CT_PASSWORD="kd-$(date +%s)"
+            CT_PASSWORD=$(head -c 24 /dev/urandom | base64 | tr -d '\n=+' | head -c 24 || true)
         fi
+        if [[ -z "$CT_PASSWORD" ]]; then
+            CT_PASSWORD=$(openssl rand -base64 18 2>/dev/null || true)
+        fi
+        [[ -n "$CT_PASSWORD" ]] || die "Konnte kein Passwort erzeugen (urandom/openssl fehlt?)"
     fi
 
     header "🚀 Erzeuge Container $CT_ID ($CT_HOSTNAME)"
@@ -617,9 +737,12 @@ do_install() {
     fi
     local ssh_keys_args=()
     if [[ -n "$CT_SSHKEY" ]]; then
-        if [[ "$CT_SSHKEY" == http://* || "$CT_SSHKEY" == https://* ]]; then
-            info "Lade SSH-Public-Key herunter ..."
-            wget -q --tries=3 -O "$TMP_DIR/sshkey.pub" "$CT_SSHKEY" || die "SSH-Key-URL nicht ladbar: $CT_SSHKEY"
+        if [[ "$CT_SSHKEY" == http://* ]]; then
+            die "--sshkey nur über https:// erlaubt (http wäre MITM-gefährdet): $CT_SSHKEY"
+        elif [[ "$CT_SSHKEY" == https://* ]]; then
+            info "Lade SSH-Public-Key herunter (https) ..."
+            curl -fSL --retry 3 -o "$TMP_DIR/sshkey.pub" "$CT_SSHKEY" \
+                || die "SSH-Key-URL nicht ladbar: $CT_SSHKEY"
         elif [[ -f "$CT_SSHKEY" ]]; then
             cp "$CT_SSHKEY" "$TMP_DIR/sshkey.pub"
         else
@@ -628,11 +751,16 @@ do_install() {
         if [[ ! -s "$TMP_DIR/sshkey.pub" ]]; then
             die "SSH-Key-Datei ist leer: $CT_SSHKEY"
         fi
+        # Key-Inhalt validieren: eine Zeile, bekannter Key-Typ (kein command= etc.)
+        if ! grep -qE '^(ssh-(rsa|ed25519)|ecdsa-sha2-[a-z0-9-]+) [A-Za-z0-9+/=]+( .*)?$' "$TMP_DIR/sshkey.pub" \
+           || [[ "$(wc -l < "$TMP_DIR/sshkey.pub")" -gt 1 ]]; then
+            die "SSH-Key-Datei sieht ungültig aus (erwartet: eine Zeile 'ssh-ed25519 AAAA…')"
+        fi
         SSH_KEY_FILE="$TMP_DIR/sshkey.pub"
         ok "SSH-Public-Key wird in den Container installiert (ssh-key-Login als root)"
         ssh_keys_args=(--ssh-public-keys "$SSH_KEY_FILE")
     fi
-    pct create "$CT_ID" "local:vztmpl/${template}" \
+    pct create "$CT_ID" "$template" \
         --hostname "$CT_HOSTNAME" \
         --cores "$CT_CORES" \
         --memory "$CT_MEMORY" \
@@ -667,6 +795,16 @@ do_update() {
     CT_ID="$ct_id"
 
     ensure_ct_running "$ct_id"
+    assert_kochido_ct "$ct_id"
+    # ohne explizites --port: Port aus der bestehenden Unit übernehmen
+    if ! $PORT_EXPLICIT; then
+        local old_port
+        old_port=$(read_ct_port "$ct_id")
+        if [[ -n "$old_port" ]] && is_uint "$old_port"; then
+            PORT=$((10#$old_port))
+            info "Port aus bestehender Unit übernommen: $PORT"
+        fi
+    fi
     verify_ct_dns "$ct_id"
 
     run_inner_setup "$ct_id"
@@ -687,6 +825,10 @@ do_uninstall() {
         return 0
     fi
     CT_ID="$ct_id"
+
+    # Marker-Check VOR dem Löschen: nur echte Koch-I-Doo-CTs (CT ggf. starten)
+    ensure_ct_running "$ct_id"
+    assert_kochido_ct "$ct_id"
 
     warn "Container $ct_id ($CT_HOSTNAME) wird GESTOPPT und GELÖSCHT."
     warn "Dabei gehen gespeicherte Rezepte verloren (/opt/kochido/data im Container)!"
@@ -719,7 +861,22 @@ do_status() {
     fi
     CT_ID="$ct_id"
 
-    pct list 2>/dev/null | awk -v id="$ct_id" '$1==id {print "Container:  " $1 " (" $2 ") – " $4}'
+    # ohne explizites --port: Port aus der Unit lesen (nur wenn CT läuft —
+    # Status startet keinen Container)
+    if ! $PORT_EXPLICIT; then
+        local st=""
+        st=$(pct status "$ct_id" 2>/dev/null || echo "unknown")
+        if [[ "$st" == *"running"* ]]; then
+            local old_port=""
+            old_port=$(read_ct_port "$ct_id" 2>/dev/null || true)
+            if [[ -n "$old_port" ]] && is_uint "$old_port"; then
+                PORT=$((10#$old_port))
+            fi
+        fi
+    fi
+
+    # $NF statt $4: bei leerer Lock-Spalte ist $4 leer, der Name steht immer ganz hinten
+    pct list 2>/dev/null | awk -v id="$ct_id" '$1==id {print "Container:  " $1 " (" $2 ") – " $NF}'
 
     local state
     state=$(pct status "$ct_id" 2>/dev/null | awk '{print $2}' || true)
@@ -753,6 +910,13 @@ do_status() {
 
 # ── Main ───────────────────────────────────────────────────────────────────
 parse_args "$@"
+
+# Root-Check zentral (gilt für alle Modi außer --help, das vorher exit't).
+# KOCHIDO_HARNESS_NONROOT=1 ist NUR für das lokale Mock-Harness (harness/run.sh)
+# — auf einem echten Proxmox-Host läuft der Installer als root.
+if [[ $EUID -ne 0 && "${KOCHIDO_HARNESS_NONROOT:-0}" != "1" ]]; then
+    die "Bitte als root ausführen (auf dem Proxmox-Host)."
+fi
 
 TMP_DIR=$(mktemp -d)
 

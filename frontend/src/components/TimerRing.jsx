@@ -46,6 +46,9 @@ export default function TimerRing({ total, remaining, running, onStart, onPause,
 export function beep() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Autoplay-Policy: Kontext explizit resumen, sonst bleibt er „suspended“
+    // (iOS/Safari) und der Alarm bleibt stumm
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
     const play = (at, freq = 880) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();

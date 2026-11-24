@@ -30,37 +30,57 @@ export default function Lists() {
 
   const create = async () => {
     if (!newName.trim()) return;
-    const { id } = await createList(newName.trim());
-    setNewName("");
-    setCreating(false);
-    setPickerFor(id);
-    load();
+    try {
+      const { id } = await createList(newName.trim());
+      setNewName("");
+      setCreating(false);
+      setPickerFor(id);
+      load();
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const removeList = async (lst) => {
     if (!window.confirm(`Liste „${lst.name}“ löschen? (Rezepte bleiben erhalten)`)) return;
-    await deleteList(lst.id);
-    setOpenId(null);
-    load();
+    try {
+      await deleteList(lst.id);
+      setOpenId(null);
+      load();
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const rename = async (lst) => {
     const name = window.prompt("Neuer Listenname:", lst.name);
     if (!name || !name.trim()) return;
-    await api(`/api/lists/${lst.id}`, { method: "PUT", body: JSON.stringify({ name: name.trim() }) });
-    load();
+    try {
+      await api(`/api/lists/${lst.id}`, { method: "PUT", body: JSON.stringify({ name: name.trim() }) });
+      load();
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const removeFromList = async (listId, recipeId) => {
-    await api(`/api/lists/${listId}/items/${recipeId}`, { method: "DELETE" });
-    load();
+    try {
+      await api(`/api/lists/${listId}/items/${recipeId}`, { method: "DELETE" });
+      load();
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const cookToday = async (lst) => {
     // Praktisch: erstes Rezept der Liste für heute einplanen
     if (!lst.recipes.length) return;
-    await addPlan(isoDate(new Date()), lst.recipes[0].id, null);
-    window.alert(`„${lst.recipes[0].title}“ wurde für heute eingeplant.`);
+    try {
+      await addPlan(isoDate(new Date()), lst.recipes[0].id, null);
+      window.alert(`„${lst.recipes[0].title}“ wurde für heute eingeplant.`);
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const openList = (lists || []).find((l) => l.id === openId);
@@ -255,12 +275,17 @@ function ListRecipePicker({ listId, onClose }) {
     (r.title + (r.tags || []).join(" ")).toLowerCase().includes(q.toLowerCase())
   );
 
+  const [addError, setAddError] = useState("");
   const add = async (r) => {
-    await api(`/api/lists/${listId}/items`, {
-      method: "POST",
-      body: JSON.stringify({ recipe_ids: [r.id] }),
-    });
-    onClose();
+    try {
+      await api(`/api/lists/${listId}/items`, {
+        method: "POST",
+        body: JSON.stringify({ recipe_ids: [r.id] }),
+      });
+      onClose();
+    } catch (err) {
+      setAddError(String(err.message || err)); // Picker bleibt offen
+    }
   };
 
   return (
@@ -277,6 +302,7 @@ function ListRecipePicker({ listId, onClose }) {
           onChange={(e) => setQ(e.target.value)}
           autoFocus
         />
+        {addError && <div className="alert alert-error">⚠ {addError}</div>}
         <div className="picker-list">
           {filtered.length === 0 && <p className="muted">Keine Rezepte gefunden.</p>}
           {filtered.map((r) => (

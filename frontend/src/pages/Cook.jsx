@@ -55,6 +55,15 @@ export default function Cook() {
   };
 
   useEffect(() => {
+    // Rezeptwechsel (/kochen/A → /kochen/B): kompletten Koch-State zurücksetzen,
+    // sonst bleibt z. B. idx des alten Rezepts stehen → step undefined
+    setRecipe(null);
+    setIdx(0);
+    setFinished(false);
+    setChecked({});
+    setRemaining(0);
+    setRunning(false);
+    setError("");
     getRecipe(id)
       .then(setRecipe)
       .catch((err) => setError(String(err.message || err)));
@@ -88,19 +97,33 @@ export default function Cook() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, steps.length]);
 
-  // Countdown
+  // Countdown – über Endzeitpunkt statt Dekrement (kein Drift durch Event-Loop-Lag)
+  const remainingRef = useRef(0);
+  remainingRef.current = remaining;
+  const endAtRef = useRef(null);
   useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => setRemaining((r) => Math.max(0, r - 1)), 1000);
+    if (!running) {
+      endAtRef.current = null;
+      return;
+    }
+    if (endAtRef.current === null) endAtRef.current = Date.now() + remainingRef.current * 1000;
+    const t = setInterval(() => {
+      setRemaining(Math.max(0, Math.round((endAtRef.current - Date.now()) / 1000)));
+    }, 250);
     return () => clearInterval(t);
   }, [running]);
 
-  // Timer-Ende: Stop + Signal
+  // Timer-Ende: Stop + Signal (Pieps + Vibration + Blitz) — NICHT setFinished(false),
+  // sonst würde der Nutzer vom „Fertig!“-Screen zurück auf den letzten Schritt geworfen
   useEffect(() => {
     if (remaining === 0 && running) {
       setRunning(false);
-      setFinished(false);
       beep();
+      try {
+        navigator.vibrate?.([200, 100, 200]);
+      } catch {
+        /* Vibration nicht verfügbar */
+      }
       flashRef.current?.classList.add("timer-flash");
       setTimeout(() => flashRef.current?.classList.remove("timer-flash"), 2000);
     }
@@ -133,7 +156,10 @@ export default function Cook() {
 
   const next = () => {
     if (idx + 1 < steps.length) setIdx(idx + 1);
-    else setFinished(true);
+    else {
+      setRunning(false); // Timer darf auf dem Fertig-Screen nicht weiterlaufen
+      setFinished(true);
+    }
   };
   const prev = () => {
     if (finished) {
@@ -156,7 +182,7 @@ export default function Cook() {
       else if (e.key === "ArrowLeft") prev();
       else if (e.key === " ") {
         e.preventDefault();
-        if (step?.time) setRunning((r) => !r);
+        if (step?.time && !finished) setRunning((r) => !r);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -240,6 +266,7 @@ export default function Cook() {
             onClick={() => {
               setIdx(i);
               setFinished(false);
+              setRunning(false);
             }}
             title={`Schritt ${i + 1}`}
           />
@@ -269,6 +296,7 @@ export default function Cook() {
                 onClick={() => {
                   setIdx(i);
                   setFinished(false);
+                  setRunning(false);
                   setShowSteps(false);
                 }}
               >
@@ -307,6 +335,7 @@ export default function Cook() {
               onClick={() => {
                 setIdx(0);
                 setFinished(false);
+                setRunning(false);
               }}
             >
               ↺ Noch einmal kochen

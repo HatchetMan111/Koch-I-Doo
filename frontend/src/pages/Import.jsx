@@ -151,6 +151,11 @@ function UrlTab() {
     try {
       const result = await importFromUrl(url.trim(), Number(maxRecipes) || 0);
       setWarnings(result.warnings || []);
+      if (!result.recipes?.length) {
+        setError("Kein Rezept auf der Seite gefunden – bitte eine Rezept-URL "
+          + "(z. B. chefkoch.de/rezepte/…) verwenden oder den Tab „Text einfügen“.");
+        return;
+      }
       if (result.recipes.length > 1) {
         // Sammlung/Suchseite: Umwandler hier absichtlich nicht automatisch –
         // jede Seite einzeln prüfen ist Aufwand; Vorschau zeigt TM-Badges,
@@ -820,6 +825,7 @@ function DumpTab() {
 
 function CookidooTab() {
   const [payload, setPayload] = useState("");
+  const [listName, setListName] = useState(""); // optionale Liste für „Alle importieren“
   const [previews, setPreviews] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -828,10 +834,21 @@ function CookidooTab() {
   const [savedIdx, setSavedIdx] = useState(new Set());
   const navigate = useNavigate();
 
-  const onFile = async (file) => {
+  const MAX_FILE_BYTES = 20 * 1024 * 1024; // cookidump data.json kann groß sein
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // gleiche Datei darf direkt erneut gewählt werden
     if (!file) return;
-    const text = await file.text();
-    setPayload(text);
+    if (file.size > MAX_FILE_BYTES) {
+      setError(`Datei zu groß (${(file.size / 1048576).toFixed(1)} MB, max. 20 MB) – bitte einzelne Rezept-JSON/-HTML wählen.`);
+      return;
+    }
+    try {
+      setPayload(await file.text());
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const load = async () => {
@@ -852,7 +869,7 @@ function CookidooTab() {
   const saveAll = async () => {
     setSaving(true);
     try {
-      const { warnings: warns } = await importBatch(previews, listName.trim(), "Cookidoo-Konto");
+      const { warnings: warns } = await importBatch(previews, listName.trim(), "Cookidoo-Dump");
       setWarnings(warns || []);
       navigate(listName.trim() ? "/listen" : "/");
     } catch (err) {
@@ -895,7 +912,13 @@ function CookidooTab() {
         type="file"
         accept=".json,.html,.htm,.txt"
         className="input"
-        onChange={(e) => onFile(e.target.files?.[0])}
+        onChange={onFile}
+      />
+      <input
+        className="input"
+        placeholder="📋 Optional: Alle importierten Rezepte als Liste speichern — Name"
+        value={listName}
+        onChange={(e) => setListName(e.target.value)}
       />
       <textarea
         className="textarea"

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createRecipe, getRecipe, updateRecipe } from "../api.js";
-import { SPEED_OPTIONS, TEMP_OPTIONS, fmtTimer } from "../format.js";
+import { SPEED_OPTIONS, TEMP_OPTIONS, fmtTimer, parseAmount } from "../format.js";
 
 const EMPTY_RECIPE = {
   title: "",
@@ -36,17 +36,32 @@ export default function Editor() {
   const [recipe, setRecipe] = useState(EMPTY_RECIPE);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const isNew = !id;
 
   useEffect(() => {
     if (id) {
       getRecipe(id)
-        .then(setRecipe)
+        .then((r) => { setRecipe(r); setDirty(false); })
         .catch((err) => setError(String(err.message || err)));
     }
   }, [id]);
 
-  const set = (patch) => setRecipe((r) => ({ ...r, ...patch }));
+  // Ungespeicherte Änderungen dürfen nicht lautlos verloren gehen (Reload/Tab zu)
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  const set = (patch) => {
+    setDirty(true);
+    setRecipe((r) => ({ ...r, ...patch }));
+  };
 
   const save = async () => {
     if (!recipe.title.trim()) {
@@ -58,15 +73,22 @@ export default function Editor() {
     try {
       if (isNew) {
         const { id: newId } = await createRecipe(recipe);
+        setDirty(false);
         navigate(`/rezept/${newId}`);
       } else {
         await updateRecipe(id, recipe);
+        setDirty(false);
         navigate(`/rezept/${id}`);
       }
     } catch (err) {
       setError(String(err.message || err));
       setSaving(false);
     }
+  };
+
+  const cancel = () => {
+    if (dirty && !window.confirm("Ungespeicherte Änderungen verwerfen?")) return;
+    navigate(isNew ? "/" : `/rezept/${id}`);
   };
 
   return (
@@ -122,23 +144,31 @@ export default function Editor() {
             />
           </label>
           <label className="field">
-            <span>Gesamtzeit (Min.)</span>
+            <span>Gesamtzeit (Min., auch 1,5)</span>
             <input
               className="input"
               type="number"
               min={0}
-              value={Math.round((recipe.time_total || 0) / 60)}
-              onChange={(e) => set({ time_total: Math.max(0, Number(e.target.value) || 0) * 60 })}
+              step="0.5"
+              value={Math.round(((recipe.time_total || 0) / 60) * 10) / 10}
+              onChange={(e) => {
+                const v = parseAmount(e.target.value);
+                set({ time_total: Math.max(0, (v || 0) * 60) });
+              }}
             />
           </label>
           <label className="field">
-            <span>Vorbereitung (Min.)</span>
+            <span>Vorbereitung (Min., auch 1,5)</span>
             <input
               className="input"
               type="number"
               min={0}
-              value={Math.round((recipe.time_prep || 0) / 60)}
-              onChange={(e) => set({ time_prep: Math.max(0, Number(e.target.value) || 0) * 60 })}
+              step="0.5"
+              value={Math.round(((recipe.time_prep || 0) / 60) * 10) / 10}
+              onChange={(e) => {
+                const v = parseAmount(e.target.value);
+                set({ time_prep: Math.max(0, (v || 0) * 60) });
+              }}
             />
           </label>
         </div>
@@ -154,10 +184,10 @@ export default function Editor() {
             />
           </label>
           <label className="field">
-            <span>Bild-URL (optional)</span>
+            <span>Bild-URL (optional) – Feld leeren löscht das Bild</span>
             <input
               className="input"
-              value={recipe.image}
+              value={recipe.image ?? ""}
               onChange={(e) => set({ image: e.target.value })}
             />
           </label>
@@ -207,24 +237,39 @@ export default function Editor() {
               inputMode="decimal"
               placeholder="200"
               value={ing.amount ?? ""}
-              onChange={(e) => updateIng(i, { amount: e.target.value === "" ? null : Number(e.target.value.replace(",", ".")) })}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") {
+                  setError("");
+                  updateIng(i, { amount: null });
+                  return;
+                }
+                // „1/2“, „1 1/2“, „½“, „1,5“ … parsen — ungültig darf nicht als null verschwinden
+                const v = parseAmount(raw);
+                if (v === null) {
+                  setError(`Ungültige Menge „${raw}“ (Zutat ${i + 1}) – bitte Zahl oder Bruch eingeben (z. B. 1/2, ½, 1,5).`);
+                } else {
+                  setError("");
+                }
+                updateIng(i, { amount: v });
+              }}
             />
             <input
               className="input ing-unit-input"
               placeholder="g"
-              value={ing.unit}
+              value={ing.unit ?? ""}
               onChange={(e) => updateIng(i, { unit: e.target.value })}
             />
             <input
               className="input"
               placeholder="Zutat"
-              value={ing.name}
+              value={ing.name ?? ""}
               onChange={(e) => updateIng(i, { name: e.target.value })}
             />
             <input
               className="input"
               placeholder="Hinweis (optional)"
-              value={ing.note}
+              value={ing.note ?? ""}
               onChange={(e) => updateIng(i, { note: e.target.value })}
             />
             <button
@@ -271,7 +316,7 @@ export default function Editor() {
         <button className="btn btn-primary btn-big" onClick={save} disabled={saving}>
           {saving ? "Speichere …" : "💾 Rezept speichern"}
         </button>
-        <button className="btn btn-outline" onClick={() => navigate(isNew ? "/" : `/rezept/${id}`)}>
+        <button className="btn btn-outline" onClick={cancel}>
           Abbrechen
         </button>
       </div>
@@ -333,7 +378,7 @@ function StepEditor({ index, step, onChange, onRemove, onMove }) {
           <span>🌡 Temperatur</span>
           <select
             className="input"
-            value={step.temperature}
+            value={step.temperature ?? ""}
             onChange={(e) => onChange({ temperature: e.target.value })}
           >
             {TEMP_OPTIONS.map((t) => (
@@ -347,7 +392,7 @@ function StepEditor({ index, step, onChange, onRemove, onMove }) {
           <span>🌀 Stufe</span>
           <select
             className="input"
-            value={step.speed}
+            value={step.speed ?? ""}
             onChange={(e) => onChange({ speed: e.target.value })}
           >
             {SPEED_OPTIONS.map((s) => (
@@ -361,7 +406,7 @@ function StepEditor({ index, step, onChange, onRemove, onMove }) {
           <span>↺</span>
           <input
             type="checkbox"
-            checked={step.reverse}
+            checked={!!step.reverse}
             onChange={(e) => onChange({ reverse: e.target.checked })}
             title="Linkslauf"
           />
@@ -370,7 +415,7 @@ function StepEditor({ index, step, onChange, onRemove, onMove }) {
           <span>🥖 Modus</span>
           <select
             className="input"
-            value={step.mode}
+            value={step.mode ?? ""}
             onChange={(e) => onChange({ mode: e.target.value })}
           >
             <option value="">—</option>
