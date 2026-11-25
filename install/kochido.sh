@@ -383,6 +383,8 @@ write_inner_script() {
 # =============================================================================
 set -Eeuo pipefail
 trap 'echo "✘ Setup-Fehler: exit $? in Zeile $LINENO: $BASH_COMMAND" >&2' ERR
+umask 022   # Service-User kochido muss /opt/kochido traversieren (CHDIR), nie 077
+
 export DEBIAN_FRONTEND=noninteractive
 export LC_ALL=C   # verhindert perl/locale-Warnungen im frischen Debian-CT
 
@@ -461,6 +463,16 @@ if ! id kochido >/dev/null 2>&1; then
     useradd -r -d /opt/kochido -s /usr/sbin/nologin kochido
 fi
 chown -R kochido:kochido /opt/kochido/data
+# WICHTIG: Der Service-User muss /opt/kochido, das Release (Symlink-Ziel von
+# WorkingDirectory) und das venv traversieren/ausführen dürfen — sonst CHDIR/EXEC
+# "Permission denied" (systemd-Status 200/CHDIR). Explizit setzen, unabhängig
+# von der umask des aufrufenden Root-Shells.
+chmod 755 /opt/kochido "$REL_DIR" "$REL" 2>/dev/null || true
+chmod -R a+rX "$REL" 2>/dev/null || true
+if [[ -d /opt/kochido/venv ]]; then
+    chmod 755 /opt/kochido/venv 2>/dev/null || true
+    chmod -R a+rX /opt/kochido/venv 2>/dev/null || true
+fi
 
 echo ">>> systemd-Unit kochido.service schreiben (Port ${PORT}, gehärtet) ..."
 cat > /etc/systemd/system/kochido.service <<UNITEOF

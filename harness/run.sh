@@ -116,7 +116,8 @@ for pat in "python3-venv" "python3 -m venv /opt/kochido/venv" "/opt/kochido/app.
            "systemctl enable kochido" "systemctl restart kochido" "--upgrade -r" \
            ".kochido-installed" "User=kochido" "NoNewPrivileges=true" \
            "ProtectSystem=strict" "ReadWritePaths=/opt/kochido/data" \
-           "Environment=KOCHIDO_TZ" "sha256sum -c" "useradd -r"; do
+           "Environment=KOCHIDO_TZ" "sha256sum -c" "useradd -r" \
+           "umask 022" "a+rX" 'chmod 755 /opt/kochido'; do
     if ! grep -qF -- "$pat" "$TMP_INNER/setup-inner.sh"; then
         fail_case "Inner-Script enthält '$pat'" "Strukturprüfung fehlgeschlagen"
         INNER_OK=0
