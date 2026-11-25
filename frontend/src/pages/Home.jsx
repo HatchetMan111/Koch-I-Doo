@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   addToList, createList, getLists, getPlan, getProfile, getRecipes, setFavorite,
 } from "../api.js";
@@ -33,17 +33,31 @@ export default function Home() {
   const [bulkMsg, setBulkMsg] = useState("");
   const [greeting, setGreeting] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tagParam = searchParams.get("tag") || "";
 
   const daypart = useMemo(() => DAYPART(), []);
 
+  // Sequenznummer gegen Such-Races: nur die LETZTE Antwort gewinnt
+  const seqRef = useRef(0);
   const load = async (query = q, tagFilter = tag, fav = favOnly) => {
+    const my = ++seqRef.current;
     try {
-      setRecipes(await getRecipes(query, tagFilter, fav));
-      setError("");
+      const res = await getRecipes(query, tagFilter, fav);
+      if (my === seqRef.current) {
+        setRecipes(res);
+        setError("");
+      }
     } catch (err) {
-      setError(String(err.message || err));
+      if (my === seqRef.current) setError(String(err.message || err));
     }
   };
+
+  // Tag-Filter aus der URL (?tag=… von der Rezept-Detailseite) übernehmen
+  useEffect(() => {
+    setTag(tagParam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tagParam]);
 
   useEffect(() => {
     load();
@@ -82,12 +96,19 @@ export default function Home() {
       .sort((a, b) => b[1] - a[1]);
   }, [recipes]);
 
+  // Doppelklick-Schutz: Server-Antwort übernehmen, sonst laufen UI und Server auseinander
+  const favBusy = useRef(new Set());
   const toggleFav = async (recipe) => {
+    if (favBusy.current.has(recipe.id)) return;
+    favBusy.current.add(recipe.id);
     try {
-      await setFavorite(recipe.id, !recipe.favorite);
-      setRecipes((prev) => (prev || []).map((r) => (r.id === recipe.id ? { ...r, favorite: !recipe.favorite } : r)));
+      const res = await setFavorite(recipe.id, !recipe.favorite);
+      const fav = res && typeof res.favorite === "boolean" ? res.favorite : !recipe.favorite;
+      setRecipes((prev) => (prev || []).map((r) => (r.id === recipe.id ? { ...r, favorite: fav } : r)));
     } catch (err) {
       setError(String(err.message || err));
+    } finally {
+      favBusy.current.delete(recipe.id);
     }
   };
 
@@ -290,11 +311,15 @@ export default function Home() {
             <div className="picker-list">
               {(lists || []).map((l) => (
                 <button key={l.id} className="picker-item" onClick={async () => {
-                  await addToList(l.id, [...selected]);
-                  setShowListPick(false);
-                  setBulkMsg(`📋 ${selected.size} Rezepte zu „${l.name}“ hinzugefügt`);
-                  setSelecting(false); setSelected(new Set());
-                  setTimeout(() => setBulkMsg(""), 4000);
+                  try {
+                    await addToList(l.id, [...selected]);
+                    setShowListPick(false);
+                    setBulkMsg(`📋 ${selected.size} Rezepte zu „${l.name}“ hinzugefügt`);
+                    setSelecting(false); setSelected(new Set());
+                    setTimeout(() => setBulkMsg(""), 4000);
+                  } catch (err) {
+                    setError(String(err.message || err));
+                  }
                 }}>
                   <b>{l.name}</b>
                   <small>{l.recipe_count} Rezepte{l.source ? ` · ${l.source.startsWith("http") ? "Import" : l.source}` : ""}</small>
@@ -306,11 +331,15 @@ export default function Home() {
                 onChange={(e) => setNewListName(e.target.value)} />
               <button className="btn btn-primary" disabled={!newListName.trim()} onClick={async () => {
                 const name = newListName.trim();
-                await createList(name, [...selected], "Manuell");
-                setShowListPick(false);
-                setBulkMsg(`📋 ${selected.size} Rezepte zu „${name}“ hinzugefügt`);
-                setNewListName(""); setSelecting(false); setSelected(new Set());
-                setTimeout(() => setBulkMsg(""), 4000);
+                try {
+                  await createList(name, [...selected], "Manuell");
+                  setShowListPick(false);
+                  setBulkMsg(`📋 ${selected.size} Rezepte zu „${name}“ hinzugefügt`);
+                  setNewListName(""); setSelecting(false); setSelected(new Set());
+                  setTimeout(() => setBulkMsg(""), 4000);
+                } catch (err) {
+                  setError(String(err.message || err));
+                }
               }}>Anlegen & einfügen</button>
             </div>
           </div>

@@ -10,7 +10,9 @@
 # Wichtig: Für Katalog-Rezepte wird ein aktives (Probe-)Abo gebraucht –
 # einmal importieren, dann Abo kündigen. Keine Daten leave the LXC except
 # der Login bei Cookidoo selbst.
+import asyncio
 import html as html_mod
+import os
 import re
 from pathlib import Path
 
@@ -231,6 +233,15 @@ def token_cache_path() -> Path:
     return db.DATA_DIR / "cookidoo_token.json"
 
 
+def save_token_secure(cookidoo, path) -> None:
+    """OAuth-Token speichern UND auf 0600 ziehen (kein Klartext für andere)."""
+    cookidoo.save_token(str(path))
+    try:
+        os.chmod(str(path), 0o600)
+    except OSError:
+        pass
+
+
 async def fetch_cookidoo_account(email: str, password: str,
                                  country: str = "de", language: str = "de-DE",
                                  max_recipes: int = 0):
@@ -255,7 +266,7 @@ async def fetch_cookidoo_account(email: str, password: str,
 
     warnings: list[str] = []
     token_path = token_cache_path()
-    jar = aiohttp.CookieJar(unsafe=True)
+    jar = aiohttp.CookieJar()  # unsafe=False: keine Cookies an IP-Literal-Domains
     timeout = aiohttp.ClientTimeout(total=None, sock_connect=30, sock_read=180)
     async with aiohttp.ClientSession(cookie_jar=jar, timeout=timeout) as session:
         try:
@@ -275,7 +286,7 @@ async def fetch_cookidoo_account(email: str, password: str,
                 localization=localizations[0],
             ),
         )
-        cookidoo.on_auth_data_update = lambda _auth: cookidoo.save_token(str(token_path))
+        cookidoo.on_auth_data_update = lambda _auth: save_token_secure(cookidoo, token_path)
         try:
             cookidoo.load_token(str(token_path))
         except Exception:
@@ -311,7 +322,7 @@ async def fetch_cookidoo_account(email: str, password: str,
             for hit in hits:
                 if max_recipes and len(recipes) >= max_recipes:
                     break
-                name = getattr(hit, "name", hit.id)
+                name = getattr(hit, "name", None) or getattr(hit, "id", "?")
                 try:
                     details = await cookidoo.get_recipe_details(hit.id)
                     recipes.append(recipe_from_details(details))
@@ -364,7 +375,7 @@ async def fetch_cookidoo_collections(email: str, password: str,
 
     warnings: list[str] = []
     token_path = token_cache_path()
-    jar = aiohttp.CookieJar(unsafe=True)
+    jar = aiohttp.CookieJar()  # unsafe=False: keine Cookies an IP-Literal-Domains
     timeout = aiohttp.ClientTimeout(total=None, sock_connect=30, sock_read=180)
     async with aiohttp.ClientSession(cookie_jar=jar, timeout=timeout) as session:
         try:
@@ -379,7 +390,7 @@ async def fetch_cookidoo_collections(email: str, password: str,
             session,
             cfg=CookidooConfig(email=email, password=password, localization=localizations[0]),
         )
-        cookidoo.on_auth_data_update = lambda _auth: cookidoo.save_token(str(token_path))
+        cookidoo.on_auth_data_update = lambda _auth: save_token_secure(cookidoo, token_path)
         try:
             cookidoo.load_token(str(token_path))
         except Exception:

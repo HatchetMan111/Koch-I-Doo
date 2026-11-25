@@ -6,9 +6,9 @@
 import json
 import re
 import urllib.error
-import urllib.request
 from datetime import timedelta
 
+from imaging import MAX_HTML_BYTES, safe_urlopen
 from .common import (
     ingredient_text,
     match_ingredients_to_steps,
@@ -37,20 +37,18 @@ def _chain(exc: Exception) -> str:
 
 
 def fetch_html(url: str) -> str:
-    """Lädt eine URL und gibt den HTML-Quelltext zurück (mit Fehlerkette)."""
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": USER_AGENT,
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "de-DE,de;q=0.9,en;q=0.7",
-        },
-    )
+    """Lädt eine URL und gibt den HTML-Quelltext zurück (mit Fehlerkette).
+    SSRF-geschützt (interne Ziele blockiert) und auf 5 MB begrenzt."""
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "de-DE,de;q=0.9,en;q=0.7",
+    }
     try:
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            raw = resp.read()
+        resp, raw = safe_urlopen(url.strip(), headers, timeout=25, max_bytes=MAX_HTML_BYTES)
+        with resp:
             charset = resp.headers.get_content_charset() or "utf-8"
-            return raw.decode(charset, "replace")
+        return raw.decode(charset, "replace")
     except urllib.error.HTTPError as exc:
         raise ImportFehler(
             f"HTTP {exc.code} beim Laden von {url} ({exc.reason}). "
@@ -185,7 +183,10 @@ def recipe_from_jsonld(node, source_url: str) -> dict:
         raise ImportFehler("Rezept ohne Namen (JSON-LD 'name' leer) – Abbruch.")
 
     ingredients = []
-    for line in node.get("recipeIngredient") or []:
+    raw_ingredients = node.get("recipeIngredient") or []
+    if isinstance(raw_ingredients, str):  # schema.org erlaubt String statt Liste
+        raw_ingredients = [raw_ingredients]
+    for line in raw_ingredients:
         if isinstance(line, str) and line.strip():
             parsed = parse_ingredient(line)
             if parsed:

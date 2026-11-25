@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, getRecipes } from "../api.js";
 import { fmtDuration } from "../format.js";
@@ -97,6 +97,8 @@ export default function Discover() {
   const navigate = useNavigate();
 
   // Suche läuft serverseitig (Titel + Zutaten + Quelle) über /api/recipes?q=
+  // Sequenznummer gegen Races: nur die letzte Antwort gewinnt
+  const searchSeq = useRef(0);
   useEffect(() => {
     const term = q.trim();
     if (!term) {
@@ -105,10 +107,18 @@ export default function Discover() {
       return;
     }
     setSearching(true);
+    const my = ++searchSeq.current;
     const t = setTimeout(() => {
       getRecipes(term)
-        .then((res) => { setRemote(res); setSearching(false); })
-        .catch(() => setSearching(false));
+        .then((res) => {
+          if (my === searchSeq.current) {
+            setRemote(res);
+            setSearching(false);
+          }
+        })
+        .catch(() => {
+          if (my === searchSeq.current) setSearching(false);
+        });
     }, 250);
     return () => clearTimeout(t);
   }, [q]);
@@ -120,9 +130,13 @@ export default function Discover() {
   const removeSeed = async (pkg, label) => {
     const n = seedStatus?.[pkg] ?? 0;
     if (!window.confirm(`${n} Standard-Rezepte entfernen (${label})?\nDeine eigenen importierten Rezepte bleiben unberührt.\n\nHinweis: Das Paket kommt erst wieder, wenn eine neuere Version der Standard-Rezepte erscheint.`)) return;
-    await api("/api/seed/remove", { method: "POST", body: JSON.stringify({ package: pkg }) });
-    setRecipes(await getRecipes().catch(() => recipes));
-    loadSeeds();
+    try {
+      await api("/api/seed/remove", { method: "POST", body: JSON.stringify({ package: pkg }) });
+      setRecipes(await getRecipes().catch(() => recipes));
+      loadSeeds();
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   useEffect(() => {
@@ -146,7 +160,7 @@ export default function Discover() {
     let list;
     if (searchMode) list = remote || [];
     else if (active) list = recipes.filter((r) => (r.tags || []).includes(active));
-    else list = recipes.slice(0, 60);
+    else list = recipes; // alle anzeigen (früher stillschweigend nur 60)
 
     if (quick === "schnell") list = list.filter((r) => r.time_total && r.time_total <= 1800);
     if (quick === "favoriten") list = list.filter((r) => r.favorite);

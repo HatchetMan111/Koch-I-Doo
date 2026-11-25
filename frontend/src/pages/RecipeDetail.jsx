@@ -59,13 +59,22 @@ export default function RecipeDetail() {
 
   const remove = async () => {
     if (!window.confirm(`„${recipe.title}“ wirklich löschen?`)) return;
-    await deleteRecipe(recipe.id);
-    navigate("/");
+    try {
+      await deleteRecipe(recipe.id);
+      navigate("/");
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const toggleFav = async () => {
-    await setFavorite(recipe.id, !recipe.favorite);
-    setRecipe({ ...recipe, favorite: !recipe.favorite });
+    try {
+      const res = await setFavorite(recipe.id, !recipe.favorite);
+      const fav = res && typeof res.favorite === "boolean" ? res.favorite : !recipe.favorite;
+      setRecipe({ ...recipe, favorite: fav });
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   const planFor = async (day) => {
@@ -280,10 +289,14 @@ export default function RecipeDetail() {
                   key={l.id}
                   className="picker-item"
                   onClick={async () => {
-                    await addToList(l.id, [recipe.id]);
-                    setShowListPick(false);
-                    setPlanMsg(`📋 Zu „${l.name}“ hinzugefügt`);
-                    setTimeout(() => setPlanMsg(""), 4000);
+                    try {
+                      await addToList(l.id, [recipe.id]);
+                      setShowListPick(false);
+                      setPlanMsg(`📋 Zu „${l.name}“ hinzugefügt`);
+                      setTimeout(() => setPlanMsg(""), 4000);
+                    } catch (err) {
+                      setError(String(err.message || err));
+                    }
                   }}
                 >
                   <b>{l.name}</b>

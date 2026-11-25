@@ -10,5 +10,7 @@ BACKEND = ROOT / "backend"
 _tmp = tempfile.mkdtemp(prefix="kochido-test-")
 os.environ.setdefault("KOCHIDO_DATA", _tmp)
 os.environ["KOCHIDO_DIST"] = str(ROOT / "frontend" / "dist")
+# Rate-Limit in Tests aus (sonst schlagen Dump-/Import-Tests am Limit an)
+os.environ["KOCHIDO_NO_RATELIMIT"] = "1"
 
 sys.path.insert(0, str(BACKEND))

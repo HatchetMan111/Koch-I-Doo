@@ -50,7 +50,8 @@ export default function ChatWidget() {
 
   return (
     <>
-      <button className="chat-fab" onClick={() => setOpen(!open)} title="Koch-Assistent">
+      <button className="chat-fab" onClick={() => setOpen(!open)} title="Koch-Assistent"
+        aria-label={open ? "Assistent schließen" : "Koch-Assistent öffnen"}>
         {open ? "✕" : "🤖"}
       </button>
       {open && (
@@ -80,6 +81,7 @@ export default function ChatWidget() {
               ref={taRef}
               className="input chat-textarea"
               rows={1}
+              aria-label="Nachricht an den Koch-Assistenten"
               placeholder="Frage eingeben … (Shift+Enter = neue Zeile)"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -90,7 +92,8 @@ export default function ChatWidget() {
                 }
               }}
             />
-            <button className="btn btn-primary chat-send" onClick={send} disabled={!input.trim() || busy} title="Senden">
+            <button className="btn btn-primary chat-send" onClick={send} disabled={!input.trim() || busy}
+              title="Senden" aria-label="Nachricht senden">
               ➤
             </button>
           </div>

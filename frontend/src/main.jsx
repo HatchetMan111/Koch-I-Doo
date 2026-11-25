@@ -9,3 +9,12 @@ createRoot(document.getElementById("root")).render(
     <App />
   </BrowserRouter>
 );
+
+// PWA: Service Worker registrieren (nur im Produktions-Build) → Offline-App-Shell
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      /* Offline-Modus nicht verfügbar – App läuft trotzdem */
+    });
+  });
+}

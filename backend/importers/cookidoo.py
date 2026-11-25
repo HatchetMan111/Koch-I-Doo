@@ -117,6 +117,33 @@ def recipe_from_cookidump(item: dict) -> dict:
 
 # ── 2) „Created Recipe“-JSON (Cookidoo-API-Schema) ──────────────────────────
 
+def _safe_seconds(value) -> int:
+    """prepTime/totalTime robust: int/Sekunden, numerischer String, ISO-8601
+    („PT15M“) oder Freitext („15 Min.“) → Sekunden; sonst 0."""
+    from .chefkoch import iso_duration_seconds
+
+    if value is None:
+        return 0
+    if isinstance(value, bool):
+        return 0
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, dict):
+        value = value.get("value") or value.get("seconds") or 0
+        return _safe_seconds(value)
+    s = str(value).strip()
+    if not s:
+        return 0
+    try:
+        return int(float(s))
+    except ValueError:
+        pass
+    iso = iso_duration_seconds(s)
+    if iso:
+        return iso
+    return _parse_time_seconds(s)
+
+
 def recipe_from_created(item: dict) -> dict:
     title = item.get("recipeName") or item.get("name") or item.get("title") or ""
     if not title:
@@ -124,16 +151,18 @@ def recipe_from_created(item: dict) -> dict:
 
     tool = item.get("tool")
     tm_versions = ["TM6"] if isinstance(tool, list) and tool else ["TM5", "TM6"]
+    y = item.get("yield")
+    if isinstance(y, dict):  # {"value": 4, "unit": "Portionen"} — String yield crashte früher
+        y = y.get("value")
     recipe = _base_recipe(
         title,
-        parse_servings((item.get("yield") or {}).get("value"))
-        or parse_servings(item.get("yield")),
+        parse_servings(y),
         [],
         "Cookidoo (Custom Recipe)",
         tm_versions,
     )
-    recipe["time_prep"] = int(item.get("prepTime") or 0)
-    recipe["time_total"] = int(item.get("totalTime") or 0)
+    recipe["time_prep"] = _safe_seconds(item.get("prepTime"))
+    recipe["time_total"] = _safe_seconds(item.get("totalTime"))
 
     for ing in item.get("ingredients") or []:
         text = ing.get("text") if isinstance(ing, dict) else str(ing)

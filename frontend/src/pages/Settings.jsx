@@ -15,6 +15,9 @@ export default function Settings() {
   const [savedHousehold, setSavedHousehold] = useState(false);
   const [savedChat, setSavedChat] = useState(false);
   const [keyInput, setKeyInput] = useState("");
+  const [tokenInput, setTokenInput] = useState("");
+  const [allowPaid, setAllowPaid] = useState(false);
+  const [savedSec, setSavedSec] = useState(false);
   const [seedStatus, setSeedStatus] = useState(null);
   const freeModels = models.filter((m) => m.kind !== "paid");
   const paidModels = models.filter((m) => m.kind === "paid");
@@ -24,6 +27,7 @@ export default function Settings() {
     getSettings().then((s) => {
       setSettings(s);
       if (s.chat_model) setKeyInput("");
+      setAllowPaid(!!s.allow_paid_fallback);
     }).catch(() => {});
     api("/api/seed/status").then(setSeedStatus).catch(() => {});
     setLoadingModels(true);
@@ -70,7 +74,14 @@ export default function Settings() {
 
   const saveChat = async () => {
     try {
-      await saveSettings(keyInput, settings.chat_model);
+      await api("/api/settings", {
+        method: "POST",
+        body: JSON.stringify({
+          openrouter_key: keyInput,
+          chat_model: settings.chat_model,
+          allow_paid_fallback: allowPaid,
+        }),
+      });
       setSavedChat(true);
       setError("");
       setKeyInput("");
@@ -79,11 +90,51 @@ export default function Settings() {
     }
   };
 
+  const saveSecurity = async () => {
+    try {
+      await api("/api/settings", {
+        method: "POST",
+        body: JSON.stringify({ api_token: tokenInput.trim(), api_token_clear: false }),
+      });
+      // Token lokal mitführen, damit die eigene UI ihn mitsenden kann
+      if (tokenInput.trim()) {
+        try { localStorage.setItem("kochido_api_token", tokenInput.trim()); } catch { /* egal */ }
+      }
+      setSavedSec(true);
+      setError("");
+      setTokenInput("");
+      const s = await getSettings();
+      setSettings(s);
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
+  const clearToken = async () => {
+    if (!window.confirm("API-Token wirklich löschen? Danach ist die API wieder offen (nur lokal).")) return;
+    try {
+      await api("/api/settings", {
+        method: "POST",
+        body: JSON.stringify({ api_token_clear: true }),
+      });
+      try { localStorage.removeItem("kochido_api_token"); } catch { /* egal */ }
+      setSavedSec(true);
+      setError("");
+      setSettings(await getSettings());
+    } catch (err) {
+      setError(String(err.message || err));
+    }
+  };
+
   const removeSeed = async (pkg, label) => {
     const n = seedStatus?.[pkg] ?? 0;
     if (!window.confirm(`${n} Standard-Rezepte entfernen (${label})? Deine importierten Rezepte bleiben.`)) return;
-    await api("/api/seed/remove", { method: "POST", body: JSON.stringify({ package: pkg }) });
-    api("/api/seed/status").then(setSeedStatus).catch(() => {});
+    try {
+      await api("/api/seed/remove", { method: "POST", body: JSON.stringify({ package: pkg }) });
+      api("/api/seed/status").then(setSeedStatus).catch(() => {});
+    } catch (err) {
+      setError(String(err.message || err));
+    }
   };
 
   return (
@@ -266,6 +317,17 @@ export default function Settings() {
         <small className="muted">
           {loadingModels ? "Lade Modelle von OpenRouter …" : `frei: ${freeModels.length} · bezahlt: ${paidModels.length}`}
         </small>
+        <label className="check" style={{ marginTop: 8 }}>
+          <input
+            type="checkbox"
+            checked={allowPaid}
+            onChange={(e) => setAllowPaid(e.target.checked)}
+          />
+          <span>
+            Bei Tageslimit automatisch auf ein günstiges <b>Bezahl-Modell</b> wechseln
+            (kostet nur wenige Cent) — sonst bleibt der Chat bei kostenlosen Modellen.
+          </span>
+        </label>
         <button className="btn btn-primary" onClick={saveChat} disabled={!settings.chat_model}>
           💾 Chat-Einstellungen speichern
         </button>
@@ -294,6 +356,33 @@ export default function Settings() {
               onClick={() => removeSeed(pkg, label)}>🗑 Entfernen</button>
           </div>
         ))}
+      </section>
+
+      <section className="card">
+        <h2>🔒 API-Schutz (optional)</h2>
+        <p className="muted">
+          Läuft Koch-I-Doo im lokalen Netz, ist die API standardmäßig offen. Wer
+          trotzdem einen Schutz will: Hier ein Token setzen — danach braucht jede
+          API-Anfrage einen <code>Authorization: Bearer …</code>-Header (die App
+          übernimmt das automatisch, sobald das Token hier eingetragen ist).
+          Alternativ serverseitig <code>KOCHIDO_API_TOKEN</code> in der
+          systemd-Unit setzen.
+        </p>
+        <label className="field">
+          <span>API-Token {settings.api_token_set && <small className="muted">(gesetzt — leer lassen = behalten)</small>}</span>
+          <input className="input" type="password" autoComplete="off"
+            placeholder="z. B. 32 zufällige Zeichen" value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)} />
+        </label>
+        <div className="form-row">
+          <button className="btn btn-primary" onClick={saveSecurity} disabled={!tokenInput.trim()}>
+            💾 Token speichern
+          </button>
+          {settings.api_token_set && (
+            <button className="btn btn-danger" onClick={clearToken}>🗑 Token löschen</button>
+          )}
+        </div>
+        {savedSec && <div className="alert alert-success">✅ Sicherheitseinstellungen gespeichert</div>}
       </section>
 
       <section className="card">

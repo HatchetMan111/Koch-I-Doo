@@ -1,15 +1,18 @@
 # Kochido – FastAPI-Backend (API + Auslieferung der React/Vite-SPA).
 # Port via $PORT (Default 8090), Datenordner via $KOCHIDO_DATA.
+import hmac
 import json
 import os
 import re
+import time
+from collections import defaultdict, deque
 from datetime import date, timedelta
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import chatbot
 import db
@@ -22,7 +25,7 @@ from importers.textimport import import_from_text
 from importers.tm_convert import convert_recipe_to_tm
 
 APP_NAME = "Koch-I-Doo"
-APP_VERSION = "1.20.0"
+APP_VERSION = "1.21.0"
 DIST_DIR = Path(os.environ.get("KOCHIDO_DIST", Path(__file__).parent / "dist"))
 SEED_FILE = Path(__file__).parent / "seed" / "demo_rezepte.json"
 
@@ -31,6 +34,67 @@ app = FastAPI(title=APP_NAME, version=APP_VERSION, docs_url="/api/docs", openapi
 # DB beim Import initialisieren (funktioniert für python main.py UND
 # `uvicorn main:app` – beides systemd-tauglich).
 db.init_db(seed_file=SEED_FILE)
+
+# ── Optionaler API-Schutz & Rate-Limit ──────────────────────────────────────
+# Ist KOCHIDO_API_TOKEN gesetzt, brauchen alle /api/*-Aufrufe (außer /api/health)
+# einen „Authorization: Bearer <token>“-Header. Ohne Token bleibt die API offen
+# (lokales Netz), aber die kritischen Endpunkte sind trotzdem rate-limitiert.
+API_TOKEN = os.environ.get("KOCHIDO_API_TOKEN", "").strip()
+PUBLIC_API_PATHS = {"/api/health"}
+
+
+def _effective_api_token() -> str:
+    """Env-Token (KOCHIDO_API_TOKEN) oder in den Einstellungen gesetzter Token."""
+    return API_TOKEN or db.get_setting("api_token", "").strip()
+
+# Pfad-Präfix → (max. Aufrufe, Fenster in Sekunden) pro Client-IP
+RATE_LIMITS = [
+    ("/api/chat", 6, 60),
+    ("/api/dump/", 2, 300),
+    ("/api/import/cookidoo-account", 3, 600),
+    ("/api/import/cookidoo-collections", 3, 600),
+    ("/api/import/", 10, 60),
+]
+_hits: dict[str, deque] = defaultdict(deque)
+
+
+@app.middleware("http")
+async def auth_and_rate_limit(request: Request, call_next):
+    path = request.url.path
+    if path.startswith("/api/"):
+        token = _effective_api_token()
+        if token and path not in PUBLIC_API_PATHS and not path.startswith("/api/docs") \
+                and path != "/api/openapi.json":
+            auth = request.headers.get("Authorization", "")
+            if not hmac.compare_digest(auth, f"Bearer {token}"):
+                return JSONResponse(
+                    {"detail": "Nicht autorisiert – KOCHIDO_API_TOKEN ist gesetzt."},
+                    status_code=401,
+                )
+        client = request.client.host if request.client else "?"
+        now = time.monotonic()
+        for prefix, max_calls, window in ([] if os.environ.get("KOCHIDO_NO_RATELIMIT") == "1" else RATE_LIMITS):
+            if path.startswith(prefix):
+                dq = _hits[f"{client}:{prefix}"]
+                while dq and now - dq[0] > window:
+                    dq.popleft()
+                if len(dq) >= max_calls:
+                    return JSONResponse(
+                        {"detail": f"Zu viele Anfragen – bitte {window}s warten ({prefix})."},
+                        status_code=429,
+                    )
+                dq.append(now)
+                break
+    return await call_next(request)
+
+
+def _valid_date(s: str) -> bool:
+    """Echtes Kalenderdatum prüfen (Regex allein akzeptiert 2026-13-45)."""
+    try:
+        date.fromisoformat(s)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 
 # ── Modelle ─────────────────────────────────────────────────────────────────
@@ -56,7 +120,7 @@ class StepModel(BaseModel):
 class RecipeModel(BaseModel):
     title: str
     description: str = ""
-    servings: int = 4
+    servings: int = Field(default=4, ge=1)  # 0/negativ → 422 statt kaputter Mengen
     serving_unit: str = "Portionen"
     time_prep: int = 0
     time_total: int = 0
@@ -104,15 +168,17 @@ class CookidooAccountBody(BaseModel):
 
 
 def _fail_400(exc: Exception) -> HTTPException:
-    """Import-Fehler als HTTP 400 mit VOLLER Ursachen-Kette (Debugging-Anforderung)."""
+    """Import-Fehler als HTTP 400. Die volle interne Ursachen-Kette (Pfade,
+    Library-Versionen) nur bei KOCHIDO_DEBUG=1 — sonst Info-Disclosure."""
     detail = str(exc)
-    cause = exc.__cause__ or exc.__context__
-    chain = []
-    while cause is not None and len(chain) < 5:
-        chain.append(f"{type(cause).__name__}: {cause}")
-        cause = cause.__cause__ or cause.__context__
-    if chain:
-        detail += " | Ursachen: " + " ← ".join(chain)
+    if os.environ.get("KOCHIDO_DEBUG") == "1":
+        cause = exc.__cause__ or exc.__context__
+        chain = []
+        while cause is not None and len(chain) < 5:
+            chain.append(f"{type(cause).__name__}: {cause}")
+            cause = cause.__cause__ or cause.__context__
+        if chain:
+            detail += " | Ursachen: " + " ← ".join(chain)
     return HTTPException(status_code=400, detail=detail)
 
 
@@ -154,8 +220,7 @@ def api_update_recipe(recipe_id: int, recipe: RecipeModel):
     data = recipe.to_dict()
     data["favorite"] = existing.get("favorite", False)
     data["created_at"] = existing.get("created_at")
-    if not data.get("image"):
-        data["image"] = existing.get("image", "")
+    # image="" löscht das Bild gewollt (Editor) — NICHT wiederherstellen
     db.update_recipe(recipe_id, data)
     return {"id": recipe_id, "ok": True}
 
@@ -189,9 +254,10 @@ class AutofillBody(BaseModel):
 @app.post("/api/plan/autofill")
 def api_plan_autofill(body: AutofillBody | None = None):
     """Füllt die nächsten Tage automatisch mit vielfältigen Mittagessen."""
-    from datetime import date as _date
-
-    start = (body.start_date if body else None) or _date.today().isoformat()
+    start = (body.start_date if body else None) or ""
+    if start and not _valid_date(start):
+        raise HTTPException(status_code=400, detail=f"Ungültiges Datum: {start} (YYYY-MM-DD)")
+    start = start or db.local_today().isoformat()
     days = min(14, max(1, int(body.days if body else 7)))
     result = db.autofill_plan(start, days)
     result["items"] = db.list_plan(start, _add_days(start, days - 1))
@@ -222,12 +288,12 @@ def api_shopping_refresh(body: ShoppingRefreshRequest | None = None):
     from_date = (body.from_date if body else None) or ""
     to_date = (body.to_date if body else None) or ""
     if not from_date or not to_date:
-        today = date.today()
+        today = db.local_today()  # konfigurierte Zeitzone, nicht Server-UTC
         monday = today - timedelta(days=today.weekday())
         from_date = from_date or monday.isoformat()
         to_date = to_date or (monday + timedelta(days=6)).isoformat()
     for d in (from_date, to_date):
-        if not re.match(r"^\d{4}-\d{2}-\d{2}$", d):
+        if not _valid_date(d):
             raise HTTPException(status_code=400, detail=f"Ungültiges Datum: {d} (YYYY-MM-DD)")
     result = db.shopping_refresh(from_date, to_date)
     result["items"] = db.shopping_items()
@@ -261,16 +327,19 @@ class PlanBody(BaseModel):
 def api_plan(from_: str | None = Query(None, alias="from"), to: str | None = Query(None)):
     """Planeinträge; ohne Parameter die aktuelle Woche (Mo–So)."""
     if not from_ or not to:
-        today = date.today()
+        today = db.local_today()  # konfigurierte Zeitzone, nicht Server-UTC
         monday = today - timedelta(days=today.weekday())
         from_ = from_ or monday.isoformat()
         to = to or (monday + timedelta(days=6)).isoformat()
+    for d in (from_, to):
+        if not _valid_date(d):
+            raise HTTPException(status_code=400, detail=f"Ungültiges Datum: {d} (YYYY-MM-DD)")
     return db.list_plan(from_, to)
 
 
 @app.post("/api/plan")
 def api_add_plan(body: PlanBody):
-    if not re.match(r"^\d{4}-\d{2}-\d{2}$", body.plan_date):
+    if not _valid_date(body.plan_date):
         raise HTTPException(status_code=400, detail=f"plan_date muss YYYY-MM-DD sein, war: {body.plan_date}")
     if db.get_recipe(body.recipe_id) is None:
         raise HTTPException(status_code=404, detail=f"Rezept {body.recipe_id} nicht gefunden")
@@ -463,6 +532,9 @@ def api_put_profile(body: ProfileBody):
 class SettingsBody(BaseModel):
     openrouter_key: str = ""
     chat_model: str = ""
+    api_token: str = ""                 # leer = behalten; api_token_clear=true löscht
+    api_token_clear: bool = False
+    allow_paid_fallback: bool | None = None  # None = unverändert
 
 
 class ChatBody(BaseModel):
@@ -477,6 +549,8 @@ def api_get_settings():
         "openrouter_key_set": bool(key),
         "chat_model": db.get_setting("chat_model"),
         "chat_configured": bool(key and db.get_setting("chat_model")),
+        "api_token_set": bool(_effective_api_token()),
+        "allow_paid_fallback": db.get_setting("chat_allow_paid_fallback") == "1",
     }
 
 
@@ -486,6 +560,12 @@ def api_set_settings(body: SettingsBody):
         db.set_setting("openrouter_key", body.openrouter_key.strip())
     if body.chat_model.strip():
         db.set_setting("chat_model", body.chat_model.strip())
+    if body.api_token_clear:
+        db.set_setting("api_token", "")
+    elif body.api_token.strip():
+        db.set_setting("api_token", body.api_token.strip()[:200])
+    if body.allow_paid_fallback is not None:
+        db.set_setting("chat_allow_paid_fallback", "1" if body.allow_paid_fallback else "0")
     return {"ok": True}
 
 
@@ -510,6 +590,10 @@ def api_chat(body: ChatBody):
         reply = chatbot.ask(body.message.strip(), body.history)
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from None
+    except Exception as exc:  # kein 500 bei unerwarteten Chat-Fehlern
+        raise HTTPException(
+            status_code=502, detail=f"Chat-Fehler: {type(exc).__name__}: {exc}"
+        ) from None
     return {"reply": reply}
 
 
@@ -546,19 +630,34 @@ class RecipeBatchBody(BaseModel):
 def api_import_batch(body: RecipeBatchBody):
     """Speichert mehrere Vorschau-Rezepte (Import-Endpunkt-Output) gesammelt —
     optional als benannte Rezept-Liste (z. B. eine Cookidoo-Sammlung oder eine
-    Chefkoch-Sammelseite)."""
+    Chefkoch-Sammelseite). EINE Transaktion: bricht ein Rezept ab, bleibt kein
+    Teil-Import stehen. Duplikate (gleiche source) werden übersprungen."""
     saved = []
+    skipped = []
     warnings = []
-    for recipe in body.recipes:
-        data = recipe.to_dict()
-        data, img_warn = localize_image(data)
-        if img_warn:
-            warnings.append(f"{data.get('title', '?')}: {img_warn}")
-        saved.append(db.insert_recipe(data))
-    list_id = None
-    if body.list_name.strip():
-        list_id = db.create_list(body.list_name.strip(), saved, source=body.list_source)
+    conn = db._connect()
+    try:
+        for recipe in body.recipes:
+            data = recipe.to_dict()
+            source = str(data.get("source") or "")
+            if source and db.get_id_by_source(source, conn=conn):
+                skipped.append(data.get("title") or "?")
+                continue
+            data, img_warn = localize_image(data)
+            if img_warn:
+                warnings.append(f"{data.get('title', '?')}: {img_warn}")
+            saved.append(db.insert_recipe(data, conn=conn))
+        list_id = None
+        if body.list_name.strip():
+            list_id = db.create_list(body.list_name.strip(), saved, source=body.list_source, conn=conn)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
     return {"ids": saved, "count": len(saved), "warnings": warnings,
+            "skipped": skipped,
             "list_id": list_id,
             "list_hint": (f"Als Liste „{body.list_name.strip()}“ gespeichert." if list_id else "")}
 
@@ -642,7 +741,20 @@ app.mount("/images", StaticFiles(directory=str(db.IMG_DIR)), name="images")
 # ── Monsieur-Cuisine-Export (isoliert, optional) ────────────────────────────
 # mc-export/ liegt neben backend/ und ist eigenständig; fehlt es, gibt es
 # einen klaren Fehler – die App läuft dadurch NICHT anders.
+# Modul wird EINMAL beim Start geladen (kein sys.path-Mutieren + reload pro Request).
 MC_EXPORT_DIR = Path(__file__).parent.parent / "mc-export"
+_mc_export = None
+if (MC_EXPORT_DIR / "mc_export.py").exists():
+    import importlib.util as _ilu
+
+    _spec = _ilu.spec_from_file_location("mc_export", MC_EXPORT_DIR / "mc_export.py")
+    if _spec and _spec.loader:
+        _mc_export = _ilu.module_from_spec(_spec)
+        try:
+            _spec.loader.exec_module(_mc_export)
+        except Exception as exc:  # defektes Modul darf die App nicht killen
+            print(f"[mc-export] Modul nicht ladbar: {exc}")
+            _mc_export = None
 
 
 class McExportBody(BaseModel):
@@ -655,19 +767,13 @@ def api_export_mc(recipe_id: int, body: McExportBody | None = None):
     recipe = db.get_recipe(recipe_id)
     if recipe is None:
         raise HTTPException(status_code=404, detail=f"Rezept {recipe_id} nicht gefunden")
-    if not (MC_EXPORT_DIR / "mc_export.py").exists():
+    if _mc_export is None:
         raise HTTPException(
             status_code=501,
             detail="Der Monsieur-Cuisine-Export ist in dieser Installation nicht "
-                   "enthalten (mc-export/ fehlt). Bitte Koch-I-Doo aktualisieren.",
+                   "verfügbar (mc-export/ fehlt oder defekt). Bitte Koch-I-Doo aktualisieren.",
         )
-    import importlib
-    import sys
-
-    sys.path.insert(0, str(MC_EXPORT_DIR))
-    mc = importlib.import_module("mc_export")
-    importlib.reload(mc)
-    data = mc.recipe_to_mc_input(recipe, (body.complexity if body else "easy"))
+    data = _mc_export.recipe_to_mc_input(recipe, (body.complexity if body else "easy"))
     from fastapi.responses import JSONResponse
 
     fname = re.sub(r"[^a-z0-9]+", "-", (recipe.get("title") or "rezept").lower()).strip("-")[:50]
