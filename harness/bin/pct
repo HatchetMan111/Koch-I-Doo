@@ -80,6 +80,11 @@ case "$cmd" in
                 printf '%s' "$code"
                 exit 0
                 ;;
+            *"touch /opt/kochido/.kochido-installed"*)
+                # Legacy Self-Heal: Marker wird nachträglich gesetzt
+                touch "$STATE/marker-set"
+                exit 0
+                ;;
             *".kochido-installed"*)
                 # Marker-Check: State-Datei "nomarker" simuliert fremden CT
                 if [[ -f "$STATE/nomarker" ]]; then
@@ -90,6 +95,13 @@ case "$cmd" in
             *"Environment=PORT="*)
                 # read_ct_port: Port aus bestehender Unit
                 cat "$STATE/ct_port" 2>/dev/null || echo 8090
+                ;;
+            *"kochido.service"*)
+                # Legacy-Erkennung: State-Datei "legacy" = alte Koch-I-Doo-Installation
+                if [[ -f "$STATE/legacy" ]]; then
+                    exit 0
+                fi
+                exit 1
                 ;;
             *"test -f"*)
                 exit 0

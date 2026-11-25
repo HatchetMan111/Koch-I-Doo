@@ -324,15 +324,27 @@ ST=$(new_state sshhttp)
 OUT=$(run_installer "$ST" --sshkey http://evil.example/key.pub)
 assert_out "$OUT" "nur über https" "--sshkey http:// abgelehnt (MITM)"
 
-# Fremder Container (kein Marker) darf nicht gelöscht werden
+# Fremder Container (kein Marker, keine kochido.service) darf nicht gelöscht werden
 ST=$(new_state foreign)
 cat > "$ST/ct_list" <<'LST'
 200 running kochido
 LST
 touch "$ST/nomarker"
 OUT=$(run_installer "$ST" --uninstall --yes </dev/null)
-assert_out "$OUT" "KEIN Koch-I-Doo-Container" "Uninstall fremder CT: Marker-Check greift"
+assert_out "$OUT" "KEIN Koch-I-Doo-Container" "Uninstall fremder CT: Check greift"
 assert_not_log "$ST" "destroy 200 --purge" "Uninstall fremder CT: kein destroy"
+
+# Legacy-Installation (alter Installer, noch ohne Marker, aber kochido.service da):
+# --update muss funktionieren und den Marker nachträglich setzen
+ST=$(new_state legacy_update)
+cat > "$ST/ct_list" <<'LST'
+205 running kochido
+LST
+touch "$ST/legacy" "$ST/nomarker"
+OUT=$(run_installer "$ST" --update)
+assert_out "$OUT" "Legacy-Installation" "Update auf Legacy-CT (205): wird erkannt, nicht blockiert"
+if [[ -f "$ST/marker-set" ]]; then ok_case "Legacy-CT: Marker wird nachträglich gesetzt"; else fail_case "Legacy-CT: Marker gesetzt" "marker-set fehlt"; fi
+if [[ -f "$ST/inner-run" ]]; then ok_case "Legacy-CT: Inner-Setup läuft durch"; else fail_case "Legacy-CT: Inner-Setup" "inner-run fehlt"; fi
 
 # Update ohne --port übernimmt den Port aus der Unit
 ST=$(new_state update_port)

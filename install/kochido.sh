@@ -138,12 +138,21 @@ find_ct_id_by_hostname() {
 # Marker-Check: Nur ein Container, den DIESER Installer angelegt hat
 # (/opt/kochido/.kochido-installed), darf per --uninstall/--force/--update
 # angefasst werden — sonst löscht ein --hostname <fremd> einen fremden CT.
+# Legacy-Installationen (Installer < v1.2.0, noch ohne Marker) werden an
+# kochido.service + /opt/kochido/app erkannt und bekommen den Marker nachträglich.
 assert_kochido_ct() {
     local ct_id="$1"
-    if ! pct exec "$ct_id" -- test -f /opt/kochido/.kochido-installed 2>/dev/null; then
-        die "Container $ct_id ist KEIN Koch-I-Doo-Container (Marker /opt/kochido/.kochido-installed fehlt).\n  Abbruch aus Sicherheitsgründen — fremde Container werden nicht angefasst."
+    if pct exec "$ct_id" -- test -f /opt/kochido/.kochido-installed 2>/dev/null; then
+        ok "Marker geprüft: Container $ct_id ist ein Koch-I-Doo-Container"
+        return 0
     fi
-    ok "Marker geprüft: Container $ct_id ist ein Koch-I-Doo-Container"
+    if pct exec "$ct_id" -- sh -c 'test -f /etc/systemd/system/kochido.service && test -d /opt/kochido/app' 2>/dev/null; then
+        warn "Legacy-Installation (vor v1.2.0, noch ohne Marker) erkannt – setze Marker nachträglich."
+        pct exec "$ct_id" -- touch /opt/kochido/.kochido-installed 2>/dev/null || true
+        ok "Container $ct_id ist ein Koch-I-Doo-Container (Legacy-Marker gesetzt)"
+        return 0
+    fi
+    die "Container $ct_id ist KEIN Koch-I-Doo-Container (kein Marker, keine kochido.service).\n  Abbruch aus Sicherheitsgründen — fremde Container werden nicht angefasst."
 }
 
 # Port aus der bestehenden systemd-Unit lesen (Update/Status ohne --port
