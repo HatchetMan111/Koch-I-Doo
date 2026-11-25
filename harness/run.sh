@@ -144,6 +144,7 @@ assert_log "$ST" "--features nesting=1" "Install: nesting=1"
 assert_log "$ST" "--memory 1024" "Install: 1024 MB RAM (Default)"
 assert_log "$ST" "--rootfs local-lvm:4" "Install: 4 GB Disk (Default)"
 assert_log "$ST" "firewall=0" "Install: net0 firewall=0 (Port im CT offen)"
+assert_log "$ST" "create 200 local-lvm:vztmpl/debian-13-standard" "Install: pct create mit aufgelöstem Template (Storage:vztmpl/name)"
 if [[ -f "$ST/inner-run" ]]; then ok_case "Install: Inner-Setup wurde ausgeführt (pct exec)"; else fail_case "Install: Inner-Setup" "inner-run-Marker fehlt"; fi
 assert_out "$OUT" "http://10.0.0.77:8090" "Install: Summary mit finaler URL"
 assert_out "$OUT" "🔑 Root-PW:   harness-password" "Install: generiertes Passwort wird angezeigt"

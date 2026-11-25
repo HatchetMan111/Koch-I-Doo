@@ -717,29 +717,34 @@ do_install() {
     fi
 
     header "🧱 Container-Template"
-    # storage-bewusst: Template im konfigurierten Storage suchen (nicht hart local)
+    # Template-Namen robust extrahieren: pveam list/available liefern Spalte 1
+    # als "<storage>:vztmpl/<name>" ODER nur "vztmpl/<name>" – wir nehmen alles
+    # nach "vztmpl/" und hängen unseren Storage selbst an.
+    tpl_name_in_list() {
+        pveam list "$CT_STORAGE" 2>/dev/null | awk '{print $1}' \
+            | sed -n 's#.*vztmpl/##p' | grep -E '^debian-1[23]-standard' | sort -rV | head -1
+    }
+    tpl_name_available() {
+        pveam available --section system 2>/dev/null | awk '{print $1}' \
+            | sed -n 's#.*vztmpl/##p' | grep -E '^debian-1[23]-standard' | sort -rV | head -1
+    }
     local template=""
-    template=$(pveam list "$CT_STORAGE" 2>/dev/null | awk '{print $1}' \
-        | grep -E "^${CT_STORAGE}:vztmpl/debian-1[23]-standard" | sort -rV | head -1 || true)
+    template=$(tpl_name_in_list || true)
     if [[ -z "$template" ]]; then
         info "Kein Debian-12/13-Template auf '$CT_STORAGE' vorhanden – lade es herunter ..."
         pveam update
-        template=$(pveam available --section system 2>/dev/null | awk '{print $1}' \
-            | grep -E "^${CT_STORAGE}:vztmpl/debian-1[23]-standard" | sort -rV | head -1 || true)
+        template=$(tpl_name_available || true)
         if [[ -z "$template" ]]; then
-            # Fallback: erstes verfügbares Debian-12/13-Template (egal welcher Storage)
-            template=$(pveam available --section system 2>/dev/null | awk '{print $1}' \
-                | grep -E '^[^:]+:vztmpl/debian-1[23]-standard' | sort -rV | head -1 || true)
+            die "Kein debian-12/13-standard-Template in 'pveam available' gefunden.\n  Koch-I-Doo braucht für den Cookidoo-Konto-Import Python ≥ 3.12 (Debian 13).\n  Manuell prüfen: pveam available --section system | grep debian"
         fi
+        pveam download "$CT_STORAGE" "$template"
+        # Download verifizieren, sonst pct create mit kaputtem Template
+        template=$(tpl_name_in_list || true)
         if [[ -z "$template" ]]; then
-            die "Kein debian-12/13-standard-Template gefunden (pveam available leer?).\n  Koch-I-Doo braucht für den Cookidoo-Konto-Import Python ≥ 3.12 (Debian 13)."
+            die "Template-Download nach '$CT_STORAGE' fehlgeschlagen (pveam list $CT_STORAGE zeigt es nicht)."
         fi
-        pveam download "$CT_STORAGE" "${template##*:}" 2>/dev/null \
-            || pveam download "$CT_STORAGE" "$template"
-        template=$(pveam list "$CT_STORAGE" 2>/dev/null | awk '{print $1}' \
-            | grep -E "^${CT_STORAGE}:vztmpl/debian-1[23]-standard" | sort -rV | head -1 || true)
     fi
-    ok "Template: $template"
+    ok "Template: ${CT_STORAGE}:vztmpl/${template}"
 
     if [[ -z "$CT_ID" ]]; then
         CT_ID=$(find_free_id)
@@ -787,7 +792,7 @@ do_install() {
         ok "SSH-Public-Key wird in den Container installiert (ssh-key-Login als root)"
         ssh_keys_args=(--ssh-public-keys "$SSH_KEY_FILE")
     fi
-    pct create "$CT_ID" "$template" \
+    pct create "$CT_ID" "${CT_STORAGE}:vztmpl/${template}" \
         --hostname "$CT_HOSTNAME" \
         --cores "$CT_CORES" \
         --memory "$CT_MEMORY" \
