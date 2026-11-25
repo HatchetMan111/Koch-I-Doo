@@ -180,9 +180,10 @@ cat > "$ST/ct_list" <<'LST'
 201 running test
 LST
 OUT=$(run_installer "$ST")
-assert_out "$OUT" "existiert bereits" "Existierender CT: Abbruch mit Hinweis"
-assert_out "$OUT" "--update" "Existierender CT: Update-Hinweis in Fehlermeldung"
-assert_not_out "$OUT" "✔  Container 200 erstellt" "Existierender CT: kein zweites pct create"
+assert_out "$OUT" "bereits installiert" "Existierender CT: Hinweis statt Abbruch"
+assert_out "$OUT" "Update durch" "Existierender CT: Plain-Installer wechselt automatisch in den Update-Pfad"
+if [[ -f "$ST/inner-run" ]]; then ok_case "Existierender CT: Inner-Setup (Update) läuft"; else fail_case "Existierender CT: Update" "inner-run fehlt"; fi
+assert_not_log "$ST" "create 200" "Existierender CT: kein zweites pct create"
 
 # ── 6) Update (inkl. gestoppter CT) ────────────────────────────────────────
 echo "— Update-Flow"

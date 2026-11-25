@@ -707,7 +707,12 @@ do_install() {
             pct stop "$existing" || true
             pct destroy "$existing" --purge
         else
-            die "Container $existing mit Hostname '$CT_HOSTNAME' existiert bereits.\n  Update:  ${ONE_LINER} --update\n  Neu aufsetzen (löst Rezepte!):  ${ONE_LINER} --force"
+            # Bereits installiert → kein Fehler, sondern direkt Update-Pfad
+            # (schützt vor versehentlichem Überschreiben, spart den Extra-Befehl)
+            warn "Container $existing mit Hostname '$CT_HOSTNAME' ist bereits installiert – führe direkt ein Update durch."
+            info "(Neu aufsetzen mit Rezept-Verlust nur bewusst: ${ONE_LINER} --force)"
+            do_update
+            return 0
         fi
     fi
 

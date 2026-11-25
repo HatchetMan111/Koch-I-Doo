@@ -164,7 +164,9 @@ funktioniert auf Android und iOS.
 ## Update / Deinstall
 
 ```bash
-# Update (App neu von GitHub, Rezept-Datenbank bleibt unberührt)
+# Update (App neu von GitHub, Rezept-Datenbank bleibt unberührt).
+# Hinweis: Der normale Installer ohne Optionen führt bei einem BESTEHENDEN
+# Koch-I-Doo-Container automatisch ein Update aus (kein erneutes Anlegen).
 bash -c "$(wget -qLO - https://raw.githubusercontent.com/HatchetMan111/Koch-I-Doo/main/install/kochido.sh)" -- --update
 
 # Status
