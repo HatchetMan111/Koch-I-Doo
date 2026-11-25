@@ -218,6 +218,14 @@ OUT=$(cd /tmp && env -i PATH="$FAKEBIN:/usr/bin:/bin" HOME=/root TERM=dumb \
         bash -c "$(cat "$INSTALLER")" --status 2>&1)
 assert_out "$OUT" "Status Kochido" "\$0-Fallback: bash -c SCRIPT --status erkennt Option"
 
+# bash -c "$(...)" -- --status → "--" ist $0 und darf NICHT als unbekannte Option durchgehen
+ST=$(new_state status_dashdash)
+OUT=$(cd /tmp && env -i PATH="$FAKEBIN:/usr/bin:/bin" HOME=/root TERM=dumb \
+        HARNESS_STATE="$ST" KOCHIDO_HARNESS_NONROOT=1 KOCHIDO_PASSWORD=harness-password \
+        bash -c "$(cat "$INSTALLER")" -- --status 2>&1)
+assert_out "$OUT" "Status Kochido" "bash -c SCRIPT -- --status: doppeltes -- wird übersprungen"
+assert_not_out "$OUT" "Unbekannte Option" "bash -c SCRIPT -- --status: kein '--'-Fehler"
+
 # ── 8) Uninstall ───────────────────────────────────────────────────────────
 echo "— Uninstall"
 ST=$(new_state rm_yes)

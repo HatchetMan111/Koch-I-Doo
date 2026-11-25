@@ -287,6 +287,7 @@ parse_args() {
             --password)      need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_PASSWORD="${args[$((i+1))]}"; i=$((i+2)) ;;
             --sshkey)        need_value "${args[$i]}" "${args[$((i+1))]:-}"; CT_SSHKEY="${args[$((i+1))]}"; i=$((i+2)) ;;
             --port)          need_value "${args[$i]}" "${args[$((i+1))]:-}"; PORT="${args[$((i+1))]}"; PORT_EXPLICIT=true; i=$((i+2)) ;;
+            --)              i=$((i+1)) ;;  # bash -c "…" -- --update: "--" ist $0/Separator, ignorieren
             --force)         FORCE_RECREATE=true; i=$((i+1)) ;;
             --yes|-y)        ASSUME_YES=true; i=$((i+1)) ;;
             --update)        UPDATE=true; i=$((i+1)) ;;
